@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "662430133513",
+    "project_id": "tyarekyara-85659",
+    "storage_bucket": "tyarekyara-85659.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:662430133513:android:c28d96e507d25330e577d8",
+        "android_client_info": {
+          "package_name": "com.example.tyarekyara"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBfLfj3HiuEicN6eDD0ydoWgQPpavrwps"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
