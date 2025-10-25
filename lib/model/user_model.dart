@@ -7,9 +7,11 @@ part 'user_model.g.dart';
 class UserModel with _$UserModel {
   const factory UserModel({
     required String id,
-    required String displayName,
+    required String nickname,
     required String email,
-    String? photoUrl,
+    @Default('') String ageRange,
+    @Default('') String region,
+    @Default('assets/images/default_avatar.png') String iconUrl,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _UserModel;
