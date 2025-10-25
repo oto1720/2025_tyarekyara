@@ -1,9 +1,9 @@
-
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/home/home.dart';
 import 'package:tyarekyara/feature/profile/profile_screen.dart';
 import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
+import 'package:tyarekyara/feature/auth/presentaion/pages/login.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
 
 // ルーティング設定
@@ -12,8 +12,22 @@ import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
 // 2. lib/widgets/bottom_navigation.dartのBottomNavigationConfigに追加
 // 3. 以下のShellRouteのroutesに新しいGoRouteを追加
 final GoRouter router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/login',
   routes: [
+    // 認証画面（BottomNavigation なし）
+    GoRoute(
+      path: '/login',
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: LoginPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/signup',
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: SignUpPage(),
+      ),
+    ),
+    // メインアプリ（BottomNavigation あり）
     ShellRoute(
       builder: (context, state, child) {
         return ScaffoldWithBottomNavigation(
@@ -25,7 +39,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: SignUpPage(),
+            child: HomeScreen(),
           ),
         ),
         // プロフィール画面

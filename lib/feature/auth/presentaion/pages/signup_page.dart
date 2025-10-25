@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../provider/auth_provider.dart';
 import '../../../../provider/auth_state.dart';
 import '../../../../widgets/custom_text_field.dart';
@@ -96,6 +97,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Account created successfully')),
           );
+          // ホーム画面に遷移
+          context.go('/');
         },
         unauthenticated: () {},
         error: (message) {
@@ -222,7 +225,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        context.push('/login');
                       },
                       child: const Text(
                         'Sign In',
