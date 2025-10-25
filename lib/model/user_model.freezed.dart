@@ -22,9 +22,11 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$UserModel {
   String get id => throw _privateConstructorUsedError;
-  String get displayName => throw _privateConstructorUsedError;
+  String get nickname => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
-  String? get photoUrl => throw _privateConstructorUsedError;
+  String get ageRange => throw _privateConstructorUsedError;
+  String get region => throw _privateConstructorUsedError;
+  String get iconUrl => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
 
@@ -45,9 +47,11 @@ abstract class $UserModelCopyWith<$Res> {
   @useResult
   $Res call({
     String id,
-    String displayName,
+    String nickname,
     String email,
-    String? photoUrl,
+    String ageRange,
+    String region,
+    String iconUrl,
     DateTime createdAt,
     DateTime updatedAt,
   });
@@ -69,9 +73,11 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
   @override
   $Res call({
     Object? id = null,
-    Object? displayName = null,
+    Object? nickname = null,
     Object? email = null,
-    Object? photoUrl = freezed,
+    Object? ageRange = null,
+    Object? region = null,
+    Object? iconUrl = null,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -81,18 +87,26 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
                 ? _value.id
                 : id // ignore: cast_nullable_to_non_nullable
                       as String,
-            displayName: null == displayName
-                ? _value.displayName
-                : displayName // ignore: cast_nullable_to_non_nullable
+            nickname: null == nickname
+                ? _value.nickname
+                : nickname // ignore: cast_nullable_to_non_nullable
                       as String,
             email: null == email
                 ? _value.email
                 : email // ignore: cast_nullable_to_non_nullable
                       as String,
-            photoUrl: freezed == photoUrl
-                ? _value.photoUrl
-                : photoUrl // ignore: cast_nullable_to_non_nullable
-                      as String?,
+            ageRange: null == ageRange
+                ? _value.ageRange
+                : ageRange // ignore: cast_nullable_to_non_nullable
+                      as String,
+            region: null == region
+                ? _value.region
+                : region // ignore: cast_nullable_to_non_nullable
+                      as String,
+            iconUrl: null == iconUrl
+                ? _value.iconUrl
+                : iconUrl // ignore: cast_nullable_to_non_nullable
+                      as String,
             createdAt: null == createdAt
                 ? _value.createdAt
                 : createdAt // ignore: cast_nullable_to_non_nullable
@@ -118,9 +132,11 @@ abstract class _$$UserModelImplCopyWith<$Res>
   @useResult
   $Res call({
     String id,
-    String displayName,
+    String nickname,
     String email,
-    String? photoUrl,
+    String ageRange,
+    String region,
+    String iconUrl,
     DateTime createdAt,
     DateTime updatedAt,
   });
@@ -141,9 +157,11 @@ class __$$UserModelImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? id = null,
-    Object? displayName = null,
+    Object? nickname = null,
     Object? email = null,
-    Object? photoUrl = freezed,
+    Object? ageRange = null,
+    Object? region = null,
+    Object? iconUrl = null,
     Object? createdAt = null,
     Object? updatedAt = null,
   }) {
@@ -153,18 +171,26 @@ class __$$UserModelImplCopyWithImpl<$Res>
             ? _value.id
             : id // ignore: cast_nullable_to_non_nullable
                   as String,
-        displayName: null == displayName
-            ? _value.displayName
-            : displayName // ignore: cast_nullable_to_non_nullable
+        nickname: null == nickname
+            ? _value.nickname
+            : nickname // ignore: cast_nullable_to_non_nullable
                   as String,
         email: null == email
             ? _value.email
             : email // ignore: cast_nullable_to_non_nullable
                   as String,
-        photoUrl: freezed == photoUrl
-            ? _value.photoUrl
-            : photoUrl // ignore: cast_nullable_to_non_nullable
-                  as String?,
+        ageRange: null == ageRange
+            ? _value.ageRange
+            : ageRange // ignore: cast_nullable_to_non_nullable
+                  as String,
+        region: null == region
+            ? _value.region
+            : region // ignore: cast_nullable_to_non_nullable
+                  as String,
+        iconUrl: null == iconUrl
+            ? _value.iconUrl
+            : iconUrl // ignore: cast_nullable_to_non_nullable
+                  as String,
         createdAt: null == createdAt
             ? _value.createdAt
             : createdAt // ignore: cast_nullable_to_non_nullable
@@ -183,9 +209,11 @@ class __$$UserModelImplCopyWithImpl<$Res>
 class _$UserModelImpl implements _UserModel {
   const _$UserModelImpl({
     required this.id,
-    required this.displayName,
+    required this.nickname,
     required this.email,
-    this.photoUrl,
+    this.ageRange = '',
+    this.region = '',
+    this.iconUrl = 'assets/images/default_avatar.png',
     required this.createdAt,
     required this.updatedAt,
   });
@@ -196,11 +224,18 @@ class _$UserModelImpl implements _UserModel {
   @override
   final String id;
   @override
-  final String displayName;
+  final String nickname;
   @override
   final String email;
   @override
-  final String? photoUrl;
+  @JsonKey()
+  final String ageRange;
+  @override
+  @JsonKey()
+  final String region;
+  @override
+  @JsonKey()
+  final String iconUrl;
   @override
   final DateTime createdAt;
   @override
@@ -208,7 +243,7 @@ class _$UserModelImpl implements _UserModel {
 
   @override
   String toString() {
-    return 'UserModel(id: $id, displayName: $displayName, email: $email, photoUrl: $photoUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'UserModel(id: $id, nickname: $nickname, email: $email, ageRange: $ageRange, region: $region, iconUrl: $iconUrl, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -217,11 +252,13 @@ class _$UserModelImpl implements _UserModel {
         (other.runtimeType == runtimeType &&
             other is _$UserModelImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.displayName, displayName) ||
-                other.displayName == displayName) &&
+            (identical(other.nickname, nickname) ||
+                other.nickname == nickname) &&
             (identical(other.email, email) || other.email == email) &&
-            (identical(other.photoUrl, photoUrl) ||
-                other.photoUrl == photoUrl) &&
+            (identical(other.ageRange, ageRange) ||
+                other.ageRange == ageRange) &&
+            (identical(other.region, region) || other.region == region) &&
+            (identical(other.iconUrl, iconUrl) || other.iconUrl == iconUrl) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
@@ -233,9 +270,11 @@ class _$UserModelImpl implements _UserModel {
   int get hashCode => Object.hash(
     runtimeType,
     id,
-    displayName,
+    nickname,
     email,
-    photoUrl,
+    ageRange,
+    region,
+    iconUrl,
     createdAt,
     updatedAt,
   );
@@ -257,9 +296,11 @@ class _$UserModelImpl implements _UserModel {
 abstract class _UserModel implements UserModel {
   const factory _UserModel({
     required final String id,
-    required final String displayName,
+    required final String nickname,
     required final String email,
-    final String? photoUrl,
+    final String ageRange,
+    final String region,
+    final String iconUrl,
     required final DateTime createdAt,
     required final DateTime updatedAt,
   }) = _$UserModelImpl;
@@ -270,11 +311,15 @@ abstract class _UserModel implements UserModel {
   @override
   String get id;
   @override
-  String get displayName;
+  String get nickname;
   @override
   String get email;
   @override
-  String? get photoUrl;
+  String get ageRange;
+  @override
+  String get region;
+  @override
+  String get iconUrl;
   @override
   DateTime get createdAt;
   @override

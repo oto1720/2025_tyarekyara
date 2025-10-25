@@ -9,9 +9,11 @@ part of 'user_model.dart';
 _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
     _$UserModelImpl(
       id: json['id'] as String,
-      displayName: json['displayName'] as String,
+      nickname: json['nickname'] as String,
       email: json['email'] as String,
-      photoUrl: json['photoUrl'] as String?,
+      ageRange: json['ageRange'] as String? ?? '',
+      region: json['region'] as String? ?? '',
+      iconUrl: json['iconUrl'] as String? ?? 'assets/images/default_avatar.png',
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -19,9 +21,11 @@ _$UserModelImpl _$$UserModelImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$UserModelImplToJson(_$UserModelImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'displayName': instance.displayName,
+      'nickname': instance.nickname,
       'email': instance.email,
-      'photoUrl': instance.photoUrl,
+      'ageRange': instance.ageRange,
+      'region': instance.region,
+      'iconUrl': instance.iconUrl,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };
