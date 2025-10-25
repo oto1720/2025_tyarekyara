@@ -4,6 +4,7 @@ import 'package:tyarekyara/feature/home/home.dart';
 import 'package:tyarekyara/feature/profile/profile_screen.dart';
 import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
+import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
 
 // ルーティング設定
 // 新しい画面を追加する場合：
@@ -24,7 +25,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(),
+            child: SignUpPage(),
           ),
         ),
         // プロフィール画面
