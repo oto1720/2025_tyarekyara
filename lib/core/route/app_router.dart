@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:tyarekyara/feature/home/home.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/home.dart';
 import 'package:tyarekyara/feature/profile/profile_screen.dart';
 import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
