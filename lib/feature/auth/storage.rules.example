@@ -1,0 +1,88 @@
+rules_version = '2';
+
+/**
+ * Firebase Storage セキュリティルール
+ *
+ * このファイルをFirebaseコンソールにコピーして使用してください。
+ * Firebase Console > Storage > ルール
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ===================================
+    // ヘルパー関数
+    // ===================================
+
+    // ユーザーが認証済みかチェック
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // リクエストしているユーザーが対象のユーザー本人かチェック
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // 画像ファイルかチェック
+    function isImageFile() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // ファイルサイズが制限内かチェック（5MB以下）
+    function isValidSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // 許可された画像形式かチェック
+    function isValidImageFormat() {
+      return request.resource.contentType in [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/gif'
+      ];
+    }
+
+    // ===================================
+    // プロフィール画像
+    // ===================================
+
+    // パス: profile_images/{userId}.{ext}
+    // 例: profile_images/abc123.jpg
+    match /profile_images/{userId}.{ext} {
+
+      // 読み取り権限
+      // - 認証済みユーザーは全員、他のユーザーのプロフィール画像を閲覧可能
+      allow read: if isAuthenticated();
+
+      // 書き込み権限（作成・更新）
+      // - 認証済みユーザーは、自分のプロフィール画像のみアップロード可能
+      // - 画像ファイルであること
+      // - ファイルサイズが5MB以下であること
+      // - 許可された画像形式であること
+      allow write: if isOwner(userId) &&
+                      isImageFile() &&
+                      isValidSize() &&
+                      isValidImageFormat();
+
+      // 削除権限
+      // - 認証済みユーザーは、自分のプロフィール画像のみ削除可能
+      allow delete: if isOwner(userId);
+    }
+
+    // ===================================
+    // その他のファイル
+    // ===================================
+
+    // 今後、新しいファイルタイプを追加する場合はここに記述
+    // 例: 投稿画像、カバー画像 など
+
+    // 例: 投稿画像
+    // match /post_images/{postId}/{imageId} {
+    //   allow read: if isAuthenticated();
+    //   allow write: if isAuthenticated() && isImageFile() && isValidSize();
+    // }
+  }
+}
