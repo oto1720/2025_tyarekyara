@@ -149,8 +149,8 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('プロフィール更新成功')),
           );
-          // ホーム画面に遷移
-          context.go('/');
+          // チュートリアル画面に遷移
+          context.go('/tutorial');
         },
         unauthenticated: () {},
         error: (message) {
