@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/auth_state.dart';
+import '../../providers/profile_setup_provider.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
@@ -17,21 +18,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final _nicknameController = TextEditingController();
 
-  String? _selectedAgeRange;
-  String? _selectedRegion;
-  int _selectedIconIndex = 0;
-
-  // アイコンオプション
-  final List<String> _iconOptions = [
-    'assets/images/avatar1.png',
-    'assets/images/avatar2.png',
-    'assets/images/avatar3.png',
-    'assets/images/avatar4.png',
-    'assets/images/avatar5.png',
-    'assets/images/avatar6.png',
-  ];
-
-    // 年齢オプション
+  // 年齢オプション
   final List<String> _ageRanges = [
     '10歳未満',
     '10代',
@@ -65,7 +52,6 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     '群馬県',
     '埼玉県',
     '千葉県',
-    '東京都',
     '神奈川県',
     '新潟県',
     '富山県',
@@ -79,7 +65,6 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     '三重県',
     '滋賀県',
     '京都府',
-    '大阪府',
     '兵庫県',
     '奈良県',
     '和歌山県',
@@ -92,15 +77,17 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     '香川県',
     '愛媛県',
     '高知県',
-    '福岡県',
     '佐賀県',
     '長崎県',
-    '熊本県',
     '大分県',
     '宮崎県',
-    '鹿児島県',
-    '沖縄県',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // 初期化は build メソッド内で行う
+  }
 
   @override
   void dispose() {
@@ -124,67 +111,36 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   Future<void> _handleSaveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedAgeRange == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('年齢は必須です'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+    final success = await ref
+        .read(profileSetupProvider.notifier)
+        .saveProfile(nickname: _nicknameController.text.trim());
+
+    if (!success) {
+      // エラーは profileSetupProvider の errorMessage で管理される
       return;
     }
-
-    if (_selectedRegion == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('地域は必須です'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    // プロフィール更新
-    final currentUserAsync = ref.read(currentUserProvider);
-    final currentUser = currentUserAsync.value;
-
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('ユーザーが見つかりません'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    await ref.read(authControllerProvider.notifier).updateProfile(
-          userId: currentUser.id,
-          nickname: _nicknameController.text.trim(),
-          ageRange: _selectedAgeRange,
-          region: _selectedRegion,
-          iconUrl: _iconOptions[_selectedIconIndex],
-        );
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final currentUserAsync = ref.watch(currentUserProvider);
+    final profileSetupState = ref.watch(profileSetupProvider);
 
-    // プロフィール更新
+    // 現在のユーザー情報でフィールドを初期化
     currentUserAsync.whenData((user) {
       if (user != null && _nicknameController.text.isEmpty) {
         _nicknameController.text = user.nickname;
-        if (user.ageRange.isNotEmpty && _selectedAgeRange == null) {
-          _selectedAgeRange = user.ageRange;
-        }
-        if (user.region.isNotEmpty && _selectedRegion == null) {
-          _selectedRegion = user.region;
-        }
+        // Providerの状態を初期化
+        ref.read(profileSetupProvider.notifier).initializeFromUser(
+              nickname: user.nickname,
+              ageRange: user.ageRange.isNotEmpty ? user.ageRange : null,
+              region: user.region.isNotEmpty ? user.region : null,
+            );
       }
     });
 
+    // 認証状態の監視
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       next.when(
         initial: () {},
@@ -208,6 +164,21 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
       );
     });
 
+    // プロフィール設定のエラー監視
+    ref.listen(profileSetupProvider, (previous, next) {
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: next.errorMessage!.contains('必須')
+                ? Colors.orange
+                : Colors.red,
+          ),
+        );
+        ref.read(profileSetupProvider.notifier).clearError();
+      }
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -225,7 +196,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
               children: [
                 const SizedBox(height: 24),
                 const Text(
-                    'プロフィール設定',
+                  'プロフィール設定',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -242,52 +213,79 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // 年齢
+                // プロフィール画像選択
                 const Text(
-                  '年齢',
+                  'プロフィール画像',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 80,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _iconOptions.length,
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedIconIndex = index;
-                          });
-                        },
+                Center(
+                  child: Column(
+                    children: [
+                      // 画像プレビュー
+                      GestureDetector(
+                        onTap: () => ref
+                            .read(profileSetupProvider.notifier)
+                            .pickImage(),
                         child: Container(
-                          width: 80,
-                          height: 80,
-                          margin: const EdgeInsets.only(right: 12),
+                          width: 120,
+                          height: 120,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
+                            color: Colors.grey[200],
                             border: Border.all(
-                              color: _selectedIconIndex == index
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[300]!,
-                              width: _selectedIconIndex == index ? 3 : 2,
+                              color: Colors.grey[300]!,
+                              width: 2,
                             ),
                           ),
                           child: ClipOval(
-                            child: Icon(
-                              Icons.person,
-                              size: 40,
-                              color: _selectedIconIndex == index
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[400],
-                            ),
+                            child: profileSetupState.selectedImage != null
+                                ? Image.file(
+                                    profileSetupState.selectedImage!,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Colors.grey[400],
+                                  ),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(height: 16),
+                      // 写真選択ボタン
+                      OutlinedButton.icon(
+                        onPressed: () => ref
+                            .read(profileSetupProvider.notifier)
+                            .pickImage(),
+                        icon: const Icon(Icons.photo_library),
+                        label: Text(
+                          profileSetupState.selectedImage != null
+                              ? '写真を変更'
+                              : '写真を選択',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).primaryColor,
+                          side: BorderSide(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '※選択しない場合はデフォルト画像が使用されます',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -320,7 +318,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       isExpanded: true,
-                      value: _selectedAgeRange,
+                      value: profileSetupState.selectedAgeRange,
                       hint: const Text('年齢を選択'),
                       items: _ageRanges.map((String value) {
                         return DropdownMenuItem<String>(
@@ -329,9 +327,11 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedAgeRange = newValue;
-                        });
+                        if (newValue != null) {
+                          ref
+                              .read(profileSetupProvider.notifier)
+                              .setAgeRange(newValue);
+                        }
                       },
                     ),
                   ),
@@ -356,7 +356,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       isExpanded: true,
-                      value: _selectedRegion,
+                      value: profileSetupState.selectedRegion,
                       hint: const Text('地域を選択'),
                       items: _regions.map((String value) {
                         return DropdownMenuItem<String>(
@@ -365,23 +365,26 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRegion = newValue;
-                        });
+                        if (newValue != null) {
+                          ref
+                              .read(profileSetupProvider.notifier)
+                              .setRegion(newValue);
+                        }
                       },
                     ),
                   ),
                 ),
                 const SizedBox(height: 40),
 
-                  // 保存
+                // 保存
                 CustomButton(
                   text: '保存',
                   onPressed: _handleSaveProfile,
-                  isLoading: authState.maybeWhen(
-                    loading: () => true,
-                    orElse: () => false,
-                  ),
+                  isLoading: profileSetupState.isUploading ||
+                      authState.maybeWhen(
+                        loading: () => true,
+                        orElse: () => false,
+                      ),
                 ),
                 const SizedBox(height: 24),
               ],
