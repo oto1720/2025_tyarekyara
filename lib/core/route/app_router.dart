@@ -5,6 +5,8 @@ import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/login.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
+import 'package:tyarekyara/feature/auth/presentaion/pages/profile_setup_page.dart';
+import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
 
 // ルーティング設定
 // 新しい画面を追加する場合：
@@ -25,6 +27,18 @@ final GoRouter router = GoRouter(
       path: '/signup',
       pageBuilder: (context, state) => const NoTransitionPage(
         child: SignUpPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/profile-setup',
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ProfileSetupPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/tutorial',
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: TutorialPage(),
       ),
     ),
     // メインアプリ（BottomNavigation あり）
