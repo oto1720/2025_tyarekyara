@@ -33,44 +33,44 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
   String? _validateNickname(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Nickname is required';
+      return 'ニックネームは必須です';
     }
     if (value.length < 2) {
-      return 'Nickname must be at least 2 characters';
+      return 'ニックネームは2文字以上で入力してください';
     }
     if (value.length > 20) {
-      return 'Nickname must be at most 20 characters';
+      return 'ニックネームは20文字以内で入力してください';
     }
     return null;
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return 'メールアドレスは必須です';
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email';
+      return '有効なメールアドレスを入力してください';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Password is required';
+      return 'パスワードは必須です';
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return 'パスワードは6文字以上で入力してください';
     }
     return null;
   }
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm password';
+      return 'パスワードを確認してください';
     }
     if (value != _passwordController.text) {
-      return 'Passwords do not match';
+      return 'パスワードが一致しません';
     }
     return null;
   }
@@ -95,10 +95,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         loading: () {},
         authenticated: (user) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created successfully')),
+            const SnackBar(content: Text('アカウント作成成功')),
           );
-          // ホーム画面に遷移
-          context.go('/');
+          // プロフィール設定画面に遷移
+          context.go('/profile-setup');
         },
         unauthenticated: () {},
         error: (message) {
@@ -115,7 +115,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Sign Up'),
+        title: const Text('登録'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -129,7 +129,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               children: [
                 const SizedBox(height: 24),
                 const Text(
-                  'Create New\nAccount',
+                  '新規アカウント作成',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -138,7 +138,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Please fill in the form to continue',
+                  'フォームに入力して続けてください',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -147,15 +147,15 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 const SizedBox(height: 40),
                 CustomTextField(
                   controller: _nicknameController,
-                  label: 'Nickname',
-                  hintText: 'Enter your nickname',
+                  label: 'ニックネーム',
+                  hintText: 'ニックネームを入力',
                   prefixIcon: const Icon(Icons.person_outline),
                   validator: _validateNickname,
                 ),
                 const SizedBox(height: 24),
                 CustomTextField(
                   controller: _emailController,
-                  label: 'Email',
+                  label: 'メールアドレス',
                   hintText: 'example@email.com',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
@@ -164,8 +164,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 const SizedBox(height: 24),
                 CustomTextField(
                   controller: _passwordController,
-                  label: 'Password',
-                  hintText: 'Min 6 characters',
+                  label: 'パスワード',
+                  hintText: '6文字以上',
                   obscureText: _obscurePassword,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
@@ -185,8 +185,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 const SizedBox(height: 24),
                 CustomTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  hintText: 'Re-enter password',
+                  label: 'パスワード確認',
+                  hintText: 'パスワードを再入力',
                   obscureText: _obscureConfirmPassword,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
@@ -205,7 +205,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
                 const SizedBox(height: 40),
                 CustomButton(
-                  text: 'Sign Up',
+                  text: '登録',
                   onPressed: _handleSignUp,
                   isLoading: authState.maybeWhen(
                     loading: () => true,
@@ -217,7 +217,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account?',
+                      'すでにアカウントをお持ちですか？',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -225,10 +225,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        context.push('/login');
+                        context.go('/login');
                       },
                       child: const Text(
-                        'Sign In',
+                        'ログイン',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,

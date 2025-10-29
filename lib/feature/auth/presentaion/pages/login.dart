@@ -28,21 +28,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return 'メールアドレスは必須です';
     }
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
-      return 'Please enter a valid email';
+      return '有効なメールアドレスを入力してください';
     }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Password is required';
+      return 'パスワードは必須です';
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return 'パスワードは6文字以上で入力してください';
     }
     return null;
   }
@@ -66,7 +66,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 	loading: () {},
 	authenticated: (user) {
 	  ScaffoldMessenger.of(context).showSnackBar(
-	    const SnackBar(content: Text('Logged in successfully')),
+	    const SnackBar(content: Text('ログイン成功')),
 	  );
 	  // ���;bkw�
 	  context.go('/');
@@ -107,7 +107,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		),
 		const SizedBox(height: 40),
 		const Text(
-		  'Welcome\nBack',
+		  'ようこそ',
 		  style: TextStyle(
 		    fontSize: 28,
 		    fontWeight: FontWeight.bold,
@@ -116,7 +116,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		),
 		const SizedBox(height: 8),
 		Text(
-		  'Login to your account',
+		  'アカウントにログインしてください',
 		  style: TextStyle(
 		    fontSize: 16,
 		    color: Colors.grey[600],
@@ -125,7 +125,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		const SizedBox(height: 40),
 		CustomTextField(
 		  controller: _emailController,
-		  label: 'Email',
+		  label: 'メールアドレス',
 		  hintText: 'example@email.com',
 		  keyboardType: TextInputType.emailAddress,
 		  prefixIcon: const Icon(Icons.email_outlined),
@@ -134,8 +134,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		const SizedBox(height: 24),
 		CustomTextField(
 		  controller: _passwordController,
-		  label: 'Password',
-		  hintText: 'Min 6 characters',
+		  label: 'パスワード',
+		  hintText: '6文字以上',
 		  obscureText: _obscurePassword,
 		  prefixIcon: const Icon(Icons.lock_outline),
 		  suffixIcon: IconButton(
@@ -161,12 +161,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
 		      ScaffoldMessenger.of(context).showSnackBar(
 			const SnackBar(
-			  content: Text('Password reset feature coming soon'),
+			  content: Text('パスワードリセット機能はまもなく登場します'),
 			),
 		      );
 		    },
 		    child: Text(
-		      'Forgot Password?',
+		      'パスワードを忘れた方はこちら',
 		      style: TextStyle(
 			color: Theme.of(context).primaryColor,
 			fontSize: 14,
@@ -177,7 +177,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		),
 		const SizedBox(height: 24),
 		CustomButton(
-		  text: 'Login',
+		  text: 'ログイン',
 		  onPressed: _handleLogin,
 		  isLoading: authState.maybeWhen(
 		    loading: () => true,
@@ -189,7 +189,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		  mainAxisAlignment: MainAxisAlignment.center,
 		  children: [
 		    Text(
-		      "Don't have an account?",
+		      "アカウントをお持ちでない方はこちら",
 		      style: TextStyle(
 			color: Colors.grey[600],
 			fontSize: 14,
@@ -197,10 +197,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		    ),
 		    TextButton(
 		      onPressed: () {
-			context.push('/signup');
+			context.go('/signup');
 		      },
 		      child: const Text(
-			'Sign Up',
+			'登録',
 			style: TextStyle(
 			  fontWeight: FontWeight.w600,
 			  fontSize: 14,
