@@ -5,21 +5,10 @@ import 'package:go_router/go_router.dart';
 /// 新しいタブを追加する場合は、[navigationItems]に追加してください
 class BottomNavigationConfig {
   static const List<NavigationItem> navigationItems = [
-    NavigationItem(
-      icon: Icons.home,
-      label: 'ホーム',
-      route: '/',
-    ),
-    NavigationItem(
-      icon: Icons.person,
-      label: 'プロフィール',
-      route: '/profile',
-    ),
-    NavigationItem(
-      icon: Icons.settings,
-      label: '設定',
-      route: '/settings',
-    ),
+    NavigationItem(icon: Icons.home, label: 'ホーム', route: '/'),
+    NavigationItem(icon: Icons.shuffle, label: 'チャレンジ', route: '/challenge'),
+    NavigationItem(icon: Icons.person, label: 'プロフィール', route: '/profile'),
+    NavigationItem(icon: Icons.settings, label: '設定', route: '/settings'),
   ];
 }
 
@@ -37,10 +26,7 @@ class NavigationItem {
 
 /// Bottom Navigationバーを表示するScaffold
 class ScaffoldWithBottomNavigation extends StatelessWidget {
-  const ScaffoldWithBottomNavigation({
-    required this.child,
-    super.key,
-  });
+  const ScaffoldWithBottomNavigation({required this.child, super.key});
 
   final Widget child;
 
@@ -49,6 +35,7 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
         items: BottomNavigationConfig.navigationItems
