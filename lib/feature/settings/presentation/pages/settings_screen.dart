@@ -175,10 +175,7 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: '通知の設定を変更',
                 iconColor: Colors.orange,
                 onTap: () {
-                  // TODO: 通知設定画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('通知設定画面（未実装）')),
-                  );
+                  context.push('/notice');
                 },
               ),
               SettingItem(
