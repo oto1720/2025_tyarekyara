@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home.dart';
 import 'package:tyarekyara/feature/profile/profile_screen.dart';
-import 'package:tyarekyara/feature/settings/settings_screen.dart';
+import 'package:tyarekyara/feature/settings/presentation/pages/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/login.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
