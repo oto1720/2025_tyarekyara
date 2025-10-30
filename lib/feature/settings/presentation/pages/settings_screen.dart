@@ -163,10 +163,7 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'プロフィール情報を編集',
                 iconColor: Colors.blue,
                 onTap: () {
-                  // TODO: プロフィール編集画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('プロフィール画面（未実装）')),
-                  );
+                  context.push('/profile');
                 },
               ),
 
