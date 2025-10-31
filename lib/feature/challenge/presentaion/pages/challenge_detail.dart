@@ -2,23 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:tyarekyara/core/route/app_router.dart';
+import 'package:tyarekyara/feature/challenge/models/my_opinion.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 
-class ChallengeDetailPage extends StatelessWidget {
+class ChallengeDetailPage extends StatefulWidget {
   // どのチャレンジかを受け取るためのID
   final Challenge challenge;
 
   const ChallengeDetailPage({super.key, required this.challenge});
 
   @override
+  State<ChallengeDetailPage> createState() => _ChallengeDetailPageState();
+}
+
+class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
+
+  // ↓↓↓ 4. フォームの状態を管理するキーを追加
+  final _formKey = GlobalKey<FormState>();
+  // ↓↓↓ 5. テキストフィールドの入力を管理するコントローラーを追加
+  final _opinionController = TextEditingController();
+
+  @override
+    void dispose() {
+      // 6. コントローラーを破棄
+      _opinionController.dispose();
+      super.dispose();
+    }
+
+  @override
   Widget build(BuildContext context) {
-    // ここで challengeId を使って、タイトルなどを表示する
-    // (今は仮でIDをそのまま表示します)
-    double currentProgress = 0.7; // ゲージ用の割合 (0.0～1.0)
-    int currentPoints = 70; // 分子 (現在のポイント)
-    int maxPoints = 100; // 分母 (最大ポイント)
+    
+    // ↓↓↓ 3. 仮の「元の意見」データを作成
+    final MyOpinion myOpinion = MyOpinion(
+      id: 'my-opinion-1',
+      challengeId: widget.challenge.id, // 受け取ったchallengeのIDと紐づける
+      stance: widget.challenge.stance, // challengeのお題と同じ立場
+      opinionText: '週休3日制は、生産性を維持しつつ従業員の幸福度を上げる素晴らしい施策だと思います。',
+    );
+
 
     return Scaffold(
-      appBar: AppBar(title: Text('チャレンジ詳細 (ID: ${challenge.id})')),
+      appBar: AppBar(title: Text('チャレンジ詳細 (ID: ${widget.challenge.id})')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -57,7 +82,7 @@ class ChallengeDetailPage extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                           child: DifficultyBadge(
-                            difficulty: challenge.difficulty,
+                            difficulty: widget.challenge.difficulty,
                             showPoints: false,
                           ),
                         ),
@@ -65,7 +90,7 @@ class ChallengeDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
                     Text(
-                      '${challenge.title}',
+                      '${widget.challenge.title}',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -81,7 +106,7 @@ class ChallengeDetailPage extends StatelessWidget {
                           size: 20, // アイコンのサイズ
                         ),
                         Text(
-                          '${challenge.difficulty.points}ポイント',
+                          '${widget.challenge.difficulty.points}ポイント',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.black87, // 少し薄い色に
@@ -94,29 +119,177 @@ class ChallengeDetailPage extends StatelessWidget {
               ),
             ),
 
-            Text(
-              'ID: ${challenge.id} のチャレンジに取り組んでいます。',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            // 意見を記述するテキストフィールド
-            TextField(
-              maxLines: 5, // 5行分の高さ
-              decoration: InputDecoration(
-                hintText: 'あなたの意見を記述してください...',
-                border: OutlineInputBorder(
+            const SizedBox(height: 30),
+
+            Card(
+              elevation: 0, // 影をなくす
+                color: Colors.grey[100], // 背景色を少し変える
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  side: BorderSide(color: Colors.grey[300]!), // 薄い枠線
                 ),
-              ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'あなたの元の意見 (${myOpinion.stance == Stance.pro ? "賛成" : "反対"})',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[900],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        myOpinion.opinionText, // 仮のデータから本文を表示
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[800],
+                          height: 1.5, // 行間
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: 意見を送信する処理
-                // 送信したら前の画面に戻る
-                Navigator.of(context).pop();
-              },
-              child: const Text('意見を送信する'),
+            
+            Form(
+              key: _formKey,
+              child: Card(
+                  elevation: 2.0, // 少し影をつける
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    side: BorderSide(color: Colors.purpleAccent[100]!,width: 1.0), // 薄い枠線
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // 挑戦する側の立場を表示
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.psychology_alt_outlined, // お好きなアイコンに変更してください
+                              color: Colors.purpleAccent[700],
+                              size: 20, // アイコンのサイズ
+                            ),
+                            Text(
+                              'チャレンジ:反対の立場で考えてみよう',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black, // テーマの色
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                              '反対の立場から、説得力のある意見を書いてみてください',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[600], // テーマの色
+                              ),
+                            ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Text(
+                              '挑戦する立場:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // 7. _buildStanceTag を呼び出す
+                            buildStanceTag(
+                              widget.challenge.stance == Stance.pro ? '反対' : '賛成',
+                              widget.challenge.stance == Stance.pro
+                                  ? const Color.fromARGB(255, 249, 209, 213)
+                                  : const Color.fromARGB(255, 214, 241, 215),
+                              widget.challenge.stance == Stance.pro
+                                  ? Colors.red[900]!
+                                  : Colors.green[900]!,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        // 意見を記述するテキストフィールド
+                        TextFormField(
+                          controller: _opinionController,
+                          maxLines: 8, // 少し高さを増やす
+                          maxLength: 300,
+                          buildCounter: (BuildContext context, {int? currentLength, int? maxLength, bool? isFocused}) {
+                            return Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '$currentLength / $maxLength (100文字以上入力してください)',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            );
+                          },
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.grey[200],
+                            
+                            hintText: '${myOpinion.stance == Stance.pro ? "反対" : "賛成"}の立場での意見を書いてみよう！',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            enabledBorder: OutlineInputBorder( // 通常時の枠線
+                              borderRadius: BorderRadius.circular(12.0),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                          ),
+                          // ↓↓↓ 13. バリデーター（100文字チェック）を追加
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return '意見を記述してください';
+                            }
+                            if (value.length < 100) {
+                              return '100文字以上で記述してください (現在 ${value.length} 文字)';
+                            }
+                            return null; // 問題なし
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(double.infinity, 50), // 横幅いっぱい、高さ50
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO: 意見を送信する処理
+                            if (_formKey.currentState!.validate()) {
+                              // バリデーションが通ったら（trueが返されたら）
+                              // TODO: 意見を送信する処理
+                              // (例: _opinionController.text を使ってデータを送信)
+
+                              // 送信したら前の画面に戻る
+                              GoRouter.of(context).pop();
+                            }
+                          },
+                          child: const Text(
+                            '意見を送信する',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ),
           ],
         ),

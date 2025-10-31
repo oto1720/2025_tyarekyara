@@ -5,7 +5,7 @@ import './difficultry_budge.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 
-Widget _buildStanceTag(String text, Color backgroundColor, Color textColor) {
+Widget buildStanceTag(String text, Color backgroundColor, Color textColor) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
     decoration: BoxDecoration(
@@ -73,7 +73,7 @@ class ChallengeCard extends StatelessWidget {
                 const Text('あなた: ', style: TextStyle(fontSize: 14)),
 
                 // stance が pro (賛成) なら緑の「賛成」タグ、con (反対) なら赤の「反対」タグ
-                _buildStanceTag(
+                buildStanceTag(
                   challenge.stance == Stance.pro ? '賛成' : '反対',
                   challenge.stance == Stance.pro
                       ? const Color.fromARGB(255, 214, 241, 215)
@@ -92,7 +92,7 @@ class ChallengeCard extends StatelessWidget {
                 const Text('挑戦: ', style: TextStyle(fontSize: 14)),
 
                 // stance が pro (賛成) なら赤の「反対」タグ、con (反対) なら緑の「賛成」タグ
-                _buildStanceTag(
+                buildStanceTag(
                   challenge.stance == Stance.pro ? '反対' : '賛成',
                   challenge.stance == Stance.pro
                       ? const Color.fromARGB(255, 249, 209, 213)
