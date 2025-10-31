@@ -1,52 +1,77 @@
 import 'package:flutter/material.dart';
 
-// 1. 難易度を「型」として定義します (Enum)
-//    こうすると、'簡単' のように文字列で渡すよりタイプミスが防げて安全です。
+// 1. Enumを修正し、テキスト、色、ポイントの情報をそれぞれに持たせる
 enum ChallengeDifficulty {
-  easy, // 簡単
-  normal, // 普通
-  hard, // 難しい
+  easy('簡単', Colors.green, 30),
+  normal('普通', Colors.amber, 50),
+  hard('難しい', Colors.red, 100);
+
+  // Enumが持つプロパティを定義
+  final String label;
+  final Color color;
+  final int points;
+
+  // コンストラクタ
+  const ChallengeDifficulty(this.label, this.color, this.points);
 }
 
 // 2. 難易度バッジを表示する専用のウィジェット
 class DifficultyBadge extends StatelessWidget {
-  // 呼び出し元から 難易度 を受け取ります
   final ChallengeDifficulty difficulty;
+  // 3. ポイントも表示するかどうかを制御するフラグを追加（デフォルトは false）
+  final bool showPoints;
 
-  const DifficultyBadge({super.key, required this.difficulty});
+  const DifficultyBadge({
+    super.key,
+    required this.difficulty,
+    this.showPoints = false, // デフォルトはポイント非表示
+  });
 
   @override
   Widget build(BuildContext context) {
-    // 難易度に応じて、表示するテキストと色を決定します
-    final (String text, Color color) badgeStyle;
-
-    switch (difficulty) {
-      case ChallengeDifficulty.easy:
-        badgeStyle = ('簡単', Colors.green);
-        break;
-      case ChallengeDifficulty.normal:
-        badgeStyle = ('普通', Colors.blue);
-        break;
-      case ChallengeDifficulty.hard:
-        badgeStyle = ('難しい', Colors.red);
-        break;
-    }
-
-    // 3. バッジの見た目（デザイン）
-    return Container(
+    // 難易度バッジの本体
+    final difficultyTag = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: badgeStyle.$2.withOpacity(0.15), // 色の薄い背景
-        borderRadius: BorderRadius.circular(20), // 楕円形（カプセル型）にする
+        // 1. 背景色を透明にする
+        color: Colors.transparent,
+
+        // 2. 枠線を追加する
+        border: Border.all(
+          color: difficulty.color, // Enumから取得した色を枠線に使う
+          width: 1.5, // 枠線の太さ（お好みで調整してください）
+        ),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        badgeStyle.$1, // '簡単', '普通', '難しい' のテキスト
+        difficulty.label, // Enumからテキストを取得
         style: TextStyle(
-          color: badgeStyle.$2, // 色の濃いテキスト
+          color: difficulty.color, // Enumから色を取得
           fontWeight: FontWeight.bold,
           fontSize: 12,
         ),
       ),
+    );
+
+    // 4. showPoints が false なら、難易度バッジだけを返す
+    if (!showPoints) {
+      return difficultyTag;
+    }
+
+    // 5. showPoints が true なら、ポイントバッジも作って Row で並べて返す
+    final pointsTag = Text(
+      '+${difficulty.points} P', // Enumからポイントを取得
+      style: TextStyle(
+        color: difficulty.color, // 難易度と同じ色を使う
+        fontWeight: FontWeight.bold,
+        fontSize: 14,
+      ),
+    );
+
+    // 難易度とポイントを横に並べる
+    return Row(
+      mainAxisSize: MainAxisSize.min, // 必要な分だけ幅をとる
+      children: [difficultyTag, const SizedBox(width: 8), pointsTag],
     );
   }
 }
