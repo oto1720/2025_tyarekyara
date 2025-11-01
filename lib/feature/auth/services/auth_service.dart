@@ -89,6 +89,55 @@ class AuthService implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw 'ユーザーがログインしていません';
+      }
+      // Firebase 10.x以降はverifyBeforeUpdateEmailを使用
+      await user.verifyBeforeUpdateEmail(newEmail);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw 'ユーザーがログインしていません';
+      }
+      // 再認証してからパスワードを変更
+      await reauthenticate(currentPassword);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
+  @override
+  Future<void> reauthenticate(String password) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null || user.email == null) {
+        throw 'ユーザーがログインしていません';
+      }
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    }
+  }
+
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'weak-password':
