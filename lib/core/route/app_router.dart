@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:tyarekyara/feature/home/presentation/pages/home.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/home_aitopic.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/profile_screen.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
@@ -55,7 +55,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: HomeScreen()),
+              const NoTransitionPage(child: AITopicHomeScreen()),
         ),
         // 統計画面
         GoRoute(
