@@ -160,11 +160,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final editState = ref.watch(profileEditProvider);
-    final validation = ref.watch(
-      profileEditProvider.select(
-        (state) => ref.read(profileEditProvider.notifier).validate(),
-      ),
-    );
+    // バリデーションは状態を監視してから計算する
+    final validation = ref.read(profileEditProvider.notifier).validate();
     final saveState = ref.watch(profileSaveProvider);
     final isLoading = saveState.isLoading;
 

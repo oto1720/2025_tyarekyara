@@ -24,7 +24,11 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
         );
       },
       loading: () => const ProfileEditState(nickname: '', email: ''),
-      error: (_, __) => const ProfileEditState(nickname: '', email: ''),
+      error: (error, _) {
+        // エラーが発生しても空の状態を返す（エラー状態にしない）
+        // エラーはユーザーがログインしていない可能性があるため
+        return const ProfileEditState(nickname: '', email: '');
+      },
     );
   }
 
