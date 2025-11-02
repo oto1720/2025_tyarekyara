@@ -10,6 +10,8 @@ import 'package:tyarekyara/feature/guide/presentaion/pages/first_page.dart';
 import 'package:tyarekyara/feature/statistics/presentation/pages/statistic.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/notice_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // ルーティング設定
 // 新しい画面を追加する場合：
@@ -17,7 +19,61 @@ import 'package:tyarekyara/feature/settings/presentation/pages/notice_screen.dar
 // 2. lib/widgets/bottom_navigation.dartのBottomNavigationConfigに追加
 // 3. 以下のShellRouteのroutesに新しいGoRouteを追加
 final GoRouter router = GoRouter(
-  initialLocation: '/first',
+  initialLocation: '/',
+  redirect: (context, state) async {
+    final currentPath = state.uri.path;
+
+    // 認証状態とチュートリアル完了状態を確認
+    final prefs = await SharedPreferences.getInstance();
+    final tutorialCompleted = prefs.getBool('tutorial_completed') ?? false;
+    final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+
+    // 認証関連ページは常にアクセス可能
+    final authPages = ['/login', '/signup', '/profile-setup'];
+    if (authPages.contains(currentPath)) {
+      return null;
+    }
+
+    // リダイレクトロジック
+    // 1. ログイン済み & チュートリアル完了 → ホームへ
+    if (isAuthenticated && tutorialCompleted) {
+      if (currentPath == '/first' || currentPath == '/tutorial') {
+        return '/';
+      }
+      return null; // ホームや他のページは正常にアクセス
+    }
+
+    // 2. ログイン済み & チュートリアル未完了 → チュートリアルへ
+    if (isAuthenticated && !tutorialCompleted) {
+      if (currentPath != '/tutorial' && currentPath != '/first') {
+        return '/tutorial';
+      }
+      return null;
+    }
+
+    // 3. 未ログイン & チュートリアル完了 → ログインへ
+    if (!isAuthenticated && tutorialCompleted) {
+      if (currentPath == '/first' || currentPath == '/tutorial') {
+        return '/login';
+      }
+      // メインアプリへのアクセスもログインにリダイレクト
+      if (currentPath == '/' || currentPath == '/settings' ||
+          currentPath == '/profile' || currentPath == '/statistics') {
+        return '/login';
+      }
+      return null;
+    }
+
+    // 4. 未ログイン & チュートリアル未完了 → 初回画面へ
+    if (!isAuthenticated && !tutorialCompleted) {
+      if (currentPath != '/first' && currentPath != '/tutorial') {
+        return '/first';
+      }
+      return null;
+    }
+
+    return null;
+  },
   routes: [
     // 初回起動画面
     GoRoute(
