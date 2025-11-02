@@ -23,4 +23,13 @@ abstract class AuthRepository {
   Future<UserModel?> getUserData(String userId);
 
   Future<void> updateUserData(UserModel user);
+
+  Future<void> updateEmail(String newEmail);
+
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  Future<void> reauthenticate(String password);
 }
