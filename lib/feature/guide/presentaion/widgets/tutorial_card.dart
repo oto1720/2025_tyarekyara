@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/tutorial_item.dart';
 
-/// チュートリアルカードWidget
+/// チュートリアルカードWidget（画面全体スライド方式）
 class TutorialCard extends StatelessWidget {
   final TutorialItem item;
 
@@ -12,91 +12,108 @@ class TutorialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        child: Card(
-          elevation: 8,
-          shadowColor: item.primaryColor.withValues(alpha: 0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 400,
-              maxHeight: 500,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  item.primaryColor.withValues(alpha: 0.1),
-                  item.secondaryColor.withValues(alpha: 0.05),
-                ],
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // アイコン
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          item.primaryColor,
-                          item.secondaryColor,
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: item.primaryColor.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      item.icon,
-                      size: 60,
-                      color: Colors.white,
-                    ),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.white,
+      child: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // タイトル
+                Text(
+                  item.title,
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: item.primaryColor,
+                    height: 1.2,
+                    letterSpacing: 0.5,
                   ),
-                  const SizedBox(height: 40),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
 
-                  // タイトル
-                  Text(
-                    item.title,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: item.primaryColor,
-                      height: 1.2,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // 説明文
-                  Text(
+                // 説明文
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
                     item.description,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[700],
-                      height: 1.6,
+                      height: 1.8,
+                      letterSpacing: 0.3,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 60),
+
+                // 丸い画像/アイコン
+                Container(
+                  width: 380,
+                  height: 380,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: item.imagePath == null
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              item.primaryColor,
+                              item.secondaryColor,
+                            ],
+                          )
+                        : null,
+                    color: item.imagePath != null ? Colors.white : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: item.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: item.imagePath != null
+                      ? ClipOval(
+                          child: Image.asset(
+                            item.imagePath!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              // 画像が見つからない場合はアイコンを表示
+                              return Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      item.primaryColor,
+                                      item.secondaryColor,
+                                    ],
+                                  ),
+                                ),
+                                child: Icon(
+                                  item.icon,
+                                  size: 100,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Icon(
+                          item.icon,
+                          size: 100,
+                          color: Colors.white,
+                        ),
+                ),
+              ],
             ),
           ),
         ),
