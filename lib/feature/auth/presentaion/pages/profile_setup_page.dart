@@ -150,7 +150,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
             const SnackBar(content: Text('プロフィール更新成功')),
           );
           // チュートリアル画面に遷移
-          context.go('/tutorial');
+          context.go('/home');
         },
         unauthenticated: () {},
         error: (message) {
