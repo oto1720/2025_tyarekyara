@@ -26,19 +26,12 @@ Widget buildStanceTag(String text, Color backgroundColor, Color textColor) {
 
 // チャレンジカード専用のウィジェット
 class ChallengeCard extends StatelessWidget {
-  // このカードが表示するために必要な情報
-  // final ChallengeDifficulty difficulty;
-  // final String title;
-  // final Stance stance;
   final Challenge challenge;
-  final VoidCallback onChallengePressed;
+  final Future<void> Function() onChallengePressed;
 
   // コンストラクタ（呼び出し元から情報を受け取る）
   const ChallengeCard({
     super.key,
-    // required this.difficulty,
-    // required this.title,
-    // required this.stance,
     required this.challenge,
     required this.onChallengePressed,
   });
@@ -105,17 +98,6 @@ class ChallengeCard extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-
-            // 3行目: 獲得ポイント（DifficultyBadge が表示するので不要なら削除）
-            // Text(
-            //   '+$points P', // ← 受け取ったポイント
-            //   style: TextStyle(
-            //     color: Colors.green[700],
-            //     fontWeight: FontWeight.bold,
-            //     fontSize: 16,
-            //   ),
-            // ),
-            // const SizedBox(height: 24),
 
             // 4行目: ボタン
             Center(

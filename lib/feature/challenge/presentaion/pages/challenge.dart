@@ -5,9 +5,10 @@ import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 
-class ChallengePage extends StatelessWidget {
+class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
 
+//仮のチャレンジカードデータ
   static final Challenge challenge1 = Challenge(
     id: 'shukyu-3',
     title: '週休3日制は導入すべきか？',
@@ -29,11 +30,28 @@ class ChallengePage extends StatelessWidget {
     stance: Stance.pro,
   );
 
+  static final List<Challenge> allChallenges = [
+    challenge1,
+    challenge2,
+    challenge3,
+  ];
+
+  @override
+  State<ChallengePage> createState() => _ChallengePageState();
+}
+
+//仮のポイントバー用のデータ
+int currentPoints = 40; // 分子 (現在のポイント)
+int maxPoints = 500; // 分母 (最大ポイント)
+
+class _ChallengePageState extends State<ChallengePage> {
   @override
   Widget build(BuildContext context) {
-    double currentProgress = 0.7; // ゲージ用の割合 (0.0～1.0)
-    int currentPoints = 70; // 分子 (現在のポイント)
-    int maxPoints = 100; // 分母 (最大ポイント)
+    // currentProgressを計算で求める
+    double currentProgress = maxPoints > 0 ? currentPoints / maxPoints : 0.0;
+    // 1.0を超えないようにする
+    if (currentProgress > 1.0) currentProgress = 1.0;
+
 
     return Scaffold(
       appBar: AppBar(title: const Text('新機能')),
@@ -146,38 +164,39 @@ class ChallengePage extends StatelessWidget {
               const Center(child: Text('ここにチャレンジ一覧などを表示')),
               const SizedBox(height: 20),
 
-              ChallengeCard(
-                challenge: challenge1,
-                onChallengePressed: () {
-                  // TODO: 挑戦処理 1
-                  GoRouter.of(
-                    context,
-                  ).push('/challenge/${challenge1.id}', extra: challenge1);
-                  print('チャレンジ 1 が押されました');
-                },
-              ),
+              
 
-              ChallengeCard(
-                challenge: challenge2,
-                onChallengePressed: () {
-                  GoRouter.of(
-                    context,
-                  ).push('/challenge/${challenge2.id}', extra: challenge2);
-                  // TODO: 挑戦処理 1
-                  print('今日のごはんカレー');
-                },
-              ),
+              //仮のチャレンジカードの表示
+              ...ChallengePage.allChallenges.map((challenge) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6.0),
+                  child: ChallengeCard(
+                    challenge: challenge,
+                    onChallengePressed: () async {
+                      final earnedPoints = await context.push<int>(
+                        '/challenge/${challenge.id}',
+                        extra: challenge,
+                      );
 
-              ChallengeCard(
-                challenge: challenge3,
-                onChallengePressed: () {
-                  GoRouter.of(
-                    context,
-                  ).push('/challenge/${challenge3.id}', extra: challenge3);
-                  // TODO: 挑戦処理 1
-                  print('hahahhaha');
-                },
-              ),
+                      if (earnedPoints != null && mounted) {
+                        setState(() {
+                          currentPoints += earnedPoints;
+                        });
+
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
+                              backgroundColor: Colors.green,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
             ],
           ),
         ),
