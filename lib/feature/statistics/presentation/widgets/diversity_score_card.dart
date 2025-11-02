@@ -55,7 +55,7 @@ class DiversityScoreCardImpl extends StatelessWidget {
             child: LinearProgressIndicator(
               minHeight: 10,
               value: pct,
-              color: const Color(0xFF4F39F6),
+              color: const Color.fromARGB(255, 0, 0, 0),
               backgroundColor: const Color(0xFFE6E6ED),
             ),
           ),
