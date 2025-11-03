@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tyarekyara/widgets/custom_button.dart';
+import './difficultry_budge.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 
@@ -23,12 +24,12 @@ Widget buildStanceTag(String text, Color backgroundColor, Color textColor) {
 }
 
 // チャレンジカード専用のウィジェット
-class ChallengeCard extends StatelessWidget {
+class CompletedCard extends StatelessWidget {
   final Challenge challenge;
   final Future<void> Function() onChallengePressed;
 
   // コンストラクタ（呼び出し元から情報を受け取る）
-  const ChallengeCard({
+  const CompletedCard({
     super.key,
     required this.challenge,
     required this.onChallengePressed,
@@ -36,9 +37,8 @@ class ChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ゆきさんが作成した Card のレイアウトをそのまま使います
     return Card(
-      color: const Color.fromARGB(255, 255, 255, 255),
+      color: const Color.fromARGB(255, 241, 250, 242)!,
       elevation: 2.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: Padding(
@@ -46,12 +46,28 @@ class ChallengeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, // 左寄せ
           children: [
-            // 1行目: 難易度とタイトル
-            DifficultyBadge(
-              difficulty: challenge.difficulty, // ← 受け取った難易度
-              showPoints: true, // ← ポイントも表示
-            ),
-            const SizedBox(width: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline, // お好きなアイコンに変更してください
+                  color: Colors.green,
+                  size: 15, // アイコンのサイズ
+                ),
+                Icon(
+                  Icons.emoji_events_outlined, // お好きなアイコンに変更してください
+                  color: Colors.green,
+                  size: 15, // アイコンのサイズ
+                ),
+                Text(
+                  '${challenge.difficulty.points}ポイント',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.green, 
+                  ),
+                ),
+            ],
+          ),
+            const SizedBox(width: 16),
             Text(
               challenge.title, // ← 受け取ったタイトル
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -97,26 +113,36 @@ class ChallengeCard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 4行目: ボタン
-            Center(
-              child: SizedBox(
-                width: 300,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: onChallengePressed, // ← 受け取った処理
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.grey, width: 1.5),
+            Container(
+              width: double.infinity, // 横幅いっぱいに広げる
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.white, // 白い背景
+                borderRadius: BorderRadius.circular(8.0), // 少し角丸
+                border: Border.all(color: Colors.grey[300]!), // 薄い枠線
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'あなたのチャレンジ回答:', // タイトル
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[700],
                     ),
                   ),
-                  child: const Text(
-                    'チャレンジする',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  Text(
+                    // challenge.oppositeOpinionText を表示 (nullならフォールバック)
+                    challenge.oppositeOpinionText ?? '（意見が保存されていません）',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey[850],
+                      height: 1.5, // 行間
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],

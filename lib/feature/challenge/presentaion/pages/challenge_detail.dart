@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:tyarekyara/core/route/app_router.dart';
-import 'package:tyarekyara/feature/challenge/models/my_opinion.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 
@@ -32,16 +31,6 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    
-    // ↓↓↓ 3. 仮の「元の意見」データを作成
-    final MyOpinion myOpinion = MyOpinion(
-      id: 'my-opinion-1',
-      challengeId: widget.challenge.id, // 受け取ったchallengeのIDと紐づける
-      stance: widget.challenge.stance, // challengeのお題と同じ立場
-      opinionText: '週休3日制は、生産性を維持しつつ従業員の幸福度を上げる素晴らしい施策だと思います。',
-    );
-
-
     return Scaffold(
       // appBar: AppBar(title: Text('チャレンジ詳細 (ID: ${widget.challenge.id})')),
       body: SingleChildScrollView(
@@ -135,7 +124,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'あなたの元の意見 (${myOpinion.stance == Stance.pro ? "賛成" : "反対"})',
+                          'あなたの元の意見 (${widget.challenge.stance == Stance.pro ? "賛成" : "反対"})',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -144,7 +133,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          myOpinion.opinionText, // 仮のデータから本文を表示
+                          widget.challenge.originalOpinionText, // 仮のデータから本文を表示
                           style: TextStyle(
                             fontSize: 15,
                             color: Colors.grey[800],
@@ -247,7 +236,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               filled: true,
                               fillColor: Colors.grey[200],
                               
-                              hintText: '${myOpinion.stance == Stance.pro ? "反対" : "賛成"}の立場での意見を書いてみよう！',
+                              hintText: '${widget.challenge.stance == Stance.pro ? "反対" : "賛成"}の立場での意見を書いてみよう！',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: BorderSide(color: Colors.grey[300]!),
@@ -318,8 +307,14 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                       // TODO: 意見を送信する処理
                                       // (例: _opinionController.text を使ってデータを送信)
                                         
-                                      // 送信したら前の画面に戻る
-                                      GoRouter.of(context).pop(widget.challenge.difficulty.points);
+                                      //送信するデータをMapにまとめる
+                                      final result = {
+                                        'points': widget.challenge.difficulty.points,
+                                        'opinion': _opinionController.text, // 入力された意見
+                                      };
+                                        
+                                      //Mapをpopで返す
+                                      GoRouter.of(context).pop(result);
                                     }
                                   },
                                   child: Row(

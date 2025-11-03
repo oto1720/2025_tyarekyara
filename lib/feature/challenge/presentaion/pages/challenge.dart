@@ -4,53 +4,62 @@ import 'package:tyarekyara/widgets/custom_button.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
 
-class ChallengePage extends StatefulWidget {
+class ChallengePage extends ConsumerStatefulWidget {
   const ChallengePage({super.key});
 
-//仮のチャレンジカードデータ
-  static final Challenge challenge1 = Challenge(
-    id: 'shukyu-3',
-    title: '週休3日制は導入すべきか？',
-    difficulty: ChallengeDifficulty.easy,
-    stance: Stance.pro,
-  );
+// //仮のチャレンジカードデータ
+//   static final Challenge challenge1 = Challenge(
+//     id: 'shukyu-3',
+//     title: '週休3日制は導入すべきか？',
+//     difficulty: ChallengeDifficulty.easy,
+//     stance: Stance.pro,
+//     originalOpinionText: '週休3日制は、労働者のワークライフバランスを向上させ、生産性を高める可能性があります。'
+//   );
 
-  static final Challenge challenge2 = Challenge(
-    id: '2',
-    difficulty: ChallengeDifficulty.normal,
-    title: '今日のご飯なに？',
-    stance: Stance.pro,
-  );
+//   static final Challenge challenge2 = Challenge(
+//     id: '2',
+//     difficulty: ChallengeDifficulty.normal,
+//     title: '今日のご飯なに？',
+//     stance: Stance.pro,
+//     originalOpinionText: 'カレーライスが食べたいです。',
+//   );
 
-  static final Challenge challenge3 = Challenge(
-    id: '3',
-    difficulty: ChallengeDifficulty.hard,
-    title: 'は？',
-    stance: Stance.pro,
-  );
+//   static final Challenge challenge3 = Challenge(
+//     id: '3',
+//     difficulty: ChallengeDifficulty.hard,
+//     title: 'は？',
+//     stance: Stance.pro,
+//     originalOpinionText: 'は？'
+//   );
 
-  static final List<Challenge> allChallenges = [
-    challenge1,
-    challenge2,
-    challenge3,
-  ];
+//   static final List<Challenge> allChallenges = [
+//     challenge1,
+//     challenge2,
+//     challenge3,
+//   ];
 
   @override
-  State<ChallengePage> createState() => _ChallengePageState();
+  ConsumerState<ChallengePage> createState() => _ChallengePageState();
 }
 
-//仮のポイントバー用のデータ
-int currentPoints = 40; // 分子 (現在のポイント)
-int maxPoints = 500; // 分母 (最大ポイント)
+class _ChallengePageState extends ConsumerState<ChallengePage> {
 
-class _ChallengePageState extends State<ChallengePage> {
   @override
   Widget build(BuildContext context) {
+    final challengeState = ref.watch(challengeProvider);
+    final currentPoints = challengeState.currentPoints; // Providerから取得
+    final maxPoints = challengeState.maxPoints; // Providerから取得
     // currentProgressを計算で求める
     double currentProgress = maxPoints > 0 ? currentPoints / maxPoints : 0.0;
     // 1.0を超えないようにする
     if (currentProgress > 1.0) currentProgress = 1.0;
+
+    //Providerからフィルタリング済みのリストを取得
+    final List<Challenge> challenges = challengeState.filteredChallenges;
 
 
     return Scaffold(
@@ -160,41 +169,140 @@ class _ChallengePageState extends State<ChallengePage> {
               ),
 
               const SizedBox(height: 20), // カードと他のコンテンツの間隔
-              // 他のコンテンツ（例: チャレンジ一覧など）
-              const Center(child: Text('ここにチャレンジ一覧などを表示')),
-              const SizedBox(height: 20),
 
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      // 1つ目のボタン (インデックス 0)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              // 7. 【変更】Providerの状態で色を決定
+                              backgroundColor: challengeState.currentFilter == ChallengeFilter.available 
+                                ? Colors.black 
+                                : Colors.white,
+                              foregroundColor: challengeState.currentFilter == ChallengeFilter.available 
+                                ? Colors.white 
+                                : Colors.black,
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              // 8. 【変更】Providerのメソッドを呼び出す (setStateは不要)
+                              // readを呼び出す（状態の変更だけなので）
+                              ref.read(challengeProvider.notifier).setFilter(ChallengeFilter.available);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon( Icons.bolt,),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '挑戦可能',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            )
+                          ),
+                        ),
+                      ),
+
+                      // 2つ目のボタン (インデックス 1)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              // 9. 【変更】Providerの状態で色を決定
+                              backgroundColor: challengeState.currentFilter == ChallengeFilter.completed 
+                                ? Colors.black 
+                                : Colors.white,
+                              foregroundColor: challengeState.currentFilter == ChallengeFilter.completed 
+                                ? Colors.white 
+                                : Colors.black,
+                              minimumSize: const Size(double.infinity, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              // 10. 【変更】Providerのメソッドを呼び出す
+                              ref.read(challengeProvider.notifier).setFilter(ChallengeFilter.completed);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon( Icons.check_circle_outline,),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '完了済み',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            )
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               
 
               //仮のチャレンジカードの表示
-              ...ChallengePage.allChallenges.map((challenge) {
+              ...challenges.map((challenge) {
+                //フィルタ状態を取得
+                final bool isAvailable = challengeState.currentFilter == ChallengeFilter.available;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
-                  child: ChallengeCard(
-                    challenge: challenge,
-                    onChallengePressed: () async {
-                      final earnedPoints = await context.push<int>(
-                        '/challenge/${challenge.id}',
-                        extra: challenge,
-                      );
+                  child: isAvailable
+                      ? ChallengeCard(
+                          challenge: challenge,
+                          onChallengePressed: () async {
+                            final result = await context.push<Map<String, dynamic>>(
+                                    '/challenge/${challenge.id}',
+                                    extra: challenge,
+                                );
 
-                      if (earnedPoints != null && mounted) {
-                        setState(() {
-                          currentPoints += earnedPoints;
-                        });
+                                if (result != null && mounted) {
+                                  final int earnedPoints = result['points'];
+                                  final String opinionText = result['opinion'];
 
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
-                              backgroundColor: Colors.green,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
+                                  // 10. [修正] Providerのメソッドを呼び出して状態を更新
+                                  ref.read(challengeProvider.notifier).completeChallenge(
+                                      challenge.id,
+                                      opinionText, // 提出された意見
+                                      earnedPoints, // 獲得ポイント
+                                  );
+
+                                  if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
+                                        backgroundColor: Colors.green,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                }
+                          }
+                        )
+                  : CompletedCard( // 完了済みの場合
+                      challenge: challenge,
+                      // TODO: 完了済みカードをタップした時の動作（詳細確認など）
+                      // onTap: () { ... }
+                      onChallengePressed: () async{
+                        // 完了済みカードをタップした時の動作（詳細確認など）
+                        print('完了済みカードがタップされました: ${challenge.title}');
+                      },
+                    ),
                 );
               }).toList(),
             ],
