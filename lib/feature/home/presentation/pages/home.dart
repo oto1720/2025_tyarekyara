@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/home_topic.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -13,12 +14,8 @@ class HomeScreen extends ConsumerWidget {
       body: ListView(
         children: [
           // トピックのリストを表示
-          _TopicCard(
-            title: '夜休3日前に投入すべきか？',
-            category: '社会問題',
-            date: '2025年10月26日',
+          GestureDetector(
             onTap: () {
-              // 意見投稿画面に遷移
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -26,6 +23,12 @@ class HomeScreen extends ConsumerWidget {
                 ),
               );
             },
+            child: const TopicCard(
+              title: '夜休3日前に投入すべきか？',
+              category: '社会問題',
+              date: '2025年10月26日',
+              description: '週休3日制の導入について、労働時間の短縮と生産性向上の観点から議論します。',
+            ),
           ),
           // 他のトピック...
         ],
