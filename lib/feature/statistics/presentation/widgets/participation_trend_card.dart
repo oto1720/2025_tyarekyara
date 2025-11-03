@@ -31,12 +31,10 @@ class ParticipationTrendCardImpl extends StatelessWidget {
             '参加の推移',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          // Increase spacing between title and chart for better separation
+          const SizedBox(height: 32),
           TrendLineChartImpl(points: pts),
           const SizedBox(height: 8),
-          const Center(
-            child: Text('投稿数', style: TextStyle(color: Color(0xFF6366F1))),
-          ),
         ],
       ),
     );
