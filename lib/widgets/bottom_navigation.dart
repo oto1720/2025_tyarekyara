@@ -56,6 +56,11 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
 
+    // 意見一覧画面や編集画面の場合は「ホーム」を選択状態にする
+    if (location.startsWith('/opinions/') || location.startsWith('/my-opinion/')) {
+      return 0; // ホームのインデックス
+    }
+
     for (int i = 0; i < BottomNavigationConfig.navigationItems.length; i++) {
       if (location == BottomNavigationConfig.navigationItems[i].route) {
         return i;

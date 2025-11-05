@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
+import '../../providers/opinion_provider.dart';
 import '../widgets/topic_card.dart';
 
 /// 日別トピックのホーム画面
@@ -80,7 +82,19 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
       return _buildEmptyView(notifier);
     }
 
-    // メインコンテンツ
+    // 投稿済みチェック
+    final topic = state.currentTopic!;
+    final postState = ref.watch(opinionPostProvider(topic.id));
+
+    // 投稿済みの場合は意見一覧画面に自動遷移
+    if (postState.hasPosted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.go('/opinions/${topic.id}');
+      });
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 未投稿の場合は投稿フォームを表示
     return _buildMainContent(state);
   }
 
@@ -179,7 +193,128 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     );
   }
 
+  Widget _buildAlreadyPostedView(topic) {
+    final postState = ref.watch(opinionPostProvider(topic.id));
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // トピックカード
+          TopicCard(
+            topic: topic,
+            dateText: '今日のトピック',
+          ),
+
+          const SizedBox(height: 24),
+
+          // 投稿済みメッセージ
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade200, width: 1.5),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  size: 48,
+                  color: Colors.green.shade600,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '投稿完了！',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'このトピックに既に意見を投稿しています',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                if (postState.userOpinion != null) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'あなたの立場:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              postState.userOpinion!.stance.displayName,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // みんなの意見を見るボタン
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/opinions/${topic.id}'),
+                icon: const Icon(Icons.people),
+                label: const Text('みんなの意見を見る'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMainContent(DailyTopicState state) {
+    final topic = state.currentTopic!;
+    final postState = ref.watch(opinionPostProvider(topic.id));
+    final isPosting = postState.isPosting;
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -318,7 +453,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isValid ? _submitOpinion : null,
+                onPressed: (_isValid && !isPosting) ? _submitOpinion : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   disabledBackgroundColor: Colors.grey.shade300,
@@ -328,14 +463,24 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  '意見を投稿する',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: _isValid ? Colors.white : Colors.grey.shade500,
-                  ),
-                ),
+                child: isPosting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        '意見を投稿する',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _isValid ? Colors.white : Colors.grey.shade500,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -346,30 +491,69 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     );
   }
 
-  void _submitOpinion() {
-    showDialog(
+  Future<void> _submitOpinion() async {
+    final topicState = ref.read(dailyTopicProvider);
+    final topic = topicState.currentTopic;
+    if (topic == null) return;
+
+    // 立場をOpinionStanceに変換
+    OpinionStance stance;
+    switch (_selectedStance) {
+      case '賛成':
+        stance = OpinionStance.agree;
+        break;
+      case '反対':
+        stance = OpinionStance.disagree;
+        break;
+      case '中立':
+        stance = OpinionStance.neutral;
+        break;
+      default:
+        return;
+    }
+
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('投稿確認'),
         content: Text('立場: $_selectedStance\n\n意見を投稿しますか？'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('キャンセル'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('意見を投稿しました')),
-              );
-              // TODO: 実際の投稿処理を実装
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('投稿する'),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    // 投稿処理
+    final postNotifier = ref.read(opinionPostProvider(topic.id).notifier);
+    final success = await postNotifier.postOpinion(
+      topicText: topic.text,
+      stance: stance,
+      content: _opinionController.text,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('意見を投稿しました！')),
+      );
+      // 投稿成功後、画面が自動的に投稿完了画面に切り替わる
+      // （hasPostedがtrueになるため）
+    } else {
+      final error = ref.read(opinionPostProvider(topic.id)).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? '投稿に失敗しました')),
+      );
+    }
   }
 }
 

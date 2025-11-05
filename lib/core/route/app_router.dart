@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/profile_screen.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/settings_screen.dart';
 import 'package:tyarekyara/widgets/bottom_navigation.dart';
@@ -127,6 +129,26 @@ final GoRouter router = GoRouter(
           path: '/',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: DailyTopicHomeScreen()),
+        ),
+        // 意見一覧画面
+        GoRoute(
+          path: '/opinions/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: OpinionListScreen(topicId: topicId),
+            );
+          },
+        ),
+        // 自分の投稿詳細・編集画面
+        GoRoute(
+          path: '/my-opinion/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: MyOpinionDetailScreen(topicId: topicId),
+            );
+          },
         ),
         // 統計画面
         GoRoute(
