@@ -118,26 +118,6 @@ final GoRouter router = GoRouter(
         child: NoticeScreen(),
       ),
     ),
-    // 意見一覧画面
-    GoRoute(
-      path: '/opinions/:topicId',
-      pageBuilder: (context, state) {
-        final topicId = state.pathParameters['topicId']!;
-        return NoTransitionPage(
-          child: OpinionListScreen(topicId: topicId),
-        );
-      },
-    ),
-    // 自分の投稿詳細・編集画面
-    GoRoute(
-      path: '/my-opinion/:topicId',
-      pageBuilder: (context, state) {
-        final topicId = state.pathParameters['topicId']!;
-        return NoTransitionPage(
-          child: MyOpinionDetailScreen(topicId: topicId),
-        );
-      },
-    ),
     // メインアプリ（BottomNavigation あり）
     ShellRoute(
       builder: (context, state, child) {
@@ -149,6 +129,26 @@ final GoRouter router = GoRouter(
           path: '/',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: DailyTopicHomeScreen()),
+        ),
+        // 意見一覧画面
+        GoRoute(
+          path: '/opinions/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: OpinionListScreen(topicId: topicId),
+            );
+          },
+        ),
+        // 自分の投稿詳細・編集画面
+        GoRoute(
+          path: '/my-opinion/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: MyOpinionDetailScreen(topicId: topicId),
+            );
+          },
         ),
         // 統計画面
         GoRoute(
