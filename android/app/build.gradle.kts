@@ -16,12 +16,20 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Enable core library desugaring required by some AARs (e.g. flutter_local_notifications)
+        // This allows usage of newer Java APIs on older Android devices.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+
+dependencies {
+    // Required for core library desugaring support
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+}
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.tyarekyara"
