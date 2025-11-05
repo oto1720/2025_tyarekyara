@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:flutter_dotenv/flutter_dotenv.dart'; // ← コメントアウト
-import 'feature/home/presentation/pages/home_answer.dart';
+import 'feature/home/presentation/pages/home_topic.dart';
 
 void main() async {
   // .envの読み込みをスキップ
