@@ -1,4 +1,8 @@
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
+import 'package:tyarekyara/feature/home/presentation/pages/home.dart';
+import 'package:tyarekyara/feature/profile/profile_screen.dart';
+import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';
@@ -11,6 +15,8 @@ import 'package:tyarekyara/feature/auth/presentaion/pages/profile_setup_page.dar
 import 'package:tyarekyara/feature/guide/presentaion/pages/first_page.dart';
 import 'package:tyarekyara/feature/statistics/presentation/pages/statistic.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge.dart';
+import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/notice_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -118,6 +124,21 @@ final GoRouter router = GoRouter(
         child: NoticeScreen(),
       ),
     ),
+
+    // チャレンジ詳細ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/challenge/:challengeId', // ← :challengeId でIDを受け取る
+      pageBuilder: (context, state) {
+        // extra から Challenge オブジェクトを取り出す
+        final Challenge challenge = state.extra as Challenge;
+
+        return NoTransitionPage(
+          // Challenge オブジェクトを詳細ページに渡す
+          child: ChallengeDetailPage(challenge: challenge),
+        );
+      },
+    ),
+
     // メインアプリ（BottomNavigation あり）
     ShellRoute(
       builder: (context, state, child) {
@@ -167,6 +188,11 @@ final GoRouter router = GoRouter(
           path: '/settings',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: SettingsScreen()),
+        ),
+        GoRoute(
+          path: '/challenge',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ChallengePage()),
         ),
       ],
     ),
