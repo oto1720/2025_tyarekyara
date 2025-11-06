@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
-import 'package:tyarekyara/core/route/app_router.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 

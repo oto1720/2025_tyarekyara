@@ -1,8 +1,5 @@
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
-import 'package:tyarekyara/feature/home/presentation/pages/home.dart';
-import 'package:tyarekyara/feature/profile/profile_screen.dart';
-import 'package:tyarekyara/feature/settings/settings_screen.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';

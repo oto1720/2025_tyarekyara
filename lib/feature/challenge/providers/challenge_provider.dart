@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
-import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 
