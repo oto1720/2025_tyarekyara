@@ -7,6 +7,7 @@ class BottomNavigationConfig {
   static const List<NavigationItem> navigationItems = [
     NavigationItem(icon: Icons.home, label: 'ホーム', route: '/'),
     NavigationItem(icon: Icons.shuffle, label: 'チャレンジ', route: '/challenge'),
+    NavigationItem(icon: Icons.bar_chart, label: '統計', route: '/statistics'),
     NavigationItem(icon: Icons.person, label: 'プロフィール', route: '/profile'),
     NavigationItem(icon: Icons.settings, label: '設定', route: '/settings'),
   ];
@@ -35,7 +36,10 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: BottomNavigationBar(
+        // 固定タイプにして、アイテム数が4つ以上になっても
+        // 背景が透明になる（shiftingによる）挙動を抑制します。
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
         items: BottomNavigationConfig.navigationItems
@@ -52,6 +56,11 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
+
+    // 意見一覧画面や編集画面の場合は「ホーム」を選択状態にする
+    if (location.startsWith('/opinions/') || location.startsWith('/my-opinion/')) {
+      return 0; // ホームのインデックス
+    }
 
     for (int i = 0; i < BottomNavigationConfig.navigationItems.length; i++) {
       if (location == BottomNavigationConfig.navigationItems[i].route) {

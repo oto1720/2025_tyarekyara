@@ -55,7 +55,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
   Future<void> _completeTutorial() async {
     await ref.read(tutorialNotifierProvider.notifier).completeTutorial();
     if (mounted) {
-      context.go('/');
+      context.go('/signup');
     }
   }
 

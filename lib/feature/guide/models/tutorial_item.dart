@@ -11,6 +11,9 @@ class TutorialItem {
   /// アイコン
   final IconData icon;
 
+  /// 画像パス（オプション）
+  final String? imagePath;
+
   /// カラー（グラデーション用）
   final Color primaryColor;
   final Color secondaryColor;
@@ -19,6 +22,7 @@ class TutorialItem {
     required this.title,
     required this.description,
     required this.icon,
+    this.imagePath,
     required this.primaryColor,
     required this.secondaryColor,
   });
