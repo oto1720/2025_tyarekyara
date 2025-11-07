@@ -36,17 +36,16 @@ final opinionRepositoryProvider = Provider<OpinionRepository>((ref) {
 
 /// 意見一覧管理ノーティファイア
 class OpinionListNotifier extends Notifier<OpinionListState> {
-  late final String topicId;
+  OpinionListNotifier(this.topicId);
+
+  final String topicId;
+
   OpinionRepository get repository => ref.read(opinionRepositoryProvider);
 
   @override
   OpinionListState build() {
     Future.microtask(() => loadOpinions());
     return const OpinionListState();
-  }
-
-  void initialize(String topicId) {
-    this.topicId = topicId;
   }
 
   /// 意見一覧を読み込む
@@ -57,8 +56,25 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
       final opinions = await repository.getOpinionsByTopic(topicId);
       final counts = await repository.getOpinionCountsByStance(topicId);
 
+      // 自分の投稿を一番上に表示するようにソート
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final sortedOpinions = <Opinion>[];
+
+      if (currentUser != null) {
+        // 自分の投稿を先に追加
+        final myOpinions = opinions.where((o) => o.userId == currentUser.uid).toList();
+        sortedOpinions.addAll(myOpinions);
+
+        // 他の人の投稿を後に追加
+        final otherOpinions = opinions.where((o) => o.userId != currentUser.uid).toList();
+        sortedOpinions.addAll(otherOpinions);
+      } else {
+        // ログインしていない場合はそのまま
+        sortedOpinions.addAll(opinions);
+      }
+
       state = state.copyWith(
-        opinions: opinions,
+        opinions: sortedOpinions,
         stanceCounts: counts,
         isLoading: false,
       );
@@ -82,26 +98,21 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
 /// 特定トピックの意見一覧プロバイダー
 final opinionListProvider =
     NotifierProvider.family<OpinionListNotifier, OpinionListState, String>(
-  (topicId) {
-    final notifier = OpinionListNotifier();
-    notifier.initialize(topicId);
-    return notifier;
-  },
+  OpinionListNotifier.new,
 );
 
 /// 意見投稿管理ノーティファイア
 class OpinionPostNotifier extends Notifier<OpinionPostState> {
-  late final String topicId;
+  OpinionPostNotifier(this.topicId);
+
+  final String topicId;
+
   OpinionRepository get repository => ref.read(opinionRepositoryProvider);
 
   @override
   OpinionPostState build() {
     Future.microtask(() => checkUserOpinion());
     return const OpinionPostState();
-  }
-
-  void initialize(String topicId) {
-    this.topicId = topicId;
   }
 
   /// ユーザーが既に投稿しているか確認
@@ -214,9 +225,5 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
 /// 意見投稿プロバイダー
 final opinionPostProvider =
     NotifierProvider.family<OpinionPostNotifier, OpinionPostState, String>(
-  (topicId) {
-    final notifier = OpinionPostNotifier();
-    notifier.initialize(topicId);
-    return notifier;
-  },
+  OpinionPostNotifier.new,
 );

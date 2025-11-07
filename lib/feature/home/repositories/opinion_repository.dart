@@ -25,16 +25,22 @@ class OpinionRepository {
   /// 特定のトピックに対する意見一覧を取得
   Future<List<Opinion>> getOpinionsByTopic(String topicId) async {
     try {
+      // orderByを削除してインデックス不要にする
+      // ソートはアプリ側で行う
       final snapshot = await _firestore
           .collection(_collectionName)
           .where('topicId', isEqualTo: topicId)
           .where('isDeleted', isEqualTo: false)
-          .orderBy('createdAt', descending: true)
           .get();
 
-      return snapshot.docs
+      final opinions = snapshot.docs
           .map((doc) => Opinion.fromJson(doc.data()))
           .toList();
+
+      // アプリ側で作成日時の降順にソート
+      opinions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return opinions;
     } catch (e) {
       print('Error getting opinions by topic: $e');
       return [];
@@ -183,10 +189,14 @@ class OpinionRepository {
         .collection(_collectionName)
         .where('topicId', isEqualTo: topicId)
         .where('isDeleted', isEqualTo: false)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Opinion.fromJson(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final opinions = snapshot.docs
+              .map((doc) => Opinion.fromJson(doc.data()))
+              .toList();
+          // アプリ側で作成日時の降順にソート
+          opinions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return opinions;
+        });
   }
 }
