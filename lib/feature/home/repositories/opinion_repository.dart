@@ -199,4 +199,72 @@ class OpinionRepository {
           return opinions;
         });
   }
+
+  /// リアクションを追加
+  Future<void> addReaction({
+    required String opinionId,
+    required String userId,
+    required ReactionType type,
+  }) async {
+    try {
+      final key = type.key;
+
+      await _firestore.collection(_collectionName).doc(opinionId).update({
+        'reactionCounts.$key': FieldValue.increment(1),
+        'reactedUsers.$key': FieldValue.arrayUnion([userId]),
+      });
+    } catch (e) {
+      print('Error adding reaction: $e');
+      rethrow;
+    }
+  }
+
+  /// リアクションを削除
+  Future<void> removeReaction({
+    required String opinionId,
+    required String userId,
+    required ReactionType type,
+  }) async {
+    try {
+      final key = type.key;
+
+      await _firestore.collection(_collectionName).doc(opinionId).update({
+        'reactionCounts.$key': FieldValue.increment(-1),
+        'reactedUsers.$key': FieldValue.arrayRemove([userId]),
+      });
+    } catch (e) {
+      print('Error removing reaction: $e');
+      rethrow;
+    }
+  }
+
+  /// リアクションをトグル（追加/削除を自動判定）
+  Future<void> toggleReaction({
+    required String opinionId,
+    required String userId,
+    required ReactionType type,
+  }) async {
+    try {
+      final doc = await _firestore.collection(_collectionName).doc(opinionId).get();
+      if (!doc.exists) {
+        throw Exception('Opinion not found');
+      }
+
+      final opinion = Opinion.fromJson(doc.data()!);
+      final key = type.key;
+      final reactedUsersList = opinion.reactedUsers[key] ?? [];
+      final hasReacted = reactedUsersList.contains(userId);
+
+      if (hasReacted) {
+        // 既にリアクション済みなら削除
+        await removeReaction(opinionId: opinionId, userId: userId, type: type);
+      } else {
+        // まだリアクションしていないなら追加
+        await addReaction(opinionId: opinionId, userId: userId, type: type);
+      }
+    } catch (e) {
+      print('Error toggling reaction: $e');
+      rethrow;
+    }
+  }
 }

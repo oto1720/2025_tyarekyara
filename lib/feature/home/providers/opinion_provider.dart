@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/opinion.dart';
 import '../repositories/opinion_repository.dart';
@@ -93,6 +94,28 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// リアクションをトグル
+  Future<void> toggleReaction({
+    required String opinionId,
+    required ReactionType type,
+  }) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      await repository.toggleReaction(
+        opinionId: opinionId,
+        userId: currentUser.uid,
+        type: type,
+      );
+
+      // 意見一覧をリフレッシュしてUI更新
+      await loadOpinions();
+    } catch (e) {
+      print('Error toggling reaction: $e');
+    }
+  }
 }
 
 /// 特定トピックの意見一覧プロバイダー
@@ -146,12 +169,28 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
     state = state.copyWith(isPosting: true, error: null);
 
     try {
+      // Firestoreからユーザー情報（nickname）を取得
+      String userName = '匿名ユーザー';
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          userName = userDoc.data()?['nickname'] ?? '匿名ユーザー';
+        }
+      } catch (e) {
+        print('Error fetching user nickname: $e');
+        // エラーの場合はデフォルト値を使用
+      }
+
       final opinion = Opinion(
         id: const Uuid().v4(),
         topicId: topicId,
         topicText: topicText,
         userId: user.uid,
-        userName: user.displayName ?? '匿名ユーザー',
+        userName: userName,
         stance: stance,
         content: content,
         createdAt: DateTime.now(),

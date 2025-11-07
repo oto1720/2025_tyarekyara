@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/opinion.dart';
 import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
@@ -106,7 +107,10 @@ class OpinionListScreen extends ConsumerWidget {
                     final opinion = state.opinions[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _OpinionCard(opinion: opinion),
+                      child: _OpinionCard(
+                        opinion: opinion,
+                        topicId: topicId,
+                      ),
                     );
                   },
                   childCount: state.opinions.length,
@@ -346,10 +350,14 @@ class _StatItem extends StatelessWidget {
 }
 
 /// 意見カード
-class _OpinionCard extends StatelessWidget {
+class _OpinionCard extends ConsumerWidget {
   final Opinion opinion;
+  final String topicId;
 
-  const _OpinionCard({required this.opinion});
+  const _OpinionCard({
+    required this.opinion,
+    required this.topicId,
+  });
 
   Color _getStanceColor() {
     switch (opinion.stance) {
@@ -374,8 +382,9 @@ class _OpinionCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final stanceColor = _getStanceColor();
+    final currentUser = FirebaseAuth.instance.currentUser;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -445,6 +454,34 @@ class _OpinionCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
+          // リアクションボタン
+          if (currentUser != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: ReactionType.values.map((type) {
+                  final key = type.key;
+                  final count = opinion.reactionCounts[key] ?? 0;
+                  final reactedUsersList = opinion.reactedUsers[key] ?? [];
+                  final hasReacted = reactedUsersList.contains(currentUser.uid);
+
+                  return _ReactionButton(
+                    type: type,
+                    count: count,
+                    hasReacted: hasReacted,
+                    onTap: () {
+                      ref.read(opinionListProvider(topicId).notifier).toggleReaction(
+                            opinionId: opinion.id,
+                            type: type,
+                          );
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+
           // 投稿日時といいね数
           Row(
             children: [
@@ -491,5 +528,63 @@ class _OpinionCard extends StatelessWidget {
     } else {
       return '${date.month}/${date.day}';
     }
+  }
+}
+
+/// リアクションボタン
+class _ReactionButton extends StatelessWidget {
+  final ReactionType type;
+  final int count;
+  final bool hasReacted;
+  final VoidCallback onTap;
+
+  const _ReactionButton({
+    required this.type,
+    required this.count,
+    required this.hasReacted,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: hasReacted
+              ? Colors.blue.withOpacity(0.1)
+              : Colors.grey.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: hasReacted
+                ? Colors.blue.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              type.emoji,
+              style: const TextStyle(fontSize: 16),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: hasReacted ? FontWeight.bold : FontWeight.normal,
+                  color: hasReacted ? Colors.blue : Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

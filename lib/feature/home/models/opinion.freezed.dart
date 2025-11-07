@@ -30,7 +30,12 @@ mixin _$Opinion {
   String get content => throw _privateConstructorUsedError; // 意見の内容
   DateTime get createdAt => throw _privateConstructorUsedError; // 投稿日時
   int get likeCount => throw _privateConstructorUsedError; // いいね数
-  bool get isDeleted => throw _privateConstructorUsedError;
+  bool get isDeleted => throw _privateConstructorUsedError; // 削除フラグ
+  // リアクション機能
+  Map<String, int> get reactionCounts =>
+      throw _privateConstructorUsedError; // リアクション数
+  Map<String, List<String>> get reactedUsers =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this Opinion to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -57,6 +62,8 @@ abstract class $OpinionCopyWith<$Res> {
     DateTime createdAt,
     int likeCount,
     bool isDeleted,
+    Map<String, int> reactionCounts,
+    Map<String, List<String>> reactedUsers,
   });
 }
 
@@ -85,6 +92,8 @@ class _$OpinionCopyWithImpl<$Res, $Val extends Opinion>
     Object? createdAt = null,
     Object? likeCount = null,
     Object? isDeleted = null,
+    Object? reactionCounts = null,
+    Object? reactedUsers = null,
   }) {
     return _then(
       _value.copyWith(
@@ -128,6 +137,14 @@ class _$OpinionCopyWithImpl<$Res, $Val extends Opinion>
                 ? _value.isDeleted
                 : isDeleted // ignore: cast_nullable_to_non_nullable
                       as bool,
+            reactionCounts: null == reactionCounts
+                ? _value.reactionCounts
+                : reactionCounts // ignore: cast_nullable_to_non_nullable
+                      as Map<String, int>,
+            reactedUsers: null == reactedUsers
+                ? _value.reactedUsers
+                : reactedUsers // ignore: cast_nullable_to_non_nullable
+                      as Map<String, List<String>>,
           )
           as $Val,
     );
@@ -153,6 +170,8 @@ abstract class _$$OpinionImplCopyWith<$Res> implements $OpinionCopyWith<$Res> {
     DateTime createdAt,
     int likeCount,
     bool isDeleted,
+    Map<String, int> reactionCounts,
+    Map<String, List<String>> reactedUsers,
   });
 }
 
@@ -180,6 +199,8 @@ class __$$OpinionImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? likeCount = null,
     Object? isDeleted = null,
+    Object? reactionCounts = null,
+    Object? reactedUsers = null,
   }) {
     return _then(
       _$OpinionImpl(
@@ -223,6 +244,14 @@ class __$$OpinionImplCopyWithImpl<$Res>
             ? _value.isDeleted
             : isDeleted // ignore: cast_nullable_to_non_nullable
                   as bool,
+        reactionCounts: null == reactionCounts
+            ? _value._reactionCounts
+            : reactionCounts // ignore: cast_nullable_to_non_nullable
+                  as Map<String, int>,
+        reactedUsers: null == reactedUsers
+            ? _value._reactedUsers
+            : reactedUsers // ignore: cast_nullable_to_non_nullable
+                  as Map<String, List<String>>,
       ),
     );
   }
@@ -242,7 +271,18 @@ class _$OpinionImpl implements _Opinion {
     required this.createdAt,
     this.likeCount = 0,
     this.isDeleted = false,
-  });
+    final Map<String, int> reactionCounts = const {
+      'empathy': 0,
+      'thoughtful': 0,
+      'newPerspective': 0,
+    },
+    final Map<String, List<String>> reactedUsers = const {
+      'empathy': [],
+      'thoughtful': [],
+      'newPerspective': [],
+    },
+  }) : _reactionCounts = reactionCounts,
+       _reactedUsers = reactedUsers;
 
   factory _$OpinionImpl.fromJson(Map<String, dynamic> json) =>
       _$$OpinionImplFromJson(json);
@@ -277,10 +317,33 @@ class _$OpinionImpl implements _Opinion {
   @override
   @JsonKey()
   final bool isDeleted;
+  // 削除フラグ
+  // リアクション機能
+  final Map<String, int> _reactionCounts;
+  // 削除フラグ
+  // リアクション機能
+  @override
+  @JsonKey()
+  Map<String, int> get reactionCounts {
+    if (_reactionCounts is EqualUnmodifiableMapView) return _reactionCounts;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_reactionCounts);
+  }
+
+  // リアクション数
+  final Map<String, List<String>> _reactedUsers;
+  // リアクション数
+  @override
+  @JsonKey()
+  Map<String, List<String>> get reactedUsers {
+    if (_reactedUsers is EqualUnmodifiableMapView) return _reactedUsers;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_reactedUsers);
+  }
 
   @override
   String toString() {
-    return 'Opinion(id: $id, topicId: $topicId, topicText: $topicText, userId: $userId, userName: $userName, stance: $stance, content: $content, createdAt: $createdAt, likeCount: $likeCount, isDeleted: $isDeleted)';
+    return 'Opinion(id: $id, topicId: $topicId, topicText: $topicText, userId: $userId, userName: $userName, stance: $stance, content: $content, createdAt: $createdAt, likeCount: $likeCount, isDeleted: $isDeleted, reactionCounts: $reactionCounts, reactedUsers: $reactedUsers)';
   }
 
   @override
@@ -302,7 +365,15 @@ class _$OpinionImpl implements _Opinion {
             (identical(other.likeCount, likeCount) ||
                 other.likeCount == likeCount) &&
             (identical(other.isDeleted, isDeleted) ||
-                other.isDeleted == isDeleted));
+                other.isDeleted == isDeleted) &&
+            const DeepCollectionEquality().equals(
+              other._reactionCounts,
+              _reactionCounts,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._reactedUsers,
+              _reactedUsers,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -319,6 +390,8 @@ class _$OpinionImpl implements _Opinion {
     createdAt,
     likeCount,
     isDeleted,
+    const DeepCollectionEquality().hash(_reactionCounts),
+    const DeepCollectionEquality().hash(_reactedUsers),
   );
 
   /// Create a copy of Opinion
@@ -347,6 +420,8 @@ abstract class _Opinion implements Opinion {
     required final DateTime createdAt,
     final int likeCount,
     final bool isDeleted,
+    final Map<String, int> reactionCounts,
+    final Map<String, List<String>> reactedUsers,
   }) = _$OpinionImpl;
 
   factory _Opinion.fromJson(Map<String, dynamic> json) = _$OpinionImpl.fromJson;
@@ -370,7 +445,12 @@ abstract class _Opinion implements Opinion {
   @override
   int get likeCount; // いいね数
   @override
-  bool get isDeleted;
+  bool get isDeleted; // 削除フラグ
+  // リアクション機能
+  @override
+  Map<String, int> get reactionCounts; // リアクション数
+  @override
+  Map<String, List<String>> get reactedUsers;
 
   /// Create a copy of Opinion
   /// with the given fields replaced by the non-null parameter values.
