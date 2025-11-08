@@ -13,6 +13,16 @@ enum OpinionStance {
   neutral, // 中立
 }
 
+/// リアクションの種類
+enum ReactionType {
+  @JsonValue('empathy')
+  empathy, // 共感した
+  @JsonValue('thoughtful')
+  thoughtful, // 考えさせられた
+  @JsonValue('newPerspective')
+  newPerspective, // 新しい視点
+}
+
 /// 意見モデル
 @freezed
 class Opinion with _$Opinion {
@@ -27,6 +37,19 @@ class Opinion with _$Opinion {
     required DateTime createdAt, // 投稿日時
     @Default(0) int likeCount, // いいね数
     @Default(false) bool isDeleted, // 削除フラグ
+    // リアクション機能
+    @Default({
+      'empathy': 0,
+      'thoughtful': 0,
+      'newPerspective': 0,
+    })
+    Map<String, int> reactionCounts, // リアクション数
+    @Default({
+      'empathy': [],
+      'thoughtful': [],
+      'newPerspective': [],
+    })
+    Map<String, List<String>> reactedUsers, // リアクションしたユーザーのUID
   }) = _Opinion;
 
   factory Opinion.fromJson(Map<String, dynamic> json) =>
@@ -54,6 +77,42 @@ extension OpinionStanceExtension on OpinionStance {
         return '👎';
       case OpinionStance.neutral:
         return '🤔';
+    }
+  }
+}
+
+/// リアクションの表示名とアイコンを取得
+extension ReactionTypeExtension on ReactionType {
+  String get displayName {
+    switch (this) {
+      case ReactionType.empathy:
+        return '共感した';
+      case ReactionType.thoughtful:
+        return '考えさせられた';
+      case ReactionType.newPerspective:
+        return '新しい視点';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case ReactionType.empathy:
+        return '💙';
+      case ReactionType.thoughtful:
+        return '💭';
+      case ReactionType.newPerspective:
+        return '💡';
+    }
+  }
+
+  String get key {
+    switch (this) {
+      case ReactionType.empathy:
+        return 'empathy';
+      case ReactionType.thoughtful:
+        return 'thoughtful';
+      case ReactionType.newPerspective:
+        return 'newPerspective';
     }
   }
 }

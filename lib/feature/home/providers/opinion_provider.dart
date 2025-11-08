@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/opinion.dart';
 import '../repositories/opinion_repository.dart';
@@ -36,17 +37,16 @@ final opinionRepositoryProvider = Provider<OpinionRepository>((ref) {
 
 /// 意見一覧管理ノーティファイア
 class OpinionListNotifier extends Notifier<OpinionListState> {
-  late final String topicId;
+  OpinionListNotifier(this.topicId);
+
+  final String topicId;
+
   OpinionRepository get repository => ref.read(opinionRepositoryProvider);
 
   @override
   OpinionListState build() {
     Future.microtask(() => loadOpinions());
     return const OpinionListState();
-  }
-
-  void initialize(String topicId) {
-    this.topicId = topicId;
   }
 
   /// 意見一覧を読み込む
@@ -57,8 +57,25 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
       final opinions = await repository.getOpinionsByTopic(topicId);
       final counts = await repository.getOpinionCountsByStance(topicId);
 
+      // 自分の投稿を一番上に表示するようにソート
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final sortedOpinions = <Opinion>[];
+
+      if (currentUser != null) {
+        // 自分の投稿を先に追加
+        final myOpinions = opinions.where((o) => o.userId == currentUser.uid).toList();
+        sortedOpinions.addAll(myOpinions);
+
+        // 他の人の投稿を後に追加
+        final otherOpinions = opinions.where((o) => o.userId != currentUser.uid).toList();
+        sortedOpinions.addAll(otherOpinions);
+      } else {
+        // ログインしていない場合はそのまま
+        sortedOpinions.addAll(opinions);
+      }
+
       state = state.copyWith(
-        opinions: opinions,
+        opinions: sortedOpinions,
         stanceCounts: counts,
         isLoading: false,
       );
@@ -77,31 +94,86 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
   void clearError() {
     state = state.copyWith(error: null);
   }
+
+  /// リアクションをトグル（楽観的UI更新）
+  Future<void> toggleReaction({
+    required String opinionId,
+    required ReactionType type,
+  }) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final key = type.key;
+    final userId = currentUser.uid;
+
+    // 即座にローカル状態を更新（楽観的UI更新）
+    final updatedOpinions = state.opinions.map((opinion) {
+      if (opinion.id != opinionId) return opinion;
+
+      // このユーザーが既にリアクション済みか確認
+      final reactedUsersList = opinion.reactedUsers[key] ?? [];
+      final hasReacted = reactedUsersList.contains(userId);
+
+      // リアクション情報を更新
+      final newReactionCounts = Map<String, int>.from(opinion.reactionCounts);
+      final newReactedUsers = Map<String, List<String>>.from(
+        opinion.reactedUsers.map((k, v) => MapEntry(k, List<String>.from(v))),
+      );
+
+      if (hasReacted) {
+        // リアクション削除
+        newReactionCounts[key] = (newReactionCounts[key] ?? 1) - 1;
+        newReactedUsers[key] = (newReactedUsers[key] ?? [])
+          ..remove(userId);
+      } else {
+        // リアクション追加
+        newReactionCounts[key] = (newReactionCounts[key] ?? 0) + 1;
+        newReactedUsers[key] = (newReactedUsers[key] ?? [])
+          ..add(userId);
+      }
+
+      return opinion.copyWith(
+        reactionCounts: newReactionCounts,
+        reactedUsers: newReactedUsers,
+      );
+    }).toList();
+
+    // 状態を即座に更新
+    state = state.copyWith(opinions: updatedOpinions);
+
+    // バックグラウンドでFirestoreを更新
+    try {
+      await repository.toggleReaction(
+        opinionId: opinionId,
+        userId: userId,
+        type: type,
+      );
+    } catch (e) {
+      print('Error toggling reaction: $e');
+      // エラー時は元に戻す
+      await loadOpinions();
+    }
+  }
 }
 
 /// 特定トピックの意見一覧プロバイダー
 final opinionListProvider =
     NotifierProvider.family<OpinionListNotifier, OpinionListState, String>(
-  (topicId) {
-    final notifier = OpinionListNotifier();
-    notifier.initialize(topicId);
-    return notifier;
-  },
+  OpinionListNotifier.new,
 );
 
 /// 意見投稿管理ノーティファイア
 class OpinionPostNotifier extends Notifier<OpinionPostState> {
-  late final String topicId;
+  OpinionPostNotifier(this.topicId);
+
+  final String topicId;
+
   OpinionRepository get repository => ref.read(opinionRepositoryProvider);
 
   @override
   OpinionPostState build() {
     Future.microtask(() => checkUserOpinion());
     return const OpinionPostState();
-  }
-
-  void initialize(String topicId) {
-    this.topicId = topicId;
   }
 
   /// ユーザーが既に投稿しているか確認
@@ -135,12 +207,28 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
     state = state.copyWith(isPosting: true, error: null);
 
     try {
+      // Firestoreからユーザー情報（nickname）を取得
+      String userName = '匿名ユーザー';
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          userName = userDoc.data()?['nickname'] ?? '匿名ユーザー';
+        }
+      } catch (e) {
+        print('Error fetching user nickname: $e');
+        // エラーの場合はデフォルト値を使用
+      }
+
       final opinion = Opinion(
         id: const Uuid().v4(),
         topicId: topicId,
         topicText: topicText,
         userId: user.uid,
-        userName: user.displayName ?? '匿名ユーザー',
+        userName: userName,
         stance: stance,
         content: content,
         createdAt: DateTime.now(),
@@ -214,9 +302,5 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
 /// 意見投稿プロバイダー
 final opinionPostProvider =
     NotifierProvider.family<OpinionPostNotifier, OpinionPostState, String>(
-  (topicId) {
-    final notifier = OpinionPostNotifier();
-    notifier.initialize(topicId);
-    return notifier;
-  },
+  OpinionPostNotifier.new,
 );
