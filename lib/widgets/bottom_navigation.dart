@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 class BottomNavigationConfig {
   static const List<NavigationItem> navigationItems = [
     NavigationItem(icon: Icons.home, label: 'ホーム', route: '/'),
+    NavigationItem(icon: Icons.shuffle, label: 'チャレンジ', route: '/challenge'),
     NavigationItem(icon: Icons.bar_chart, label: '統計', route: '/statistics'),
     NavigationItem(icon: Icons.person, label: 'プロフィール', route: '/profile'),
     NavigationItem(icon: Icons.settings, label: '設定', route: '/settings'),
@@ -55,6 +56,11 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.path;
+
+    // 意見一覧画面や編集画面の場合は「ホーム」を選択状態にする
+    if (location.startsWith('/opinions/') || location.startsWith('/my-opinion/')) {
+      return 0; // ホームのインデックス
+    }
 
     for (int i = 0; i < BottomNavigationConfig.navigationItems.length; i++) {
       if (location == BottomNavigationConfig.navigationItems[i].route) {

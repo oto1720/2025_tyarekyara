@@ -18,6 +18,19 @@ _$OpinionImpl _$$OpinionImplFromJson(Map<String, dynamic> json) =>
       createdAt: DateTime.parse(json['createdAt'] as String),
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       isDeleted: json['isDeleted'] as bool? ?? false,
+      reactionCounts:
+          (json['reactionCounts'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          const {'empathy': 0, 'thoughtful': 0, 'newPerspective': 0},
+      reactedUsers:
+          (json['reactedUsers'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(
+              k,
+              (e as List<dynamic>).map((e) => e as String).toList(),
+            ),
+          ) ??
+          const {'empathy': [], 'thoughtful': [], 'newPerspective': []},
     );
 
 Map<String, dynamic> _$$OpinionImplToJson(_$OpinionImpl instance) =>
@@ -32,6 +45,8 @@ Map<String, dynamic> _$$OpinionImplToJson(_$OpinionImpl instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'likeCount': instance.likeCount,
       'isDeleted': instance.isDeleted,
+      'reactionCounts': instance.reactionCounts,
+      'reactedUsers': instance.reactedUsers,
     };
 
 const _$OpinionStanceEnumMap = {

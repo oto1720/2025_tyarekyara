@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';
@@ -11,6 +12,8 @@ import 'package:tyarekyara/feature/auth/presentaion/pages/profile_setup_page.dar
 import 'package:tyarekyara/feature/guide/presentaion/pages/first_page.dart';
 import 'package:tyarekyara/feature/statistics/presentation/pages/statistic.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge.dart';
+import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/notice_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -118,26 +121,21 @@ final GoRouter router = GoRouter(
         child: NoticeScreen(),
       ),
     ),
-    // 意見一覧画面
+
+    // チャレンジ詳細ページ (ShellRoute の「外」に置く)
     GoRoute(
-      path: '/opinions/:topicId',
+      path: '/challenge/:challengeId', // ← :challengeId でIDを受け取る
       pageBuilder: (context, state) {
-        final topicId = state.pathParameters['topicId']!;
+        // extra から Challenge オブジェクトを取り出す
+        final Challenge challenge = state.extra as Challenge;
+
         return NoTransitionPage(
-          child: OpinionListScreen(topicId: topicId),
+          // Challenge オブジェクトを詳細ページに渡す
+          child: ChallengeDetailPage(challenge: challenge),
         );
       },
     ),
-    // 自分の投稿詳細・編集画面
-    GoRoute(
-      path: '/my-opinion/:topicId',
-      pageBuilder: (context, state) {
-        final topicId = state.pathParameters['topicId']!;
-        return NoTransitionPage(
-          child: MyOpinionDetailScreen(topicId: topicId),
-        );
-      },
-    ),
+
     // メインアプリ（BottomNavigation あり）
     ShellRoute(
       builder: (context, state, child) {
@@ -149,6 +147,26 @@ final GoRouter router = GoRouter(
           path: '/',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: DailyTopicHomeScreen()),
+        ),
+        // 意見一覧画面
+        GoRoute(
+          path: '/opinions/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: OpinionListScreen(topicId: topicId),
+            );
+          },
+        ),
+        // 自分の投稿詳細・編集画面
+        GoRoute(
+          path: '/my-opinion/:topicId',
+          pageBuilder: (context, state) {
+            final topicId = state.pathParameters['topicId']!;
+            return NoTransitionPage(
+              child: MyOpinionDetailScreen(topicId: topicId),
+            );
+          },
         ),
         // 統計画面
         GoRoute(
@@ -167,6 +185,11 @@ final GoRouter router = GoRouter(
           path: '/settings',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: SettingsScreen()),
+        ),
+        GoRoute(
+          path: '/challenge',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ChallengePage()),
         ),
       ],
     ),
