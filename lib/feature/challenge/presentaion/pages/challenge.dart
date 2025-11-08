@@ -61,7 +61,28 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
 
 
     return Scaffold(
-      appBar: AppBar(title: const Text('新機能')),
+      appBar: AppBar(
+        title: const Text('新機能'),
+        actions: [
+          // デバッグ用リフレッシュボタン
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'データを再読み込み',
+            onPressed: () async {
+              print('🔄 [UI] リフレッシュボタンが押されました');
+              await ref.read(challengeProvider.notifier).refresh();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('データを再読み込みしました'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0), // 画面全体に余白
