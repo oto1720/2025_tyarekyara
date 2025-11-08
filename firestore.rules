@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ユーザー情報コレクション
+    match /users/{userId} {
+      // 自分のユーザー情報のみ読み書き可能
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 意見コレクション
+    match /opinions/{opinionId} {
+      // 認証済みユーザーは誰でも読み取り可能
+      allow read: if request.auth != null;
+
+      // 自分の意見のみ作成・更新・削除可能
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null
+                            && resource.data.userId == request.auth.uid;
+    }
+
+    // トピックコレクション
+    match /topics/{topicId} {
+      // 認証済みユーザーは誰でも読み取り可能
+      allow read: if request.auth != null;
+
+      // 管理者のみ作成・更新・削除可能（必要に応じて調整）
+      allow write: if request.auth != null;
+    }
+
+    // ★★★ チャレンジコレクション（重要！）★★★
+    match /userChallenges/{documentId} {
+      // ドキュメントIDの形式: {userId}_{challengeId}
+
+      // 認証済みユーザーのみアクセス可能
+      // 自分のチャレンジのみ読み書き可能
+      allow read: if request.auth != null
+                  && documentId.matches('^' + request.auth.uid + '_.*');
+
+      allow create, update: if request.auth != null
+                            && documentId.matches('^' + request.auth.uid + '_.*')
+                            && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if request.auth != null
+                    && documentId.matches('^' + request.auth.uid + '_.*')
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    // 統計情報コレクション
+    match /statistics/{userId} {
+      // 自分の統計情報のみ読み書き可能
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
