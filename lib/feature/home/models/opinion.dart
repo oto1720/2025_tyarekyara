@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'topic.dart'; // TopicDifficultyをインポート
 
 part 'opinion.freezed.dart';
 part 'opinion.g.dart';
@@ -30,6 +31,7 @@ class Opinion with _$Opinion {
     required String id,
     required String topicId, // トピックID
     required String topicText, // トピックのテキスト（表示用）
+    TopicDifficulty? topicDifficulty, // トピックの難易度（チャレンジ用）
     required String userId, // 投稿者のUID
     required String userName, // 投稿者の名前
     required OpinionStance stance, // 立場

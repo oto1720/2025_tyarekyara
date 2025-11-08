@@ -11,6 +11,10 @@ _$OpinionImpl _$$OpinionImplFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       topicId: json['topicId'] as String,
       topicText: json['topicText'] as String,
+      topicDifficulty: $enumDecodeNullable(
+        _$TopicDifficultyEnumMap,
+        json['topicDifficulty'],
+      ),
       userId: json['userId'] as String,
       userName: json['userName'] as String,
       stance: $enumDecode(_$OpinionStanceEnumMap, json['stance']),
@@ -38,6 +42,7 @@ Map<String, dynamic> _$$OpinionImplToJson(_$OpinionImpl instance) =>
       'id': instance.id,
       'topicId': instance.topicId,
       'topicText': instance.topicText,
+      'topicDifficulty': _$TopicDifficultyEnumMap[instance.topicDifficulty],
       'userId': instance.userId,
       'userName': instance.userName,
       'stance': _$OpinionStanceEnumMap[instance.stance]!,
@@ -48,6 +53,12 @@ Map<String, dynamic> _$$OpinionImplToJson(_$OpinionImpl instance) =>
       'reactionCounts': instance.reactionCounts,
       'reactedUsers': instance.reactedUsers,
     };
+
+const _$TopicDifficultyEnumMap = {
+  TopicDifficulty.easy: 'easy',
+  TopicDifficulty.medium: 'medium',
+  TopicDifficulty.hard: 'hard',
+};
 
 const _$OpinionStanceEnumMap = {
   OpinionStance.agree: 'agree',

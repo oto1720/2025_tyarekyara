@@ -1,16 +1,199 @@
 # tyarekyara
 
-A new Flutter project.
+議論を通じて多角的な思考力を養うFlutterアプリケーション
 
-## Getting Started
+## プロジェクト概要
 
-This project is a starting point for a Flutter application.
+tyarekyaraは、日々のトピックに対して意見を投稿し、他のユーザーと議論を交わすことで、多角的な思考力を育むアプリケーションです。
 
-A few resources to get you started if this is your first Flutter project:
+## 主な機能
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 🏠 ホーム機能
+- 日替わりトピックの表示
+- 意見の投稿（賛成・反対・中立）
+- リアクション機能（いいね、考えさせられる、面白いなど）
+- 自分の投稿を上部に表示
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 🎯 チャレンジ機能（視点交換チャレンジ）
+- 自分とは反対の立場で意見を考えるトレーニング
+- チャレンジ完了でポイント獲得
+- 難易度別のチャレンジ（簡単・普通・難しい）
+- **Firebase連携による永続化**
+  - チャレンジの進行状況をFirestoreに保存
+  - アプリ再起動後もデータを復元
+  - 複数端末での同期対応
+
+### 📊 統計機能
+- 参加統計
+- 立場別の分布
+- 多様性スコア
+- 獲得バッジ
+
+### ⚙️ 設定機能
+- プロフィール編集
+- 通知設定
+- テーマ設定
+
+## 技術スタック
+
+### フレームワーク・言語
+- Flutter
+- Dart
+
+### 状態管理
+- Riverpod 2.x
+
+### バックエンド・データベース
+- Firebase Authentication（認証）
+- Cloud Firestore（データベース）
+- Firebase Storage（画像保存）
+- Firebase Cloud Messaging（プッシュ通知）
+
+### アーキテクチャ
+- レイヤードアーキテクチャ
+  - Presentation Layer（UI）
+  - Provider Layer（状態管理）
+  - Repository Layer（データアクセス）
+  - Model Layer（データ構造）
+  - Service Layer（ビジネスロジック）
+
+### ルーティング
+- go_router
+
+### データ処理
+- freezed（イミュータブルなデータクラス）
+- json_serializable（JSONシリアライズ）
+
+## プロジェクト構造
+
+```
+lib/
+├── feature/
+│   ├── auth/                    # 認証機能
+│   │   ├── models/
+│   │   ├── providers/
+│   │   ├── repositories/
+│   │   └── services/
+│   ├── home/                    # ホーム・トピック機能
+│   │   ├── models/
+│   │   ├── providers/
+│   │   ├── repositories/
+│   │   ├── services/
+│   │   └── presentation/
+│   ├── challenge/               # チャレンジ機能
+│   │   ├── models/
+│   │   │   └── challenge_model.dart
+│   │   ├── providers/
+│   │   │   └── challenge_provider.dart
+│   │   ├── repositories/
+│   │   │   └── challenge_repositories.dart  # Firebase連携
+│   │   └── presentaion/
+│   │       ├── pages/
+│   │       └── widgets/
+│   ├── statistics/              # 統計機能
+│   └── settings/                # 設定機能
+├── router/                      # ルーティング設定
+├── utils/                       # ユーティリティ
+└── widgets/                     # 共通ウィジェット
+```
+
+## Firestoreデータ構造
+
+### userChallenges コレクション
+チャレンジの進行状況を保存
+```
+userChallenges/{userId}_{challengeId}/
+├── id: string                   # チャレンジID
+├── userId: string               # ユーザーID
+├── title: string                # チャレンジタイトル
+├── stance: string               # 元の立場（pro/con）
+├── difficulty: string           # 難易度（easy/normal/hard）
+├── status: string               # ステータス（available/completed）
+├── originalOpinionText: string  # 元の意見
+├── oppositeOpinionText: string  # チャレンジで書いた反対意見
+├── earnedPoints: int            # 獲得ポイント
+└── completedAt: Timestamp       # 完了日時
+```
+
+### opinions コレクション
+ユーザーの意見を保存
+```
+opinions/{opinionId}/
+├── id: string
+├── topicId: string
+├── userId: string
+├── userName: string
+├── stance: string               # agree/disagree/neutral
+├── content: string
+├── createdAt: Timestamp
+├── reactionCounts: Map
+└── reactedUsers: Map
+```
+
+## セットアップ
+
+### 必要な環境
+- Flutter SDK 3.x以上
+- Dart 3.x以上
+- Firebase プロジェクト
+
+### インストール手順
+
+1. リポジトリをクローン
+```bash
+git clone [repository-url]
+cd 2025_tyarekyara
+```
+
+2. 依存関係をインストール
+```bash
+flutter pub get
+```
+
+3. Firebaseの設定
+- Firebase Consoleでプロジェクトを作成
+- iOS/Androidアプリを追加
+- 設定ファイルを配置
+  - iOS: `ios/Runner/GoogleService-Info.plist`
+  - Android: `android/app/google-services.json`
+
+4. コード生成
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+5. アプリを実行
+```bash
+flutter run
+```
+
+## 開発
+
+### コード生成
+freezedやjson_serializableを使用する場合、変更後に以下を実行：
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
+### 静的解析
+```bash
+flutter analyze
+```
+
+### フォーマット
+```bash
+dart format .
+```
+
+## 最近の更新
+
+### 2025-11-08: Challenge機能のFirebase連携実装
+- `challenge_model.dart`にFirestore用メソッド追加
+- `challenge_repositories.dart`でFirestore操作を実装
+- `challenge_provider.dart`でデータの読み込み・保存機能を追加
+- チャレンジの進行状況が永続化され、アプリ再起動後も復元可能に
+- 複数端末での同期に対応
+
+## ライセンス
+
+このプロジェクトは私的な学習・開発プロジェクトです。
