@@ -536,6 +536,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     final postNotifier = ref.read(opinionPostProvider(topic.id).notifier);
     final success = await postNotifier.postOpinion(
       topicText: topic.text,
+      topicDifficulty: topic.difficulty, // トピックの難易度を渡す
       stance: stance,
       content: _opinionController.text,
     );

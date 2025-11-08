@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/challenge_model.dart';
 import '../../home/models/opinion.dart';
+import '../../home/models/topic.dart'; // TopicDifficultyをインポート
 import '../../home/repositories/opinion_repository.dart';
 import '../presentaion/widgets/difficultry_budge.dart';
 
@@ -264,8 +265,10 @@ class ChallengeRepository {
 
   /// OpinionをChallengeに変換する
   Challenge _opinionToChallenge(Opinion opinion, String userId) {
-    // 難易度を決定（意見の文字数に応じて）
-    final difficulty = _calculateDifficulty(opinion.content);
+    // 難易度を決定（トピックの難易度を優先、なければ文字数で決定）
+    final difficulty = opinion.topicDifficulty != null
+        ? _topicDifficultyToChallenge(opinion.topicDifficulty!)
+        : _calculateDifficulty(opinion.content);
 
     // 元の立場を保存
     final originalStance = _opinionStanceToChallenge(opinion.stance);
@@ -286,7 +289,19 @@ class ChallengeRepository {
     );
   }
 
-  /// 意見の文字数に応じて難易度を決定
+  /// TopicDifficultyをChallengeDifficultyに変換
+  ChallengeDifficulty _topicDifficultyToChallenge(TopicDifficulty topicDifficulty) {
+    switch (topicDifficulty) {
+      case TopicDifficulty.easy:
+        return ChallengeDifficulty.easy;
+      case TopicDifficulty.medium:
+        return ChallengeDifficulty.normal;
+      case TopicDifficulty.hard:
+        return ChallengeDifficulty.hard;
+    }
+  }
+
+  /// 意見の文字数に応じて難易度を決定（フォールバック用）
   ChallengeDifficulty _calculateDifficulty(String content) {
     final length = content.length;
 

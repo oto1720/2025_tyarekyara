@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/opinion.dart';
+import '../models/topic.dart'; // TopicDifficultyをインポート
 import '../repositories/opinion_repository.dart';
 
 part 'opinion_provider.freezed.dart';
@@ -195,6 +196,7 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
   /// 意見を投稿
   Future<bool> postOpinion({
     required String topicText,
+    TopicDifficulty? topicDifficulty, // トピックの難易度を追加
     required OpinionStance stance,
     required String content,
   }) async {
@@ -227,6 +229,7 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
         id: const Uuid().v4(),
         topicId: topicId,
         topicText: topicText,
+        topicDifficulty: topicDifficulty, // トピックの難易度を保存
         userId: user.uid,
         userName: userName,
         stance: stance,
