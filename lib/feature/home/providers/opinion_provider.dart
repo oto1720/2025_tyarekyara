@@ -95,7 +95,7 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
     state = state.copyWith(error: null);
   }
 
-  /// リアクションをトグル
+  /// リアクションをトグル（楽観的UI更新）
   Future<void> toggleReaction({
     required String opinionId,
     required ReactionType type,
@@ -103,17 +103,55 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
+    final key = type.key;
+    final userId = currentUser.uid;
+
+    // 即座にローカル状態を更新（楽観的UI更新）
+    final updatedOpinions = state.opinions.map((opinion) {
+      if (opinion.id != opinionId) return opinion;
+
+      // このユーザーが既にリアクション済みか確認
+      final reactedUsersList = opinion.reactedUsers[key] ?? [];
+      final hasReacted = reactedUsersList.contains(userId);
+
+      // リアクション情報を更新
+      final newReactionCounts = Map<String, int>.from(opinion.reactionCounts);
+      final newReactedUsers = Map<String, List<String>>.from(
+        opinion.reactedUsers.map((k, v) => MapEntry(k, List<String>.from(v))),
+      );
+
+      if (hasReacted) {
+        // リアクション削除
+        newReactionCounts[key] = (newReactionCounts[key] ?? 1) - 1;
+        newReactedUsers[key] = (newReactedUsers[key] ?? [])
+          ..remove(userId);
+      } else {
+        // リアクション追加
+        newReactionCounts[key] = (newReactionCounts[key] ?? 0) + 1;
+        newReactedUsers[key] = (newReactedUsers[key] ?? [])
+          ..add(userId);
+      }
+
+      return opinion.copyWith(
+        reactionCounts: newReactionCounts,
+        reactedUsers: newReactedUsers,
+      );
+    }).toList();
+
+    // 状態を即座に更新
+    state = state.copyWith(opinions: updatedOpinions);
+
+    // バックグラウンドでFirestoreを更新
     try {
       await repository.toggleReaction(
         opinionId: opinionId,
-        userId: currentUser.uid,
+        userId: userId,
         type: type,
       );
-
-      // 意見一覧をリフレッシュしてUI更新
-      await loadOpinions();
     } catch (e) {
       print('Error toggling reaction: $e');
+      // エラー時は元に戻す
+      await loadOpinions();
     }
   }
 }
