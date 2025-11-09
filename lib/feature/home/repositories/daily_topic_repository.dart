@@ -19,33 +19,40 @@ class DailyTopicRepository {
   Future<Topic?> getTodayTopic() async {
     try {
       final dateKey = _getTodayKey();
+
       final doc = await _firestore
           .collection(_collectionName)
           .doc(dateKey)
           .get();
 
       if (doc.exists && doc.data() != null) {
-        return Topic.fromJson(doc.data()!);
+        final data = doc.data()!;
+        return Topic.fromJson(data);
       }
       return null;
     } catch (e) {
-      print('Error getting today topic: $e');
       return null;
     }
   }
 
   /// 今日のトピックを保存
   Future<void> saveTodayTopic(Topic topic) async {
-    try {
-      final dateKey = _getTodayKey();
-      await _firestore
-          .collection(_collectionName)
-          .doc(dateKey)
-          .set(topic.toJson());
-    } catch (e) {
-      print('Error saving today topic: $e');
-      rethrow;
+    final dateKey = _getTodayKey();
+
+    // TopicをJSONに変換
+    final jsonData = topic.toJson();
+
+    // relatedNewsを手動でJSON配列に変換（Firestoreサポートのため）
+    if (topic.relatedNews.isNotEmpty) {
+      jsonData['relatedNews'] = topic.relatedNews
+          .map((newsItem) => newsItem.toJson())
+          .toList();
     }
+
+    await _firestore
+        .collection(_collectionName)
+        .doc(dateKey)
+        .set(jsonData);
   }
 
   /// 特定の日付のトピックを取得
