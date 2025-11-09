@@ -5,6 +5,7 @@ import '../services/topic_generation_service.dart';
 import '../services/topic_classifier_service.dart';
 import '../services/topic_duplicate_detector.dart';
 import '../services/topic_difficulty_adjuster.dart';
+import '../services/news_service.dart';
 import 'topic_generation_state.dart';
 
 /// AI プロバイダーの選択
@@ -48,6 +49,17 @@ final topicDuplicateDetectorProvider = Provider<TopicDuplicateDetector>((ref) {
 final topicDifficultyAdjusterProvider =
     Provider<TopicDifficultyAdjuster>((ref) {
   return TopicDifficultyAdjuster();
+});
+
+/// Geminiリポジトリプロバイダー（ニュース取得用）
+final geminiRepositoryProvider = Provider<GeminiRepository>((ref) {
+  return GeminiRepository();
+});
+
+/// ニュースサービスプロバイダー
+final newsServiceProvider = Provider<NewsService>((ref) {
+  final geminiRepository = ref.watch(geminiRepositoryProvider);
+  return NewsService(geminiRepository);
 });
 
 /// ユーザーレベルプロバイダー（将来的にはユーザー設定から取得）
@@ -112,6 +124,14 @@ class TopicGenerationNotifier extends Notifier<TopicGenerationState> {
         }
       }
 
+      // 関連ニュースを取得
+      final newsService = ref.read(newsServiceProvider);
+      final relatedNews = await newsService.getNewsByCategory(
+        topicText,
+        finalCategory.displayName,
+        count: 3,
+      );
+
       // Topicオブジェクトを作成
       final topic = Topic(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -122,6 +142,7 @@ class TopicGenerationNotifier extends Notifier<TopicGenerationState> {
         source: TopicSource.ai,
         tags: tags,
         similarityScore: similarity,
+        relatedNews: relatedNews,
       );
 
       // 状態を更新

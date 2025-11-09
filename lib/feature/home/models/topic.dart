@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'news_item.dart';
 
 part 'topic.freezed.dart';
 part 'topic.g.dart';
@@ -43,6 +44,7 @@ class Topic with _$Topic {
     @Default([]) List<String> tags,
     String? description, // トピックの説明（オプション）
     @Default(0) double similarityScore, // 既存トピックとの類似度スコア
+    @Default([]) List<NewsItem> relatedNews, // 関連ニュース
   }) = _Topic;
 
   factory Topic.fromJson(Map<String, dynamic> json) => _$TopicFromJson(json);
