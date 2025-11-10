@@ -5,6 +5,7 @@ import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../../providers/opinion_provider.dart';
 import '../widgets/topic_card.dart';
+import '../widgets/news_list.dart';
 
 /// 日別トピックのホーム画面
 class DailyTopicHomeScreen extends ConsumerStatefulWidget {
@@ -205,6 +206,15 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             dateText: '今日のトピック',
           ),
 
+          const SizedBox(height: 16),
+
+          // 関連ニュース
+          if (topic.relatedNews.isNotEmpty)
+            RelatedNewsSection(
+              newsList: topic.relatedNews,
+              topicText: topic.text,
+            ),
+
           const SizedBox(height: 24),
 
           // 投稿済みメッセージ
@@ -323,6 +333,15 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             topic: state.currentTopic!,
             dateText: '今日のトピック',
           ),
+
+          const SizedBox(height: 16),
+
+          // 関連ニュース
+          if (topic.relatedNews.isNotEmpty)
+            RelatedNewsSection(
+              newsList: topic.relatedNews,
+              topicText: topic.text,
+            ),
 
           const SizedBox(height: 16),
 
@@ -536,6 +555,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     final postNotifier = ref.read(opinionPostProvider(topic.id).notifier);
     final success = await postNotifier.postOpinion(
       topicText: topic.text,
+      topicDifficulty: topic.difficulty, // トピックの難易度を渡す
       stance: stance,
       content: _opinionController.text,
     );

@@ -30,7 +30,9 @@ mixin _$Topic {
   List<String> get tags => throw _privateConstructorUsedError;
   String? get description =>
       throw _privateConstructorUsedError; // トピックの説明（オプション）
-  double get similarityScore => throw _privateConstructorUsedError;
+  double get similarityScore =>
+      throw _privateConstructorUsedError; // 既存トピックとの類似度スコア
+  List<NewsItem> get relatedNews => throw _privateConstructorUsedError;
 
   /// Serializes this Topic to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -56,6 +58,7 @@ abstract class $TopicCopyWith<$Res> {
     List<String> tags,
     String? description,
     double similarityScore,
+    List<NewsItem> relatedNews,
   });
 }
 
@@ -83,6 +86,7 @@ class _$TopicCopyWithImpl<$Res, $Val extends Topic>
     Object? tags = null,
     Object? description = freezed,
     Object? similarityScore = null,
+    Object? relatedNews = null,
   }) {
     return _then(
       _value.copyWith(
@@ -122,6 +126,10 @@ class _$TopicCopyWithImpl<$Res, $Val extends Topic>
                 ? _value.similarityScore
                 : similarityScore // ignore: cast_nullable_to_non_nullable
                       as double,
+            relatedNews: null == relatedNews
+                ? _value.relatedNews
+                : relatedNews // ignore: cast_nullable_to_non_nullable
+                      as List<NewsItem>,
           )
           as $Val,
     );
@@ -146,6 +154,7 @@ abstract class _$$TopicImplCopyWith<$Res> implements $TopicCopyWith<$Res> {
     List<String> tags,
     String? description,
     double similarityScore,
+    List<NewsItem> relatedNews,
   });
 }
 
@@ -172,6 +181,7 @@ class __$$TopicImplCopyWithImpl<$Res>
     Object? tags = null,
     Object? description = freezed,
     Object? similarityScore = null,
+    Object? relatedNews = null,
   }) {
     return _then(
       _$TopicImpl(
@@ -211,6 +221,10 @@ class __$$TopicImplCopyWithImpl<$Res>
             ? _value.similarityScore
             : similarityScore // ignore: cast_nullable_to_non_nullable
                   as double,
+        relatedNews: null == relatedNews
+            ? _value._relatedNews
+            : relatedNews // ignore: cast_nullable_to_non_nullable
+                  as List<NewsItem>,
       ),
     );
   }
@@ -229,7 +243,9 @@ class _$TopicImpl implements _Topic {
     final List<String> tags = const [],
     this.description,
     this.similarityScore = 0,
-  }) : _tags = tags;
+    final List<NewsItem> relatedNews = const [],
+  }) : _tags = tags,
+       _relatedNews = relatedNews;
 
   factory _$TopicImpl.fromJson(Map<String, dynamic> json) =>
       _$$TopicImplFromJson(json);
@@ -262,10 +278,20 @@ class _$TopicImpl implements _Topic {
   @override
   @JsonKey()
   final double similarityScore;
+  // 既存トピックとの類似度スコア
+  final List<NewsItem> _relatedNews;
+  // 既存トピックとの類似度スコア
+  @override
+  @JsonKey()
+  List<NewsItem> get relatedNews {
+    if (_relatedNews is EqualUnmodifiableListView) return _relatedNews;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_relatedNews);
+  }
 
   @override
   String toString() {
-    return 'Topic(id: $id, text: $text, category: $category, difficulty: $difficulty, createdAt: $createdAt, source: $source, tags: $tags, description: $description, similarityScore: $similarityScore)';
+    return 'Topic(id: $id, text: $text, category: $category, difficulty: $difficulty, createdAt: $createdAt, source: $source, tags: $tags, description: $description, similarityScore: $similarityScore, relatedNews: $relatedNews)';
   }
 
   @override
@@ -286,7 +312,11 @@ class _$TopicImpl implements _Topic {
             (identical(other.description, description) ||
                 other.description == description) &&
             (identical(other.similarityScore, similarityScore) ||
-                other.similarityScore == similarityScore));
+                other.similarityScore == similarityScore) &&
+            const DeepCollectionEquality().equals(
+              other._relatedNews,
+              _relatedNews,
+            ));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -302,6 +332,7 @@ class _$TopicImpl implements _Topic {
     const DeepCollectionEquality().hash(_tags),
     description,
     similarityScore,
+    const DeepCollectionEquality().hash(_relatedNews),
   );
 
   /// Create a copy of Topic
@@ -329,6 +360,7 @@ abstract class _Topic implements Topic {
     final List<String> tags,
     final String? description,
     final double similarityScore,
+    final List<NewsItem> relatedNews,
   }) = _$TopicImpl;
 
   factory _Topic.fromJson(Map<String, dynamic> json) = _$TopicImpl.fromJson;
@@ -350,7 +382,9 @@ abstract class _Topic implements Topic {
   @override
   String? get description; // トピックの説明（オプション）
   @override
-  double get similarityScore;
+  double get similarityScore; // 既存トピックとの類似度スコア
+  @override
+  List<NewsItem> get relatedNews;
 
   /// Create a copy of Topic
   /// with the given fields replaced by the non-null parameter values.

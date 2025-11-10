@@ -5,6 +5,7 @@ import '../models/topic.dart';
 import '../repositories/daily_topic_repository.dart';
 import '../repositories/ai_repository.dart';
 import '../services/topic_generation_service.dart';
+import '../services/news_service.dart';
 import '../utils/random_topic_selector.dart';
 
 part 'daily_topic_provider.freezed.dart';
@@ -28,6 +29,17 @@ final dailyTopicRepositoryProvider = Provider<DailyTopicRepository>((ref) {
 /// ランダムセレクタープロバイダー
 final randomTopicSelectorProvider = Provider<RandomTopicSelector>((ref) {
   return RandomTopicSelector();
+});
+
+/// Geminiリポジトリプロバイダー（ニュース取得用）
+final geminiRepositoryProviderForDaily = Provider<GeminiRepository>((ref) {
+  return GeminiRepository();
+});
+
+/// ニュースサービスプロバイダー
+final newsServiceProviderForDaily = Provider<NewsService>((ref) {
+  final geminiRepository = ref.watch(geminiRepositoryProviderForDaily);
+  return NewsService(geminiRepository);
 });
 
 /// 日別トピック管理ノーティファイア
@@ -88,6 +100,14 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
         difficulty: selection.difficulty,
       );
 
+      // 関連ニュースを取得
+      final newsService = ref.read(newsServiceProviderForDaily);
+      final relatedNews = await newsService.getNewsByCategory(
+        topicText.trim(),
+        selection.category.displayName,
+        count: 3,
+      );
+
       // Topicオブジェクトを作成
       final newTopic = Topic(
         id: const Uuid().v4(),
@@ -97,6 +117,7 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
         createdAt: DateTime.now(),
         source: TopicSource.ai,
         tags: _generateTags(selection.category),
+        relatedNews: relatedNews,
       );
 
       // Firestoreに保存

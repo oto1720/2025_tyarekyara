@@ -24,6 +24,8 @@ mixin _$Opinion {
   String get id => throw _privateConstructorUsedError;
   String get topicId => throw _privateConstructorUsedError; // トピックID
   String get topicText => throw _privateConstructorUsedError; // トピックのテキスト（表示用）
+  TopicDifficulty? get topicDifficulty =>
+      throw _privateConstructorUsedError; // トピックの難易度（チャレンジ用）
   String get userId => throw _privateConstructorUsedError; // 投稿者のUID
   String get userName => throw _privateConstructorUsedError; // 投稿者の名前
   OpinionStance get stance => throw _privateConstructorUsedError; // 立場
@@ -55,6 +57,7 @@ abstract class $OpinionCopyWith<$Res> {
     String id,
     String topicId,
     String topicText,
+    TopicDifficulty? topicDifficulty,
     String userId,
     String userName,
     OpinionStance stance,
@@ -85,6 +88,7 @@ class _$OpinionCopyWithImpl<$Res, $Val extends Opinion>
     Object? id = null,
     Object? topicId = null,
     Object? topicText = null,
+    Object? topicDifficulty = freezed,
     Object? userId = null,
     Object? userName = null,
     Object? stance = null,
@@ -109,6 +113,10 @@ class _$OpinionCopyWithImpl<$Res, $Val extends Opinion>
                 ? _value.topicText
                 : topicText // ignore: cast_nullable_to_non_nullable
                       as String,
+            topicDifficulty: freezed == topicDifficulty
+                ? _value.topicDifficulty
+                : topicDifficulty // ignore: cast_nullable_to_non_nullable
+                      as TopicDifficulty?,
             userId: null == userId
                 ? _value.userId
                 : userId // ignore: cast_nullable_to_non_nullable
@@ -163,6 +171,7 @@ abstract class _$$OpinionImplCopyWith<$Res> implements $OpinionCopyWith<$Res> {
     String id,
     String topicId,
     String topicText,
+    TopicDifficulty? topicDifficulty,
     String userId,
     String userName,
     OpinionStance stance,
@@ -192,6 +201,7 @@ class __$$OpinionImplCopyWithImpl<$Res>
     Object? id = null,
     Object? topicId = null,
     Object? topicText = null,
+    Object? topicDifficulty = freezed,
     Object? userId = null,
     Object? userName = null,
     Object? stance = null,
@@ -216,6 +226,10 @@ class __$$OpinionImplCopyWithImpl<$Res>
             ? _value.topicText
             : topicText // ignore: cast_nullable_to_non_nullable
                   as String,
+        topicDifficulty: freezed == topicDifficulty
+            ? _value.topicDifficulty
+            : topicDifficulty // ignore: cast_nullable_to_non_nullable
+                  as TopicDifficulty?,
         userId: null == userId
             ? _value.userId
             : userId // ignore: cast_nullable_to_non_nullable
@@ -264,6 +278,7 @@ class _$OpinionImpl implements _Opinion {
     required this.id,
     required this.topicId,
     required this.topicText,
+    this.topicDifficulty,
     required this.userId,
     required this.userName,
     required this.stance,
@@ -295,6 +310,9 @@ class _$OpinionImpl implements _Opinion {
   @override
   final String topicText;
   // トピックのテキスト（表示用）
+  @override
+  final TopicDifficulty? topicDifficulty;
+  // トピックの難易度（チャレンジ用）
   @override
   final String userId;
   // 投稿者のUID
@@ -343,7 +361,7 @@ class _$OpinionImpl implements _Opinion {
 
   @override
   String toString() {
-    return 'Opinion(id: $id, topicId: $topicId, topicText: $topicText, userId: $userId, userName: $userName, stance: $stance, content: $content, createdAt: $createdAt, likeCount: $likeCount, isDeleted: $isDeleted, reactionCounts: $reactionCounts, reactedUsers: $reactedUsers)';
+    return 'Opinion(id: $id, topicId: $topicId, topicText: $topicText, topicDifficulty: $topicDifficulty, userId: $userId, userName: $userName, stance: $stance, content: $content, createdAt: $createdAt, likeCount: $likeCount, isDeleted: $isDeleted, reactionCounts: $reactionCounts, reactedUsers: $reactedUsers)';
   }
 
   @override
@@ -355,6 +373,8 @@ class _$OpinionImpl implements _Opinion {
             (identical(other.topicId, topicId) || other.topicId == topicId) &&
             (identical(other.topicText, topicText) ||
                 other.topicText == topicText) &&
+            (identical(other.topicDifficulty, topicDifficulty) ||
+                other.topicDifficulty == topicDifficulty) &&
             (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.userName, userName) ||
                 other.userName == userName) &&
@@ -383,6 +403,7 @@ class _$OpinionImpl implements _Opinion {
     id,
     topicId,
     topicText,
+    topicDifficulty,
     userId,
     userName,
     stance,
@@ -413,6 +434,7 @@ abstract class _Opinion implements Opinion {
     required final String id,
     required final String topicId,
     required final String topicText,
+    final TopicDifficulty? topicDifficulty,
     required final String userId,
     required final String userName,
     required final OpinionStance stance,
@@ -432,6 +454,8 @@ abstract class _Opinion implements Opinion {
   String get topicId; // トピックID
   @override
   String get topicText; // トピックのテキスト（表示用）
+  @override
+  TopicDifficulty? get topicDifficulty; // トピックの難易度（チャレンジ用）
   @override
   String get userId; // 投稿者のUID
   @override

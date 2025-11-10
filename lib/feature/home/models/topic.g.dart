@@ -20,6 +20,11 @@ _$TopicImpl _$$TopicImplFromJson(Map<String, dynamic> json) => _$TopicImpl(
       const [],
   description: json['description'] as String?,
   similarityScore: (json['similarityScore'] as num?)?.toDouble() ?? 0,
+  relatedNews:
+      (json['relatedNews'] as List<dynamic>?)
+          ?.map((e) => NewsItem.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$$TopicImplToJson(_$TopicImpl instance) =>
@@ -33,6 +38,7 @@ Map<String, dynamic> _$$TopicImplToJson(_$TopicImpl instance) =>
       'tags': instance.tags,
       'description': instance.description,
       'similarityScore': instance.similarityScore,
+      'relatedNews': instance.relatedNews,
     };
 
 const _$TopicCategoryEnumMap = {

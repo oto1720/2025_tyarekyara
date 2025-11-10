@@ -59,12 +59,15 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           ),
                           const SizedBox(width: 8), // アイコンとテキストの間隔
                           // 2. 説明テキスト
-                          Text(
-                            '視点交換チャレンジ', // もっと長い説明
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
+                          Flexible(
+                            child: Text(
+                              '視点交換チャレンジ', // もっと長い説明
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -80,25 +83,31 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
                       Text(
                         '${widget.challenge.title}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black, // 少し薄い色に
                         ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8), // 少し間隔をあける
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.emoji_events_outlined, // お好きなアイコンに変更してください
                             color: Colors.amber,
                             size: 20, // アイコンのサイズ
                           ),
-                          Text(
-                            '${widget.challenge.difficulty.points}ポイント',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black87, // 少し薄い色に
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              '${widget.challenge.difficulty.points}ポイント',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Colors.black87, // 少し薄い色に
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -129,6 +138,8 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                             fontWeight: FontWeight.bold,
                             color: Colors.grey[900],
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -166,12 +177,16 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                 color: Colors.purpleAccent[700],
                                 size: 20, // アイコンのサイズ
                               ),
-                              Text(
-                                'チャレンジ:反対の立場で考えてみよう',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black, // テーマの色
+                              const SizedBox(width: 8),
+                              const Flexible(
+                                child: Text(
+                                  'チャレンジ:反対の立場で考えてみよう',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black, // テーマの色
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -184,16 +199,21 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey[600], // テーマの色
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                           const SizedBox(height: 20),
                           Row(
                             children: [
-                              Text(
-                                '挑戦する立場:',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
+                              Flexible(
+                                child: Text(
+                                  '挑戦する立場:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -316,15 +336,20 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                       GoRouter.of(context).pop(result);
                                     }
                                   },
-                                  child: Row(
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(  
+                                      Icon(
                                         Icons.check_circle_outline,
                                       ),
-                                      const SizedBox(width: 8),
-                                      const Text(
-                                        'チャレンジ完了',
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          'チャレンジ完了',
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -370,6 +395,8 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       ],
 
                     ),
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
                 ))
               )
             ],

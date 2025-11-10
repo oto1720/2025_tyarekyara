@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 enum AIProvider {
   openai,
   claude,
+  gemini,
 }
 
 /// AIリポジトリのインターフェース
@@ -104,6 +105,129 @@ class ClaudeRepository implements AIRepository {
   }
 }
 
+/// Gemini APIリポジトリ（Google Search連携対応）
+class GeminiRepository implements AIRepository {
+  final String _apiKey;
+  final String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+
+  GeminiRepository({String? apiKey})
+      : _apiKey = apiKey ?? dotenv.env['GEMINI_API_KEY'] ?? '';
+
+  @override
+  Future<String> generateText({
+    required String prompt,
+    double temperature = 0.7,
+    int maxTokens = 500,
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw Exception('Gemini API key is not configured');
+    }
+
+    // Gemini 1.5 Flash（最新バージョン）
+    final response = await http.post(
+      Uri.parse('$_baseUrl/models/gemini-1.5-flash-latest:generateContent?key=$_apiKey'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt}
+            ]
+          }
+        ],
+        'generationConfig': {
+          'temperature': temperature,
+          'maxOutputTokens': maxTokens,
+        },
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return data['candidates'][0]['content']['parts'][0]['text'] as String;
+    } else {
+      throw Exception('Gemini API error: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  /// Google Search連携でテキストを生成
+  Future<String> generateTextWithSearch({
+    required String prompt,
+    double temperature = 0.7,
+    int maxTokens = 5000,  // Google Search Groundingは検索メタデータで大量のトークンを消費するため十分大きく設定
+  }) async {
+    if (_apiKey.isEmpty) {
+      throw Exception('Gemini API key is not configured');
+    }
+
+    // Google Search (grounding) 対応モデル - Gemini 2.5 Flash（最新）
+    // 公式ドキュメント: https://ai.google.dev/gemini-api/docs/grounding
+    final url = '$_baseUrl/models/gemini-2.5-flash:generateContent?key=$_apiKey';
+
+    final requestBody = {
+      'contents': [
+        {
+          'parts': [
+            {'text': prompt}
+          ]
+        }
+      ],
+      'generationConfig': {
+        'temperature': temperature,
+        'maxOutputTokens': maxTokens,
+      },
+      'tools': [
+        {
+          'google_search': {}  // 最新のGoogle Search Grounding形式
+        }
+      ],
+    };
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      // レスポンス構造の検証
+      if (data['candidates'] == null) {
+        throw Exception('Invalid response: candidates is null');
+      }
+
+      final candidate = data['candidates'][0];
+
+      if (candidate['content'] == null) {
+        throw Exception('Invalid response: content is null');
+      }
+
+      final content = candidate['content'];
+
+      if (content['parts'] == null) {
+        // finishReasonを確認
+        final finishReason = candidate['finishReason'];
+
+        if (finishReason == 'MAX_TOKENS') {
+          throw Exception('トークン制限に達しました。maxTokensを増やす必要があります。現在: $maxTokens');
+        }
+
+        throw Exception('Invalid response: parts is null');
+      }
+
+      final text = content['parts'][0]['text'] as String;
+      return text;
+    } else {
+      throw Exception('Gemini API error: ${response.statusCode} - ${response.body}');
+    }
+  }
+}
+
 /// AIリポジトリのファクトリ
 class AIRepositoryFactory {
   static AIRepository create(AIProvider provider) {
@@ -112,6 +236,8 @@ class AIRepositoryFactory {
         return OpenAIRepository();
       case AIProvider.claude:
         return ClaudeRepository();
+      case AIProvider.gemini:
+        return GeminiRepository();
     }
   }
 }

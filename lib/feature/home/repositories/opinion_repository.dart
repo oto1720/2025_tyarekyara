@@ -82,16 +82,22 @@ class OpinionRepository {
   /// 特定ユーザーの意見を取得
   Future<List<Opinion>> getOpinionsByUser(String userId) async {
     try {
+      // orderByを削除してインデックス不要にする
+      // ソートはアプリ側で行う
       final snapshot = await _firestore
           .collection(_collectionName)
           .where('userId', isEqualTo: userId)
           .where('isDeleted', isEqualTo: false)
-          .orderBy('createdAt', descending: true)
           .get();
 
-      return snapshot.docs
+      final opinions = snapshot.docs
           .map((doc) => Opinion.fromJson(doc.data()))
           .toList();
+
+      // アプリ側で作成日時の降順にソート
+      opinions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return opinions;
     } catch (e) {
       print('Error getting opinions by user: $e');
       return [];
