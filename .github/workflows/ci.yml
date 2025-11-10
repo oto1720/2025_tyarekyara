@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - dev
+jobs:
+  check-main-code:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: setup flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 3.35.3
+        cache: true
+    
+    - name: package download
+      run: flutter pub get
+
+    - name: run static analysis
+      run: flutter analyze
+    
+    # - name: run tests
+    #  run: flutter test
+
+    - name: complete
+      run: |
+        echo "CI completed successfully"
+
+        
