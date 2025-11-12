@@ -32,6 +32,16 @@ enum TopicSource {
   manual, // 手動作成
 }
 
+/// トピックへのフィードバック種類
+enum TopicFeedback {
+  @JsonValue('good')
+  good, // よかった
+  @JsonValue('normal')
+  normal, // 普通
+  @JsonValue('bad')
+  bad, // 悪かった
+}
+
 @freezed
 class Topic with _$Topic {
   const factory Topic({
@@ -45,6 +55,8 @@ class Topic with _$Topic {
     String? description, // トピックの説明（オプション）
     @Default(0) double similarityScore, // 既存トピックとの類似度スコア
     @Default([]) List<NewsItem> relatedNews, // 関連ニュース
+    @Default({}) Map<String, int> feedbackCounts, // フィードバック数 {'good': 5, 'normal': 3, 'bad': 1}
+    @Default({}) Map<String, String> feedbackUsers, // ユーザーのフィードバック {userId: 'good'}
   }) = _Topic;
 
   factory Topic.fromJson(Map<String, dynamic> json) => _$TopicFromJson(json);
@@ -96,6 +108,42 @@ extension TopicDifficultyExtension on TopicDifficulty {
         return '少し考える必要がある話題';
       case TopicDifficulty.hard:
         return '深い思考が必要な話題';
+    }
+  }
+}
+
+/// フィードバックの日本語名とアイコンを取得
+extension TopicFeedbackExtension on TopicFeedback {
+  String get displayName {
+    switch (this) {
+      case TopicFeedback.good:
+        return 'よかった';
+      case TopicFeedback.normal:
+        return '普通';
+      case TopicFeedback.bad:
+        return '悪かった';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case TopicFeedback.good:
+        return '👍';
+      case TopicFeedback.normal:
+        return '😐';
+      case TopicFeedback.bad:
+        return '👎';
+    }
+  }
+
+  String get key {
+    switch (this) {
+      case TopicFeedback.good:
+        return 'good';
+      case TopicFeedback.normal:
+        return 'normal';
+      case TopicFeedback.bad:
+        return 'bad';
     }
   }
 }

@@ -166,3 +166,27 @@ final dailyTopicProvider =
     NotifierProvider<DailyTopicNotifier, DailyTopicState>(
   DailyTopicNotifier.new,
 );
+
+/// 選択中の日付を管理するNotifier
+class SelectedDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    return DateTime.now(); // 初期値は今日
+  }
+
+  /// 日付を設定
+  void setDate(DateTime date) {
+    state = date;
+  }
+}
+
+/// 選択中の日付プロバイダー（意見一覧画面用）
+final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(
+  SelectedDateNotifier.new,
+);
+
+/// 選択した日付のトピックを取得するプロバイダー
+final topicByDateProvider = FutureProvider.family<Topic?, DateTime>((ref, date) async {
+  final repository = ref.watch(dailyTopicRepositoryProvider);
+  return await repository.getTopicByDate(date);
+});
