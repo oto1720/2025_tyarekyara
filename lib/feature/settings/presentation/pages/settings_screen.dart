@@ -72,7 +72,12 @@ class SettingsScreen extends ConsumerWidget {
                   if (user == null) {
                     return const SizedBox.shrink();
                   }
-                  return Container(
+                  return GestureDetector(
+                    onTap: () {
+                      // ★ プロフィール画面へ遷移
+                      context.push('/profile');
+                    },
+                  child:  Container(
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -144,6 +149,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
                 loading: () => const Center(
