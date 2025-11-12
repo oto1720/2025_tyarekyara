@@ -69,11 +69,60 @@ AIを活用した1日1回のトピック自動生成とディスカッション�
 - **意見カード**: 各意見を立場別の色分けで表示
 - **自分の投稿リンク**: 右上アイコンから自分の投稿詳細へアクセス
 - **リフレッシュ**: 最新の意見を取得
+- **日付選択機能**: 過去の日付のトピックと意見を閲覧可能（下記参照）
 
 #### 意見編集機能
 - **閲覧モード**: 自分の投稿内容を確認
 - **編集モード**: 立場と意見内容を変更可能
 - **リアルタイム更新**: 編集後すぐに意見一覧に反映
+
+#### 日付選択機能（履歴閲覧）
+意見一覧画面で過去の日付のトピックと意見を閲覧できる機能
+
+##### 特徴
+- ✅ **過去のトピック閲覧**: 過去に生成されたトピックを日付指定で閲覧
+- ✅ **過去の意見閲覧**: その日のトピックに投稿された全ての意見を表示
+- ✅ **直感的なUI**: 前日/翌日ボタンとカレンダーピッカーで簡単操作
+- ✅ **今日への制限**: 未来の日付には移動できない
+- ✅ **エラーハンドリング**: トピックが存在しない日は適切なメッセージを表示
+
+##### 操作方法
+1. **前日へ移動**: AppBarの「←」ボタンをタップ
+2. **翌日へ移動**: AppBarの「→」ボタンをタップ（今日より先には進めない）
+3. **カレンダーで選択**: AppBarの日付表示（例: 11/12 (火)）をタップしてDatePickerを開く
+4. **日付を選択**: カレンダーから任意の日付を選択（2020年1月1日〜今日まで）
+
+##### UI構成
+```
+AppBar
+┌────────────────────────────────────────┐
+│ [←] 11/12 (火) 📅 [→]     [更新]     │
+└────────────────────────────────────────┘
+     ↑       ↑      ↑     ↑
+     |       |      |     |
+  前の日  日付表示  次の日  リフレッシュ
+         (タップで
+         カレンダー)
+```
+
+##### 表示される内容
+- **トピックカード**: 選択した日のトピック情報
+- **統計情報**: その日のトピックへの意見の統計（賛成/反対/中立）
+- **意見一覧**: その日のトピックに投稿された全ての意見
+- **空の状態**: トピックが存在しない日は「この日のトピックはまだ作成されていません」と表示
+
+##### 技術的な詳細
+| コンポーネント | 説明 |
+|--------------|------|
+| selectedDateProvider | 現在選択中の日付を管理するNotifierProvider |
+| topicByDateProvider | 指定した日付のトピックを取得するFutureProvider.family |
+| SelectedDateNotifier | 日付の状態を管理し、setDate()メソッドで更新 |
+| DateFormat | intlパッケージを使用した日付フォーマット（M/d (E)形式） |
+
+##### 日付の制限
+- **最古の日付**: 2020年1月1日（変更可能）
+- **最新の日付**: 今日（動的に変更）
+- **未来の日付**: 選択不可（DatePickerとボタンで制御）
 
 #### データ構造
 | フィールド | 型 | 説明 |
@@ -158,7 +207,7 @@ lib/feature/home/
 └── presentation/                          # UI
     ├── pages/
     │   ├── daily_topic_home.dart          # 【新規】メインホーム画面（意見投稿機能含む）
-    │   ├── home_answer.dart               # 【新規】意見一覧画面
+    │   ├── home_answer.dart               # 【新規】意見一覧画面（日付選択機能含む）
     │   ├── my_opinion_detail.dart         # 【新規】自分の投稿詳細・編集画面
     │   ├── home_aitopic.dart              # AI トピック生成画面（開発用）
     │   ├── home_topic.dart                # トピック表示画面（旧）
@@ -289,6 +338,18 @@ await ref.read(dailyTopicProvider.notifier).regenerateTopic();
 - **統計確認**: 賛成/反対/中立の数と割合を確認
 - **意見閲覧**: 他のユーザーの意見をスクロールして閲覧
 - **リフレッシュ**: 右上の更新ボタンで最新の意見を取得
+
+#### 過去の意見を見る（日付選択機能）
+1. **意見一覧画面を開く**: 投稿後の自動遷移、またはホーム画面から手動でアクセス
+2. **前日へ移動**: AppBarの左矢印「←」ボタンをタップして前日のトピックと意見を表示
+3. **翌日へ移動**: AppBarの右矢印「→」ボタンをタップして翌日のトピックと意見を表示
+   - 今日より先には進めない（ボタンが無効化される）
+4. **カレンダーで選択**:
+   - AppBarの日付表示（例: 11/12 (火)）をタップ
+   - カレンダーピッカーが開く
+   - 任意の日付を選択（2020年1月1日〜今日まで）
+   - 選択した日のトピックと意見が表示される
+5. **今日に戻る**: 右矢印を連続でタップ、またはカレンダーから今日を選択
 
 #### 自分の意見を編集する
 1. **意見一覧画面を開く**: 投稿後に自動遷移、または手動でアクセス
@@ -510,6 +571,45 @@ Future<void> regenerateTopic()     // トピックを再生成
 void clearError()                  // エラーをクリア
 ```
 
+#### SelectedDateNotifier
+日付選択の状態管理（意見一覧画面での履歴閲覧用）
+
+**状態:**
+```dart
+DateTime  // 現在選択中の日付（初期値: 今日）
+```
+
+**主なメソッド:**
+```dart
+void setDate(DateTime date)  // 日付を設定
+```
+
+**関連プロバイダー:**
+```dart
+// 選択中の日付を管理
+final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(
+  SelectedDateNotifier.new,
+);
+
+// 指定した日付のトピックを取得
+final topicByDateProvider = FutureProvider.family<Topic?, DateTime>((ref, date) async {
+  final repository = ref.watch(dailyTopicRepositoryProvider);
+  return await repository.getTopicByDate(date);
+});
+```
+
+**使用例:**
+```dart
+// 日付を取得
+final selectedDate = ref.watch(selectedDateProvider);
+
+// 日付を変更
+ref.read(selectedDateProvider.notifier).setDate(DateTime(2024, 11, 12));
+
+// 選択した日付のトピックを取得
+final topicAsync = ref.watch(topicByDateProvider(selectedDate));
+```
+
 #### TopicCard
 トピックを表示する再利用可能なウィジェット
 
@@ -538,6 +638,7 @@ TopicCard(
 - **データベース**: Cloud Firestore
 - **ルーティング**: go_router
 - **認証**: Firebase Authentication
+- **日付フォーマット**: intl パッケージ（日付選択機能で使用）
 
 ---
 
@@ -614,6 +715,30 @@ flutter pub run build_runner build --delete-conflicting-outputs
 2. **go_router**: `go_router`パッケージが正しくインストールされているか確認
 3. **hasPosted**: 投稿後に`hasPosted`が`true`に更新されているか確認
 4. **context.go()**: `WidgetsBinding.instance.addPostFrameCallback`が正しく呼ばれているか確認
+
+### 日付選択機能が動作しない場合
+
+1. **DatePicker エラー**:
+   - `MaterialLocalizations`エラーが発生した場合は、`showDatePicker`の`locale`パラメータを削除
+   - アプリ全体のローカライゼーション設定を確認
+
+2. **日付が変更されない**:
+   - `selectedDateProvider.notifier.setDate()`が正しく呼ばれているか確認
+   - Riverpod DevToolsで状態の変更を確認
+
+3. **過去のトピックが表示されない**:
+   - `topicByDateProvider`が正しく動作しているか確認
+   - Firestoreの`daily_topics`コレクションにデータが存在するか確認（日付キー: YYYY-MM-DD形式）
+   - `DailyTopicRepository.getTopicByDate()`メソッドが正しく実装されているか確認
+
+4. **カレンダーが開かない**:
+   - `showDatePicker`が正しく呼ばれているか確認
+   - `context`が有効か確認
+   - エラーログを確認
+
+5. **日付フォーマットが表示されない**:
+   - `intl`パッケージがインストールされているか確認: `flutter pub get`
+   - `DateFormat`のインポートが正しいか確認: `import 'package:intl/intl.dart';`
 
 ---
 
@@ -772,6 +897,90 @@ if (postState.hasPosted) {
 }
 ```
 
+### 日付選択機能を使用する
+
+```dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:tyarekyara/feature/home/providers/daily_topic_provider.dart';
+
+class DateSelectorWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    final topicAsync = ref.watch(topicByDateProvider(selectedDate));
+
+    return Column(
+      children: [
+        // 日付表示
+        Text(
+          DateFormat('M/d (E)', 'ja').format(selectedDate),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+
+        // 前日へ移動
+        IconButton(
+          icon: Icon(Icons.chevron_left),
+          onPressed: () {
+            final previousDay = DateTime(
+              selectedDate.year,
+              selectedDate.month,
+              selectedDate.day - 1,
+            );
+            ref.read(selectedDateProvider.notifier).setDate(previousDay);
+          },
+        ),
+
+        // トピック表示
+        topicAsync.when(
+          data: (topic) {
+            if (topic == null) {
+              return Text('この日のトピックはありません');
+            }
+            return TopicCard(topic: topic);
+          },
+          loading: () => CircularProgressIndicator(),
+          error: (error, stack) => Text('エラー: $error'),
+        ),
+      ],
+    );
+  }
+}
+```
+
+### カレンダーピッカーで日付を選択する
+
+```dart
+Future<void> _showDatePicker(BuildContext context, WidgetRef ref) async {
+  final currentDate = ref.read(selectedDateProvider);
+  final today = DateTime.now();
+
+  final selectedDate = await showDatePicker(
+    context: context,
+    initialDate: currentDate,
+    firstDate: DateTime(2020, 1, 1),
+    lastDate: today,
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: ColorScheme.light(
+            primary: Colors.blue.shade600,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black87,
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (selectedDate != null) {
+    ref.read(selectedDateProvider.notifier).setDate(selectedDate);
+  }
+}
+```
+
 ### AIプロバイダーの切り替え
 
 `daily_topic_provider.dart`の44行目:
@@ -797,6 +1006,7 @@ final aiRepository = AIRepositoryFactory.create(AIProvider.claude);
 - [ ] カテゴリー別のトピック表示
 
 ### 意見投稿・一覧機能
+- [x] 日付選択機能（過去の意見閲覧） - **完成**
 - [ ] いいね機能の実装（現在はモデルのみ）
 - [ ] コメント機能（意見に対する返信）
 - [ ] 意見の検索・フィルター機能
@@ -809,6 +1019,8 @@ final aiRepository = AIRepositoryFactory.create(AIProvider.claude);
 - [ ] 意見の履歴表示（自分の過去の投稿一覧）
 - [ ] AIによる意見分析・要約機能
 - [ ] 議論の可視化（立場の分布グラフなど）
+- [ ] 日付選択機能の拡張（月別カレンダービュー）
+- [ ] 日付選択機能の拡張（週別ビュー）
 
 ### AI生成機能
 - [ ] カスタムプロンプト機能
