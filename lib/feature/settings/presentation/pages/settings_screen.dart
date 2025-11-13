@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/setting_item.dart';
+import '../../../../core/providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -41,6 +42,67 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+  void _showThemeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        // ダイアログ内で Provider を操作するために Consumer を使用
+        return Consumer(
+          builder: (context, ref, child) {
+            final currentThemeMode = ref.watch(themeModeProvider);
+
+            return AlertDialog(
+              title: const Text('表示テーマ'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<ThemeMode>(
+                    title: const Text('ライトモード'),
+                    value: ThemeMode.light,
+                    groupValue: currentThemeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref.read(themeModeProvider.notifier).setThemeMode(value);
+                        // TODO: SharedPreferencesなどに設定を保存
+                      }
+                    },
+                  ),
+                  RadioListTile<ThemeMode>(
+                    title: const Text('ダークモード'),
+                    value: ThemeMode.dark,
+                    groupValue: currentThemeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref.read(themeModeProvider.notifier).setThemeMode(value);
+                        // TODO: SharedPreferencesなどに設定を保存
+                      }
+                    },
+                  ),
+                  RadioListTile<ThemeMode>(
+                    title: const Text('システム設定に従う'),
+                    value: ThemeMode.system,
+                    groupValue: currentThemeMode,
+                    onChanged: (value) {
+                      if (value != null) {
+                        ref.read(themeModeProvider.notifier).setThemeMode(value);
+                        // TODO: SharedPreferencesなどに設定を保存
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('閉じる'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -72,7 +134,12 @@ class SettingsScreen extends ConsumerWidget {
                   if (user == null) {
                     return const SizedBox.shrink();
                   }
-                  return Container(
+                  return GestureDetector(
+                    onTap: () {
+                      // ★ プロフィール画面へ遷移
+                      context.push('/profile');
+                    },
+                  child:  Container(
                     margin: const EdgeInsets.all(16),
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -144,6 +211,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
                 loading: () => const Center(
@@ -184,10 +252,8 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'テーマやフォントサイズ',
                 iconColor: Colors.purple,
                 onTap: () {
-                  // TODO: 表示設定画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('表示設定画面（未実装）')),
-                  );
+                  // ★ SnackBarの表示をダイアログ呼び出しに変更
+                  _showThemeDialog(context);
                 },
               ),
               SettingItem(

@@ -113,7 +113,6 @@ class ProfileScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(validation.nicknameError ??
-              validation.emailError ??
               validation.currentPasswordError ??
               validation.newPasswordError ??
               validation.confirmPasswordError ??
@@ -216,21 +215,6 @@ class ProfileScreen extends ConsumerWidget {
                   errorText: validation.nicknameError,
                   onChanged: (value) {
                     ref.read(profileEditProvider.notifier).updateNickname(value);
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // メールアドレス
-                const SectionTitle('メールアドレス'),
-                const SizedBox(height: 8),
-                StandardTextField(
-                  initialValue: editState.email,
-                  label: 'メールアドレス',
-                  icon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  errorText: validation.emailError,
-                  onChanged: (value) {
-                    ref.read(profileEditProvider.notifier).updateEmail(value);
                   },
                 ),
                 const SizedBox(height: 24),

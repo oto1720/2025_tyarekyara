@@ -1,6 +1,7 @@
+// lib/feature/settings/providers/profile_edit_provider.dart
+
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'profile_edit_state.dart';
 import 'profile_update_provider.dart';
@@ -14,20 +15,19 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
     return userAsync.when(
       data: (user) {
         if (user == null) {
-          return const ProfileEditState(nickname: '', email: '');
+          return const ProfileEditState(nickname: '');
         }
         return ProfileEditState.fromUser(
           nickname: user.nickname,
-          email: user.email,
           ageRange: user.ageRange.isNotEmpty ? user.ageRange : null,
           region: user.region.isNotEmpty ? user.region : null,
         );
       },
-      loading: () => const ProfileEditState(nickname: '', email: ''),
+      loading: () => const ProfileEditState(nickname: ''),
       error: (error, _) {
         // エラーが発生しても空の状態を返す（エラー状態にしない）
         // エラーはユーザーがログインしていない可能性があるため
-        return const ProfileEditState(nickname: '', email: '');
+        return const ProfileEditState(nickname: '');
       },
     );
   }
@@ -35,11 +35,6 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
   /// ニックネームを更新
   void updateNickname(String nickname) {
     state = state.copyWith(nickname: nickname);
-  }
-
-  /// メールアドレスを更新
-  void updateEmail(String email) {
-    state = state.copyWith(email: email);
   }
 
   /// 年代を更新
@@ -85,7 +80,6 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
   /// フォームバリデーション
   ProfileEditValidation validate() {
     String? nicknameError;
-    String? emailError;
     String? currentPasswordError;
     String? newPasswordError;
     String? confirmPasswordError;
@@ -93,13 +87,6 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
     // ニックネームのバリデーション
     if (state.nickname.isEmpty) {
       nicknameError = 'ニックネームを入力してください';
-    }
-
-    // メールアドレスのバリデーション
-    if (state.email.isEmpty) {
-      emailError = 'メールアドレスを入力してください';
-    } else if (!state.email.contains('@')) {
-      emailError = '正しいメールアドレスを入力してください';
     }
 
     // パスワード編集時のバリデーション
@@ -116,10 +103,8 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
         confirmPasswordError = 'パスワードが一致しません';
       }
     }
-
     return ProfileEditValidation(
       nicknameError: nicknameError,
-      emailError: emailError,
       currentPasswordError: currentPasswordError,
       newPasswordError: newPasswordError,
       confirmPasswordError: confirmPasswordError,
@@ -164,8 +149,6 @@ class ProfileSaveNotifier extends AsyncNotifier<void> {
       }
 
       final profileUpdate = ref.read(profileUpdateProvider);
-      final oldEmail = user.email;
-      final newEmail = editState.email.trim();
 
       // 1. 画像をアップロード
       String? uploadedImageUrl;
@@ -174,20 +157,6 @@ class ProfileSaveNotifier extends AsyncNotifier<void> {
           userId: user.id,
           imageFile: editState.selectedImage!,
         );
-      }
-
-      // 2. メールアドレスが変更された場合
-      if (oldEmail != newEmail) {
-        if (editState.isEditingPassword &&
-            editState.currentPassword.isNotEmpty) {
-          await profileUpdate.updateEmail(
-            userId: user.id,
-            newEmail: newEmail,
-            currentPassword: editState.currentPassword,
-          );
-        } else {
-          throw 'メールアドレスを変更するには現在のパスワードを入力してください';
-        }
       }
 
       // 3. パスワードを変更

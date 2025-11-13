@@ -18,7 +18,6 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$ProfileEditState {
   String get nickname => throw _privateConstructorUsedError;
-  String get email => throw _privateConstructorUsedError;
   String? get ageRange => throw _privateConstructorUsedError;
   String? get region => throw _privateConstructorUsedError;
   File? get selectedImage => throw _privateConstructorUsedError;
@@ -44,7 +43,6 @@ abstract class $ProfileEditStateCopyWith<$Res> {
   @useResult
   $Res call({
     String nickname,
-    String email,
     String? ageRange,
     String? region,
     File? selectedImage,
@@ -72,7 +70,6 @@ class _$ProfileEditStateCopyWithImpl<$Res, $Val extends ProfileEditState>
   @override
   $Res call({
     Object? nickname = null,
-    Object? email = null,
     Object? ageRange = freezed,
     Object? region = freezed,
     Object? selectedImage = freezed,
@@ -87,10 +84,6 @@ class _$ProfileEditStateCopyWithImpl<$Res, $Val extends ProfileEditState>
             nickname: null == nickname
                 ? _value.nickname
                 : nickname // ignore: cast_nullable_to_non_nullable
-                      as String,
-            email: null == email
-                ? _value.email
-                : email // ignore: cast_nullable_to_non_nullable
                       as String,
             ageRange: freezed == ageRange
                 ? _value.ageRange
@@ -141,7 +134,6 @@ abstract class _$$ProfileEditStateImplCopyWith<$Res>
   @useResult
   $Res call({
     String nickname,
-    String email,
     String? ageRange,
     String? region,
     File? selectedImage,
@@ -168,7 +160,6 @@ class __$$ProfileEditStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? nickname = null,
-    Object? email = null,
     Object? ageRange = freezed,
     Object? region = freezed,
     Object? selectedImage = freezed,
@@ -183,10 +174,6 @@ class __$$ProfileEditStateImplCopyWithImpl<$Res>
         nickname: null == nickname
             ? _value.nickname
             : nickname // ignore: cast_nullable_to_non_nullable
-                  as String,
-        email: null == email
-            ? _value.email
-            : email // ignore: cast_nullable_to_non_nullable
                   as String,
         ageRange: freezed == ageRange
             ? _value.ageRange
@@ -230,7 +217,6 @@ class __$$ProfileEditStateImplCopyWithImpl<$Res>
 class _$ProfileEditStateImpl implements _ProfileEditState {
   const _$ProfileEditStateImpl({
     required this.nickname,
-    required this.email,
     this.ageRange,
     this.region,
     this.selectedImage,
@@ -243,8 +229,6 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
 
   @override
   final String nickname;
-  @override
-  final String email;
   @override
   final String? ageRange;
   @override
@@ -268,7 +252,7 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
 
   @override
   String toString() {
-    return 'ProfileEditState(nickname: $nickname, email: $email, ageRange: $ageRange, region: $region, selectedImage: $selectedImage, uploadedImageUrl: $uploadedImageUrl, isEditingPassword: $isEditingPassword, currentPassword: $currentPassword, newPassword: $newPassword, confirmPassword: $confirmPassword)';
+    return 'ProfileEditState(nickname: $nickname, ageRange: $ageRange, region: $region, selectedImage: $selectedImage, uploadedImageUrl: $uploadedImageUrl, isEditingPassword: $isEditingPassword, currentPassword: $currentPassword, newPassword: $newPassword, confirmPassword: $confirmPassword)';
   }
 
   @override
@@ -278,7 +262,6 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
             other is _$ProfileEditStateImpl &&
             (identical(other.nickname, nickname) ||
                 other.nickname == nickname) &&
-            (identical(other.email, email) || other.email == email) &&
             (identical(other.ageRange, ageRange) ||
                 other.ageRange == ageRange) &&
             (identical(other.region, region) || other.region == region) &&
@@ -300,7 +283,6 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
   int get hashCode => Object.hash(
     runtimeType,
     nickname,
-    email,
     ageRange,
     region,
     selectedImage,
@@ -326,7 +308,6 @@ class _$ProfileEditStateImpl implements _ProfileEditState {
 abstract class _ProfileEditState implements ProfileEditState {
   const factory _ProfileEditState({
     required final String nickname,
-    required final String email,
     final String? ageRange,
     final String? region,
     final File? selectedImage,
@@ -339,8 +320,6 @@ abstract class _ProfileEditState implements ProfileEditState {
 
   @override
   String get nickname;
-  @override
-  String get email;
   @override
   String? get ageRange;
   @override
@@ -369,7 +348,6 @@ abstract class _ProfileEditState implements ProfileEditState {
 /// @nodoc
 mixin _$ProfileEditValidation {
   String? get nicknameError => throw _privateConstructorUsedError;
-  String? get emailError => throw _privateConstructorUsedError;
   String? get currentPasswordError => throw _privateConstructorUsedError;
   String? get newPasswordError => throw _privateConstructorUsedError;
   String? get confirmPasswordError => throw _privateConstructorUsedError;
@@ -390,7 +368,6 @@ abstract class $ProfileEditValidationCopyWith<$Res> {
   @useResult
   $Res call({
     String? nicknameError,
-    String? emailError,
     String? currentPasswordError,
     String? newPasswordError,
     String? confirmPasswordError,
@@ -416,7 +393,6 @@ class _$ProfileEditValidationCopyWithImpl<
   @override
   $Res call({
     Object? nicknameError = freezed,
-    Object? emailError = freezed,
     Object? currentPasswordError = freezed,
     Object? newPasswordError = freezed,
     Object? confirmPasswordError = freezed,
@@ -426,10 +402,6 @@ class _$ProfileEditValidationCopyWithImpl<
             nicknameError: freezed == nicknameError
                 ? _value.nicknameError
                 : nicknameError // ignore: cast_nullable_to_non_nullable
-                      as String?,
-            emailError: freezed == emailError
-                ? _value.emailError
-                : emailError // ignore: cast_nullable_to_non_nullable
                       as String?,
             currentPasswordError: freezed == currentPasswordError
                 ? _value.currentPasswordError
@@ -460,7 +432,6 @@ abstract class _$$ProfileEditValidationImplCopyWith<$Res>
   @useResult
   $Res call({
     String? nicknameError,
-    String? emailError,
     String? currentPasswordError,
     String? newPasswordError,
     String? confirmPasswordError,
@@ -483,7 +454,6 @@ class __$$ProfileEditValidationImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? nicknameError = freezed,
-    Object? emailError = freezed,
     Object? currentPasswordError = freezed,
     Object? newPasswordError = freezed,
     Object? confirmPasswordError = freezed,
@@ -493,10 +463,6 @@ class __$$ProfileEditValidationImplCopyWithImpl<$Res>
         nicknameError: freezed == nicknameError
             ? _value.nicknameError
             : nicknameError // ignore: cast_nullable_to_non_nullable
-                  as String?,
-        emailError: freezed == emailError
-            ? _value.emailError
-            : emailError // ignore: cast_nullable_to_non_nullable
                   as String?,
         currentPasswordError: freezed == currentPasswordError
             ? _value.currentPasswordError
@@ -520,7 +486,6 @@ class __$$ProfileEditValidationImplCopyWithImpl<$Res>
 class _$ProfileEditValidationImpl extends _ProfileEditValidation {
   const _$ProfileEditValidationImpl({
     this.nicknameError,
-    this.emailError,
     this.currentPasswordError,
     this.newPasswordError,
     this.confirmPasswordError,
@@ -528,8 +493,6 @@ class _$ProfileEditValidationImpl extends _ProfileEditValidation {
 
   @override
   final String? nicknameError;
-  @override
-  final String? emailError;
   @override
   final String? currentPasswordError;
   @override
@@ -539,7 +502,7 @@ class _$ProfileEditValidationImpl extends _ProfileEditValidation {
 
   @override
   String toString() {
-    return 'ProfileEditValidation(nicknameError: $nicknameError, emailError: $emailError, currentPasswordError: $currentPasswordError, newPasswordError: $newPasswordError, confirmPasswordError: $confirmPasswordError)';
+    return 'ProfileEditValidation(nicknameError: $nicknameError, currentPasswordError: $currentPasswordError, newPasswordError: $newPasswordError, confirmPasswordError: $confirmPasswordError)';
   }
 
   @override
@@ -549,8 +512,6 @@ class _$ProfileEditValidationImpl extends _ProfileEditValidation {
             other is _$ProfileEditValidationImpl &&
             (identical(other.nicknameError, nicknameError) ||
                 other.nicknameError == nicknameError) &&
-            (identical(other.emailError, emailError) ||
-                other.emailError == emailError) &&
             (identical(other.currentPasswordError, currentPasswordError) ||
                 other.currentPasswordError == currentPasswordError) &&
             (identical(other.newPasswordError, newPasswordError) ||
@@ -563,7 +524,6 @@ class _$ProfileEditValidationImpl extends _ProfileEditValidation {
   int get hashCode => Object.hash(
     runtimeType,
     nicknameError,
-    emailError,
     currentPasswordError,
     newPasswordError,
     confirmPasswordError,
@@ -585,7 +545,6 @@ class _$ProfileEditValidationImpl extends _ProfileEditValidation {
 abstract class _ProfileEditValidation extends ProfileEditValidation {
   const factory _ProfileEditValidation({
     final String? nicknameError,
-    final String? emailError,
     final String? currentPasswordError,
     final String? newPasswordError,
     final String? confirmPasswordError,
@@ -594,8 +553,6 @@ abstract class _ProfileEditValidation extends ProfileEditValidation {
 
   @override
   String? get nicknameError;
-  @override
-  String? get emailError;
   @override
   String? get currentPasswordError;
   @override

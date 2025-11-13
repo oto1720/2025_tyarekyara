@@ -8,7 +8,6 @@ part 'profile_edit_state.freezed.dart';
 class ProfileEditState with _$ProfileEditState {
   const factory ProfileEditState({
     required String nickname,
-    required String email,
     String? ageRange,
     String? region,
     File? selectedImage,
@@ -21,13 +20,11 @@ class ProfileEditState with _$ProfileEditState {
 
   factory ProfileEditState.fromUser({
     required String nickname,
-    required String email,
     String? ageRange,
     String? region,
   }) {
     return ProfileEditState(
       nickname: nickname,
-      email: email,
       ageRange: ageRange,
       region: region,
     );
@@ -39,7 +36,6 @@ class ProfileEditState with _$ProfileEditState {
 class ProfileEditValidation with _$ProfileEditValidation {
   const factory ProfileEditValidation({
     String? nicknameError,
-    String? emailError,
     String? currentPasswordError,
     String? newPasswordError,
     String? confirmPasswordError,
@@ -49,7 +45,6 @@ class ProfileEditValidation with _$ProfileEditValidation {
 
   bool get isValid =>
       nicknameError == null &&
-      emailError == null &&
       currentPasswordError == null &&
       newPasswordError == null &&
       confirmPasswordError == null;
