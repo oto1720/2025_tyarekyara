@@ -54,9 +54,45 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
           ),
         ),
         actions: [
+          // デバッグ: トピック再生成ボタン
+          IconButton(
+            icon: const Icon(Icons.bug_report, color: Colors.orange),
+            tooltip: 'デバッグ: トピックを再生成',
+            onPressed: state.isLoading || state.isGenerating
+                ? null
+                : () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('デバッグ: トピック再生成'),
+                        content: const Text(
+                          '新しいトピックを生成しますか？\n'
+                          '（既存のトピックは上書きされます）',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('キャンセル'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                            ),
+                            child: const Text('再生成'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      notifier.regenerateTopic();
+                    }
+                  },
+          ),
           // リロードボタン（管理者用）
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.black87),
+            tooltip: 'リロード',
             onPressed: state.isLoading || state.isGenerating
                 ? null
                 : () => notifier.loadTodayTopic(),

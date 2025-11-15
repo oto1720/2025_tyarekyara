@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/debug/enhanced_matching_debug_page.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
@@ -15,6 +16,16 @@ import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/settings/presentation/pages/notice_screen.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_event_list_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_event_detail_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_entry_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_waiting_room_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_match_detail_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_room_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_judgment_waiting_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_result_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_ranking_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_stats_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -136,6 +147,103 @@ final GoRouter router = GoRouter(
       },
     ),
 
+    // ディベートイベント詳細ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/event/:eventId',
+      pageBuilder: (context, state) {
+        final eventId = state.pathParameters['eventId']!;
+        return NoTransitionPage(
+          child: DebateEventDetailPage(eventId: eventId),
+        );
+      },
+    ),
+
+    // ディベートエントリーページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/event/:eventId/entry',
+      pageBuilder: (context, state) {
+        final eventId = state.pathParameters['eventId']!;
+        return NoTransitionPage(
+          child: DebateEntryPage(eventId: eventId),
+        );
+      },
+    ),
+
+    // ディベートウェイティングルームページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/event/:eventId/waiting',
+      pageBuilder: (context, state) {
+        final eventId = state.pathParameters['eventId']!;
+        return NoTransitionPage(
+          child: DebateWaitingRoomPage(eventId: eventId),
+        );
+      },
+    ),
+
+    // ディベートマッチ詳細ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/match/:matchId',
+      pageBuilder: (context, state) {
+        final matchId = state.pathParameters['matchId']!;
+        return NoTransitionPage(
+          child: DebateMatchDetailPage(matchId: matchId),
+        );
+      },
+    ),
+
+    // ディベートルームページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/room/:matchId',
+      pageBuilder: (context, state) {
+        final matchId = state.pathParameters['matchId']!;
+        return NoTransitionPage(
+          child: DebateRoomPage(matchId: matchId),
+        );
+      },
+    ),
+
+    // AI判定待機ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/judgment/:matchId',
+      pageBuilder: (context, state) {
+        final matchId = state.pathParameters['matchId']!;
+        return NoTransitionPage(
+          child: DebateJudgmentWaitingPage(matchId: matchId),
+        );
+      },
+    ),
+
+    // 判定結果ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/result/:matchId',
+      pageBuilder: (context, state) {
+        final matchId = state.pathParameters['matchId']!;
+        return NoTransitionPage(
+          child: DebateResultPage(matchId: matchId),
+        );
+      },
+    ),
+
+    // ディベートランキングページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/ranking',
+      pageBuilder: (context, state) {
+        return const NoTransitionPage(
+          child: DebateRankingPage(),
+        );
+      },
+    ),
+
+    // ディベート統計ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/stats',
+      pageBuilder: (context, state) {
+        return const NoTransitionPage(
+          child: DebateStatsPage(),
+        );
+      },
+    ),
+
     // メインアプリ（BottomNavigation あり）
     ShellRoute(
       builder: (context, state, child) {
@@ -190,6 +298,16 @@ final GoRouter router = GoRouter(
           path: '/challenge',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: ChallengePage()),
+        ),
+        // ディベートイベント一覧画面
+        GoRoute(
+          path: '/debate',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DebateEventListPage()),
+        ),
+        GoRoute(
+          path: '/debug/matching',
+          pageBuilder: (context, state) => const NoTransitionPage(child: EnhancedMatchingDebugPage()),
         ),
       ],
     ),
