@@ -135,6 +135,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
         title: const Text('ディベートルーム'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false, // 戻るボタンを非表示
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(
