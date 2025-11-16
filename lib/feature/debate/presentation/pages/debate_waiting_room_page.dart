@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
@@ -30,6 +31,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
   @override
   void initState() {
     super.initState();
+    print('🎯 DebateWaitingRoomPage initState called for event: ${widget.eventId}');
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -54,11 +56,13 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
 
   @override
   Widget build(BuildContext context) {
+    print('🔄 DebateWaitingRoomPage build called');
     final authState = ref.watch(authControllerProvider);
     final userId = authState.maybeWhen(
       authenticated: (user) => user.id,
       orElse: () => null,
     );
+    print('👤 UserId: $userId');
 
     if (userId == null) {
       return _buildNotAuthenticated(context);
@@ -80,16 +84,27 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
               return const Center(child: CircularProgressIndicator());
             }
 
-            // マッチング成立チェック
+            // マッチング成立チェック - マッチ詳細画面へ
             if (entry.status == MatchStatus.matched && entry.matchId != null) {
+              // マッチング成立したらマッチ詳細画面へ遷移
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
-                  Navigator.of(context).pushReplacementNamed(
-                    '/debate/match/${entry.matchId}',
-                  );
+                  print('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
+                  context.pushReplacement('/debate/match/${entry.matchId}');
                 }
               });
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('マッチング成立！'),
+                    SizedBox(height: 8),
+                    Text('マッチ詳細画面へ遷移中...'),
+                  ],
+                ),
+              );
             }
 
             return _buildWaitingRoom(context, entry, userId);

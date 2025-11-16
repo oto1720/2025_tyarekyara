@@ -26,6 +26,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('📄 DebateEntryPage build called for event: ${widget.eventId}');
     final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
     final authState = ref.watch(authControllerProvider);
 
@@ -244,7 +245,9 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
 
       // リポジトリに保存
       final repository = ref.read(debateMatchRepositoryProvider);
+      print('📝 Creating entry for event: ${event.id}');
       await repository.createEntry(entry);
+      print('✅ Entry created successfully');
 
       // イベントの参加者数を更新
       try {
@@ -259,8 +262,13 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
       if (!context.mounted) return;
 
       // ウェイティングルームへ遷移
+      print('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
       context.pushReplacement('/debate/event/${event.id}/waiting');
-    } catch (e) {
+      print('✅ Navigation triggered');
+    } catch (e, stackTrace) {
+      print('❌ Entry error: $e');
+      print('Stack trace: $stackTrace');
+
       if (!context.mounted) return;
 
       // エラーダイアログ

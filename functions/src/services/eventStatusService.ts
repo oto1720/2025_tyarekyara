@@ -1,5 +1,9 @@
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
+import {
+  createRoomsForEvent,
+  activateRoomsForEvent,
+} from "./debateRoomService";
 
 /**
  * イベントステータスを時刻に基づいて自動更新
@@ -13,14 +17,17 @@ export async function updateEventStatuses(): Promise<void> {
 
     let updatedCount = 0;
 
-    // 1. エントリー締切を過ぎたイベントを「matching」に変更
+    // 1. 開催24時間前になったイベントを「accepting」に変更
+    updatedCount += await updateScheduledToAccepting(db, now);
+
+    // 2. エントリー締切を過ぎたイベントを「matching」に変更
     updatedCount +=
       await updateAcceptingToMatching(db, now);
 
-    // 2. 開催時刻を過ぎたイベントを「inProgress」に変更
+    // 3. 開催時刻を過ぎたイベントを「inProgress」に変更
     updatedCount += await updateMatchingToInProgress(db, now);
 
-    // 3. 終了時刻を過ぎたイベントを「completed」に変更
+    // 4. 終了時刻を過ぎたイベントを「completed」に変更
     // （開催時刻 + 2時間を終了時刻とする）
     updatedCount += await updateInProgressToCompleted(db, now);
 
@@ -58,11 +65,28 @@ async function updateAcceptingToMatching(
 
     let count = 0;
     for (const doc of snapshot.docs) {
+      const eventId = doc.id;
+
+      // イベントステータスを更新
       await doc.ref.update({
         status: "matching",
         updatedAt: now,
       });
-      logger.info(`Updated event ${doc.id} to matching status`);
+      logger.info(`Updated event ${eventId} to matching status`);
+
+      // マッチング済みのマッチのルームを作成
+      try {
+        const roomsCreated = await createRoomsForEvent(eventId);
+        logger.info(
+          `Created ${roomsCreated} rooms for event ${eventId}`
+        );
+      } catch (error) {
+        logger.error(
+          `Error creating rooms for event ${eventId}:`,
+          error
+        );
+      }
+
       count++;
     }
 
@@ -98,11 +122,28 @@ async function updateMatchingToInProgress(
 
     let count = 0;
     for (const doc of snapshot.docs) {
+      const eventId = doc.id;
+
+      // イベントステータスを更新
       await doc.ref.update({
         status: "inProgress",
         updatedAt: now,
       });
-      logger.info(`Updated event ${doc.id} to inProgress status`);
+      logger.info(`Updated event ${eventId} to inProgress status`);
+
+      // イベントのルームをアクティブ化（ディベート開始）
+      try {
+        const roomsActivated = await activateRoomsForEvent(eventId);
+        logger.info(
+          `Activated ${roomsActivated} rooms for event ${eventId}`
+        );
+      } catch (error) {
+        logger.error(
+          `Error activating rooms for event ${eventId}:`,
+          error
+        );
+      }
+
       count++;
     }
 

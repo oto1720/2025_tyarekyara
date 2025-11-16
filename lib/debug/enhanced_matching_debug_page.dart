@@ -117,10 +117,16 @@ class _EnhancedMatchingDebugPageState
 
           _buildSection('1. 準備', [
             _buildButton(
-              'テストイベント作成',
+              'テストイベント作成（締切未来）',
               Icons.event,
               Colors.blue,
               _createTestEvent,
+            ),
+            _buildButton(
+              'テストイベント作成（締切過去）',
+              Icons.event_available,
+              Colors.blueAccent,
+              _createTestEventWithPastDeadline,
             ),
             _buildButton(
               'データクリア',
@@ -156,11 +162,23 @@ class _EnhancedMatchingDebugPageState
               Colors.purple,
               _triggerManualMatching,
             ),
+            _buildButton(
+              'イベントステータス更新',
+              Icons.update,
+              Colors.orange,
+              _triggerEventStatusUpdate,
+            ),
           ]),
 
           const SizedBox(height: 24),
 
           _buildSection('4. 確認', [
+            _buildButton(
+              'イベント状態確認',
+              Icons.event,
+              Colors.blue,
+              _checkEventStatus,
+            ),
             _buildButton(
               'エントリー状態確認',
               Icons.list,
@@ -247,7 +265,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _createTestEvent() async {
     setState(() => isLoading = true);
     try {
-      print('📝 テストイベント作成開始...');
+      print('📝 テストイベント作成開始（締切未来）...');
 
       final firestore = FirebaseFirestore.instance;
       final eventData = {
@@ -270,7 +288,48 @@ class _EnhancedMatchingDebugPageState
 
       print('✅ イベント作成成功');
       setState(() {
-        lastSuccess = '✅ テストイベント作成完了\nID: $eventId';
+        lastSuccess = '✅ テストイベント作成完了\nID: $eventId\n締切: 1時間後（まだacceptingのまま）';
+        lastError = null;
+      });
+    } catch (e, stack) {
+      print('❌ イベント作成失敗: $e');
+      print(stack);
+      setState(() {
+        lastError = '❌ イベント作成エラー\n\n$e';
+        lastSuccess = null;
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _createTestEventWithPastDeadline() async {
+    setState(() => isLoading = true);
+    try {
+      print('📝 テストイベント作成開始（締切過去）...');
+
+      final firestore = FirebaseFirestore.instance;
+      final eventData = {
+        'id': eventId,
+        'title': 'テストディベート',
+        'topic': 'AIは人類に有益か',
+        'description': 'マッチングテスト用（締切過去）',
+        'status': 'accepting',
+        'scheduledAt': Timestamp.fromDate(DateTime.now().add(Duration(minutes: 5))),
+        'entryDeadline': Timestamp.fromDate(DateTime.now().subtract(Duration(minutes: -3))),
+        'availableDurations': ['short', 'medium'],
+        'availableFormats': ['oneVsOne', 'twoVsTwo'],
+        'currentParticipants': 0,
+        'maxParticipants': 100,
+        'createdAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      };
+
+      await firestore.collection('debate_events').doc(eventId).set(eventData);
+
+      print('✅ イベント作成成功（締切過去）');
+      setState(() {
+        lastSuccess = '✅ テストイベント作成完了\nID: $eventId\n締切: 5分前（ステータス更新でmatchingに遷移するはず）';
         lastError = null;
       });
     } catch (e, stack) {
@@ -378,6 +437,47 @@ class _EnhancedMatchingDebugPageState
     }
   }
 
+  Future<void> _triggerEventStatusUpdate() async {
+    setState(() => isLoading = true);
+    try {
+      print('🔄 イベントステータス更新開始...');
+
+      final functions =
+          FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+
+      final result = await functions.httpsCallable('manualEventStatusUpdate').call();
+
+      print('✅ イベントステータス更新完了: ${result.data}');
+
+      setState(() {
+        lastSuccess = '✅ イベントステータス更新成功\n\n${result.data}';
+        lastError = null;
+      });
+    } on FirebaseFunctionsException catch (e) {
+      print('❌ Firebase Functions エラー発生');
+      print('コード: ${e.code}');
+      print('メッセージ: ${e.message}');
+      print('詳細: ${e.details}');
+
+      setState(() {
+        lastError = '❌ イベントステータス更新エラー\n\n'
+            'コード: ${e.code}\n'
+            'メッセージ: ${e.message}\n'
+            '詳細: ${e.details}';
+        lastSuccess = null;
+      });
+    } catch (e, stack) {
+      print('❌ 予期しないエラー: $e');
+      print(stack);
+      setState(() {
+        lastError = '❌ イベントステータス更新エラー\n\n$e';
+        lastSuccess = null;
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
   Future<void> _triggerManualMatching() async {
     setState(() => isLoading = true);
     try {
@@ -455,6 +555,82 @@ class _EnhancedMatchingDebugPageState
 
       setState(() {
         lastError = errorMessage;
+        lastSuccess = null;
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _checkEventStatus() async {
+    setState(() => isLoading = true);
+    try {
+      print('🎪 イベント状態確認...');
+
+      final firestore = FirebaseFirestore.instance;
+      final doc = await firestore.collection('debate_events').doc(eventId).get();
+
+      if (!doc.exists) {
+        setState(() {
+          lastError = '❌ イベントが見つかりません\nID: $eventId';
+          lastSuccess = null;
+        });
+        return;
+      }
+
+      final data = doc.data()!;
+      final now = DateTime.now();
+      final scheduledAt = (data['scheduledAt'] as Timestamp?)?.toDate();
+      final entryDeadline = (data['entryDeadline'] as Timestamp?)?.toDate();
+
+      String details = '【イベント状態】\n';
+      details += 'ID: $eventId\n';
+      details += 'ステータス: ${data['status']}\n';
+      details += 'タイトル: ${data['title']}\n\n';
+
+      details += '【時刻情報】\n';
+      details += '現在時刻: ${now.toString().substring(0, 19)}\n';
+      if (entryDeadline != null) {
+        details += '締切時刻: ${entryDeadline.toString().substring(0, 19)}\n';
+        final diff = entryDeadline.difference(now);
+        if (diff.isNegative) {
+          details += '→ 締切から${diff.abs().inMinutes}分経過\n';
+        } else {
+          details += '→ あと${diff.inMinutes}分で締切\n';
+        }
+      }
+      if (scheduledAt != null) {
+        details += '開催時刻: ${scheduledAt.toString().substring(0, 19)}\n';
+        final diff = scheduledAt.difference(now);
+        if (diff.isNegative) {
+          details += '→ 開催から${diff.abs().inMinutes}分経過\n';
+        } else {
+          details += '→ あと${diff.inMinutes}分で開催\n';
+        }
+      }
+
+      details += '\n【次に実行されるべき処理】\n';
+      if (data['status'] == 'accepting' && entryDeadline != null && now.isAfter(entryDeadline)) {
+        details += '⚠️ 締切を過ぎています\n';
+        details += '→ イベントステータスを"matching"に更新すべき\n';
+      } else if (data['status'] == 'matching' && scheduledAt != null && now.isAfter(scheduledAt)) {
+        details += '⚠️ 開催時刻を過ぎています\n';
+        details += '→ イベントステータスを"inProgress"に更新すべき\n';
+      } else {
+        details += '✅ 正常な状態です\n';
+      }
+
+      print(details);
+
+      setState(() {
+        lastSuccess = details;
+        lastError = null;
+      });
+    } catch (e, stack) {
+      print('❌ イベント状態確認失敗: $e');
+      print(stack);
+      setState(() {
+        lastError = '❌ イベント状態確認エラー\n\n$e';
         lastSuccess = null;
       });
     } finally {
@@ -642,80 +818,6 @@ class _EnhancedMatchingDebugPageState
 
       setState(() {
         lastError = errorMessage;
-        lastSuccess = null;
-      });
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<void> _checkEventStatus() async {
-    setState(() => isLoading = true);
-    try {
-      print('📋 イベントステータス確認...');
-
-      final firestore = FirebaseFirestore.instance;
-      final eventDoc =
-          await firestore.collection('debate_events').doc(eventId).get();
-
-      if (!eventDoc.exists) {
-        setState(() {
-          lastSuccess = '📭 イベントが見つかりません\n\nID: $eventId';
-          lastError = null;
-        });
-        return;
-      }
-
-      final data = eventDoc.data()!;
-      final scheduledAt = data['scheduledAt'] as Timestamp?;
-      final entryDeadline = data['entryDeadline'] as Timestamp?;
-      final status = data['status'] ?? '不明';
-
-      String details = '【イベント情報】\n';
-      details += 'ID: $eventId\n';
-      details += 'タイトル: ${data['title'] ?? "なし"}\n';
-      details += 'トピック: ${data['topic'] ?? "なし"}\n';
-      details += 'ステータス: $status\n\n';
-
-      if (scheduledAt != null) {
-        final scheduledDateTime = scheduledAt.toDate();
-        final now = DateTime.now();
-        final diff = scheduledDateTime.difference(now);
-        details += '【開催日時】\n';
-        details += '${scheduledDateTime.toString()}\n';
-        details += '（${diff.isNegative ? "過去" : "未来"} ${diff.abs().inHours}時間${diff.abs().inMinutes % 60}分）\n\n';
-      }
-
-      if (entryDeadline != null) {
-        final deadlineDateTime = entryDeadline.toDate();
-        final now = DateTime.now();
-        final diff = deadlineDateTime.difference(now);
-        details += '【エントリー締切】\n';
-        details += '${deadlineDateTime.toString()}\n';
-        details += '（${diff.isNegative ? "過去" : "未来"} ${diff.abs().inHours}時間${diff.abs().inMinutes % 60}分）\n\n';
-      }
-
-      details += '【参加者数】\n';
-      details += '現在: ${data['currentParticipants'] ?? 0}\n';
-      details += '最大: ${data['maxParticipants'] ?? 0}\n\n';
-
-      details += '【ステータス遷移の説明】\n';
-      details += '• scheduled → accepting: 開催24時間前\n';
-      details += '• accepting → matching: エントリー締切後\n';
-      details += '• matching → inProgress: 開催時刻\n';
-      details += '• inProgress → completed: 開催から2時間後';
-
-      print(details);
-
-      setState(() {
-        lastSuccess = details;
-        lastError = null;
-      });
-    } catch (e, stack) {
-      print('❌ イベントステータス確認失敗: $e');
-      print(stack);
-      setState(() {
-        lastError = '❌ イベントステータス確認エラー\n\n$e';
         lastSuccess = null;
       });
     } finally {

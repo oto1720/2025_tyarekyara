@@ -59,6 +59,19 @@ class DebateRoomRepository {
     }
   }
 
+  /// マッチIDからルームをリアルタイム監視
+  Stream<DebateRoom?> watchRoomByMatchId(String matchId) {
+    return _firestore
+        .collection(_roomsCollectionName)
+        .where('matchId', isEqualTo: matchId)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) {
+      if (snapshot.docs.isEmpty) return null;
+      return DebateRoom.fromJson(snapshot.docs.first.data());
+    });
+  }
+
   /// メッセージを送信
   Future<void> sendMessage(DebateMessage message) async {
     try {
