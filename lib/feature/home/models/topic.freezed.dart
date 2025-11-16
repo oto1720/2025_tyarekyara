@@ -32,7 +32,11 @@ mixin _$Topic {
       throw _privateConstructorUsedError; // トピックの説明（オプション）
   double get similarityScore =>
       throw _privateConstructorUsedError; // 既存トピックとの類似度スコア
-  List<NewsItem> get relatedNews => throw _privateConstructorUsedError;
+  List<NewsItem> get relatedNews =>
+      throw _privateConstructorUsedError; // 関連ニュース
+  Map<String, int> get feedbackCounts =>
+      throw _privateConstructorUsedError; // フィードバック数 {'good': 5, 'normal': 3, 'bad': 1}
+  Map<String, String> get feedbackUsers => throw _privateConstructorUsedError;
 
   /// Serializes this Topic to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,6 +63,8 @@ abstract class $TopicCopyWith<$Res> {
     String? description,
     double similarityScore,
     List<NewsItem> relatedNews,
+    Map<String, int> feedbackCounts,
+    Map<String, String> feedbackUsers,
   });
 }
 
@@ -87,6 +93,8 @@ class _$TopicCopyWithImpl<$Res, $Val extends Topic>
     Object? description = freezed,
     Object? similarityScore = null,
     Object? relatedNews = null,
+    Object? feedbackCounts = null,
+    Object? feedbackUsers = null,
   }) {
     return _then(
       _value.copyWith(
@@ -130,6 +138,14 @@ class _$TopicCopyWithImpl<$Res, $Val extends Topic>
                 ? _value.relatedNews
                 : relatedNews // ignore: cast_nullable_to_non_nullable
                       as List<NewsItem>,
+            feedbackCounts: null == feedbackCounts
+                ? _value.feedbackCounts
+                : feedbackCounts // ignore: cast_nullable_to_non_nullable
+                      as Map<String, int>,
+            feedbackUsers: null == feedbackUsers
+                ? _value.feedbackUsers
+                : feedbackUsers // ignore: cast_nullable_to_non_nullable
+                      as Map<String, String>,
           )
           as $Val,
     );
@@ -155,6 +171,8 @@ abstract class _$$TopicImplCopyWith<$Res> implements $TopicCopyWith<$Res> {
     String? description,
     double similarityScore,
     List<NewsItem> relatedNews,
+    Map<String, int> feedbackCounts,
+    Map<String, String> feedbackUsers,
   });
 }
 
@@ -182,6 +200,8 @@ class __$$TopicImplCopyWithImpl<$Res>
     Object? description = freezed,
     Object? similarityScore = null,
     Object? relatedNews = null,
+    Object? feedbackCounts = null,
+    Object? feedbackUsers = null,
   }) {
     return _then(
       _$TopicImpl(
@@ -225,6 +245,14 @@ class __$$TopicImplCopyWithImpl<$Res>
             ? _value._relatedNews
             : relatedNews // ignore: cast_nullable_to_non_nullable
                   as List<NewsItem>,
+        feedbackCounts: null == feedbackCounts
+            ? _value._feedbackCounts
+            : feedbackCounts // ignore: cast_nullable_to_non_nullable
+                  as Map<String, int>,
+        feedbackUsers: null == feedbackUsers
+            ? _value._feedbackUsers
+            : feedbackUsers // ignore: cast_nullable_to_non_nullable
+                  as Map<String, String>,
       ),
     );
   }
@@ -244,8 +272,12 @@ class _$TopicImpl implements _Topic {
     this.description,
     this.similarityScore = 0,
     final List<NewsItem> relatedNews = const [],
+    final Map<String, int> feedbackCounts = const {},
+    final Map<String, String> feedbackUsers = const {},
   }) : _tags = tags,
-       _relatedNews = relatedNews;
+       _relatedNews = relatedNews,
+       _feedbackCounts = feedbackCounts,
+       _feedbackUsers = feedbackUsers;
 
   factory _$TopicImpl.fromJson(Map<String, dynamic> json) =>
       _$$TopicImplFromJson(json);
@@ -289,9 +321,31 @@ class _$TopicImpl implements _Topic {
     return EqualUnmodifiableListView(_relatedNews);
   }
 
+  // 関連ニュース
+  final Map<String, int> _feedbackCounts;
+  // 関連ニュース
+  @override
+  @JsonKey()
+  Map<String, int> get feedbackCounts {
+    if (_feedbackCounts is EqualUnmodifiableMapView) return _feedbackCounts;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_feedbackCounts);
+  }
+
+  // フィードバック数 {'good': 5, 'normal': 3, 'bad': 1}
+  final Map<String, String> _feedbackUsers;
+  // フィードバック数 {'good': 5, 'normal': 3, 'bad': 1}
+  @override
+  @JsonKey()
+  Map<String, String> get feedbackUsers {
+    if (_feedbackUsers is EqualUnmodifiableMapView) return _feedbackUsers;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_feedbackUsers);
+  }
+
   @override
   String toString() {
-    return 'Topic(id: $id, text: $text, category: $category, difficulty: $difficulty, createdAt: $createdAt, source: $source, tags: $tags, description: $description, similarityScore: $similarityScore, relatedNews: $relatedNews)';
+    return 'Topic(id: $id, text: $text, category: $category, difficulty: $difficulty, createdAt: $createdAt, source: $source, tags: $tags, description: $description, similarityScore: $similarityScore, relatedNews: $relatedNews, feedbackCounts: $feedbackCounts, feedbackUsers: $feedbackUsers)';
   }
 
   @override
@@ -316,6 +370,14 @@ class _$TopicImpl implements _Topic {
             const DeepCollectionEquality().equals(
               other._relatedNews,
               _relatedNews,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._feedbackCounts,
+              _feedbackCounts,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._feedbackUsers,
+              _feedbackUsers,
             ));
   }
 
@@ -333,6 +395,8 @@ class _$TopicImpl implements _Topic {
     description,
     similarityScore,
     const DeepCollectionEquality().hash(_relatedNews),
+    const DeepCollectionEquality().hash(_feedbackCounts),
+    const DeepCollectionEquality().hash(_feedbackUsers),
   );
 
   /// Create a copy of Topic
@@ -361,6 +425,8 @@ abstract class _Topic implements Topic {
     final String? description,
     final double similarityScore,
     final List<NewsItem> relatedNews,
+    final Map<String, int> feedbackCounts,
+    final Map<String, String> feedbackUsers,
   }) = _$TopicImpl;
 
   factory _Topic.fromJson(Map<String, dynamic> json) = _$TopicImpl.fromJson;
@@ -384,7 +450,11 @@ abstract class _Topic implements Topic {
   @override
   double get similarityScore; // 既存トピックとの類似度スコア
   @override
-  List<NewsItem> get relatedNews;
+  List<NewsItem> get relatedNews; // 関連ニュース
+  @override
+  Map<String, int> get feedbackCounts; // フィードバック数 {'good': 5, 'normal': 3, 'bad': 1}
+  @override
+  Map<String, String> get feedbackUsers;
 
   /// Create a copy of Topic
   /// with the given fields replaced by the non-null parameter values.

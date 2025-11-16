@@ -111,4 +111,76 @@ class DailyTopicRepository {
       rethrow;
     }
   }
+
+  /// トピックにフィードバックを送信
+  Future<void> submitFeedback({
+    required DateTime date,
+    required String userId,
+    required String feedbackType, // 'good', 'normal', 'bad'
+  }) async {
+    try {
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final docRef = _firestore.collection(_collectionName).doc(dateKey);
+
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+
+        if (!snapshot.exists) {
+          throw Exception('Topic not found');
+        }
+
+        final data = snapshot.data()!;
+        final feedbackCounts = Map<String, int>.from(data['feedbackCounts'] ?? {});
+        final feedbackUsers = Map<String, String>.from(data['feedbackUsers'] ?? {});
+
+        // 既存のフィードバックがある場合は削除
+        if (feedbackUsers.containsKey(userId)) {
+          final oldFeedback = feedbackUsers[userId]!;
+          feedbackCounts[oldFeedback] = (feedbackCounts[oldFeedback] ?? 1) - 1;
+          if (feedbackCounts[oldFeedback]! <= 0) {
+            feedbackCounts.remove(oldFeedback);
+          }
+        }
+
+        // 新しいフィードバックを追加
+        feedbackUsers[userId] = feedbackType;
+        feedbackCounts[feedbackType] = (feedbackCounts[feedbackType] ?? 0) + 1;
+
+        transaction.update(docRef, {
+          'feedbackCounts': feedbackCounts,
+          'feedbackUsers': feedbackUsers,
+        });
+      });
+    } catch (e) {
+      print('Error submitting feedback: $e');
+      rethrow;
+    }
+  }
+
+  /// ユーザーのフィードバックを取得
+  Future<String?> getUserFeedback({
+    required DateTime date,
+    required String userId,
+  }) async {
+    try {
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final doc = await _firestore
+          .collection(_collectionName)
+          .doc(dateKey)
+          .get();
+
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
+
+      final data = doc.data()!;
+      final feedbackUsers = Map<String, String>.from(data['feedbackUsers'] ?? {});
+      return feedbackUsers[userId];
+    } catch (e) {
+      print('Error getting user feedback: $e');
+      return null;
+    }
+  }
 }

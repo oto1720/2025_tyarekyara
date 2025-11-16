@@ -7,6 +7,8 @@ import '../repositories/ai_repository.dart';
 import '../services/topic_generation_service.dart';
 import '../services/news_service.dart';
 import '../utils/random_topic_selector.dart';
+import '../../debate/repositories/debate_event_repository.dart';
+import '../../debate/models/debate_event.dart';
 
 part 'daily_topic_provider.freezed.dart';
 
@@ -42,6 +44,11 @@ final newsServiceProviderForDaily = Provider<NewsService>((ref) {
   return NewsService(geminiRepository);
 });
 
+/// DebateEventRepositoryプロバイダー
+final debateEventRepositoryProviderForDaily = Provider<DebateEventRepository>((ref) {
+  return DebateEventRepository();
+});
+
 /// 日別トピック管理ノーティファイア
 class DailyTopicNotifier extends Notifier<DailyTopicState> {
   @override
@@ -59,6 +66,9 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
 
   RandomTopicSelector get randomSelector =>
       ref.read(randomTopicSelectorProvider);
+
+  DebateEventRepository get debateEventRepository =>
+      ref.read(debateEventRepositoryProviderForDaily);
 
   /// 今日のトピックを読み込む（存在しない場合は生成）
   Future<void> loadTodayTopic() async {
@@ -123,6 +133,9 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
       // Firestoreに保存
       await repository.saveTodayTopic(newTopic);
 
+      // debateイベントも自動作成
+      await _createDebateEventFromTopic(newTopic);
+
       // 状態を更新
       state = state.copyWith(
         currentTopic: newTopic,
@@ -159,6 +172,71 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
         return ['価値観', '人生'];
     }
   }
+
+  /// TopicからDebateEventを作成
+  Future<void> _createDebateEventFromTopic(Topic topic) async {
+    final now = DateTime.now();
+    
+    // 既に今日のイベントが存在するか確認
+    try {
+      final existingEvents = await debateEventRepository.getUpcomingEvents(limit: 10);
+      final hasTodayEvent = existingEvents.any(
+        (e) => e.scheduledAt.year == now.year &&
+              e.scheduledAt.month == now.month &&
+              e.scheduledAt.day == now.day,
+      );
+
+      // 既に存在する場合はスキップ
+      if (hasTodayEvent) {
+        print('今日のdebateイベントは既に存在します');
+        return;
+      }
+    } catch (e) {
+      // エラーが発生しても作成を続行
+      print('既存イベント確認中にエラー: $e');
+    }
+
+    try {
+      // 今日の20:00に開催予定
+      final scheduledAt = DateTime(now.year, now.month, now.day, 20, 0);
+      // 今日の18:00がエントリー締切
+      final entryDeadline = DateTime(now.year, now.month, now.day, 18, 0);
+
+      final debateEvent = DebateEvent(
+        id: 'daily-${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+        title: '今日のディベート',
+        topic: topic.text,
+        description: topic.description ?? '${topic.category.displayName}に関するディベートです。',
+        status: EventStatus.accepting,
+        scheduledAt: scheduledAt,
+        entryDeadline: entryDeadline,
+        createdAt: now,
+        updatedAt: now,
+        availableDurations: [
+          DebateDuration.short,
+          DebateDuration.medium,
+          DebateDuration.long,
+        ],
+        availableFormats: [
+          DebateFormat.oneVsOne,
+          DebateFormat.twoVsTwo,
+        ],
+        currentParticipants: 0,
+        maxParticipants: 100,
+        metadata: {
+          'topicId': topic.id,
+          'category': topic.category.name,
+          'difficulty': topic.difficulty.name,
+        },
+      );
+
+      await debateEventRepository.createEvent(debateEvent);
+      print('✅ debateイベントを作成しました: ${debateEvent.id}');
+    } catch (e) {
+      print('⚠️ debateイベントの作成に失敗しました: $e');
+      // エラーが発生してもトピック生成は続行
+    }
+  }
 }
 
 /// 日別トピックプロバイダー
@@ -166,3 +244,27 @@ final dailyTopicProvider =
     NotifierProvider<DailyTopicNotifier, DailyTopicState>(
   DailyTopicNotifier.new,
 );
+
+/// 選択中の日付を管理するNotifier
+class SelectedDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    return DateTime.now(); // 初期値は今日
+  }
+
+  /// 日付を設定
+  void setDate(DateTime date) {
+    state = date;
+  }
+}
+
+/// 選択中の日付プロバイダー（意見一覧画面用）
+final selectedDateProvider = NotifierProvider<SelectedDateNotifier, DateTime>(
+  SelectedDateNotifier.new,
+);
+
+/// 選択した日付のトピックを取得するプロバイダー
+final topicByDateProvider = FutureProvider.family<Topic?, DateTime>((ref, date) async {
+  final repository = ref.watch(dailyTopicRepositoryProvider);
+  return await repository.getTopicByDate(date);
+});

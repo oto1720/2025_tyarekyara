@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tyarekyara/core/route/app_router.dart';
 import 'firebase_options.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:tyarekyara/core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +26,16 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
+      themeMode: themeMode, // ★ ここに設定
+      theme: ThemeData.light(useMaterial3: true),     // ライトモード用テーマ
+      darkTheme: ThemeData.dark(useMaterial3: true),  // ダークモード用テーマ
       routerConfig: router,
       // DevicePreview設定
       locale: DevicePreview.locale(context),

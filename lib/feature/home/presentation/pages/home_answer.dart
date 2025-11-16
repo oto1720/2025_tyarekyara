@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import '../../models/opinion.dart';
+import '../../models/topic.dart';
 import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
+import '../../repositories/daily_topic_repository.dart';
 import '../widgets/topic_card.dart';
 
 /// 意見一覧画面
@@ -18,9 +20,8 @@ class OpinionListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final opinionState = ref.watch(opinionListProvider(topicId));
-    final opinionNotifier = ref.read(opinionListProvider(topicId).notifier);
-    final postState = ref.watch(opinionPostProvider(topicId));
+    final selectedDate = ref.watch(selectedDateProvider);
+    final topicAsync = ref.watch(topicByDateProvider(selectedDate));
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -31,32 +32,214 @@ class OpinionListScreen extends ConsumerWidget {
         //   icon: const Icon(Icons.arrow_back, color: Colors.black87),
         //   onPressed: () => Navigator.pop(context),
         // ),
-        title: const Text(
-          '意見一覧',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: _buildDateSelector(context, ref),
         actions: [
-          // 自分の投稿へのリンク（投稿済みの場合のみ表示）
-          if (postState.hasPosted)
-            IconButton(
-              icon: const Icon(Icons.edit_note, color: Colors.black87),
-              tooltip: '自分の投稿を見る',
-              onPressed: () {
-                context.push('/my-opinion/$topicId');
-              },
-            ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black87),
-            onPressed: () => opinionNotifier.refresh(),
+          // リフレッシュボタン
+          topicAsync.maybeWhen(
+            data: (topic) => topic != null
+                ? IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.black87),
+                    onPressed: () {
+                      ref.read(opinionListProvider(topic.id).notifier).refresh();
+                    },
+                  )
+                : const SizedBox.shrink(),
+            orElse: () => const SizedBox.shrink(),
           ),
         ],
       ),
-      body: _buildBody(context, ref, opinionState, opinionNotifier),
+      body: topicAsync.when(
+        data: (topic) {
+          if (topic == null) {
+            return _buildNoTopicView();
+          }
+          // 選択した日付のトピックの意見を表示
+          final opinionState = ref.watch(opinionListProvider(topic.id));
+          final opinionNotifier = ref.read(opinionListProvider(topic.id).notifier);
+          return _buildBody(context, ref, opinionState, opinionNotifier, topic.id);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => _buildTopicLoadErrorView(error.toString()),
+      ),
     );
+  }
+
+  /// トピックが存在しない場合の表示
+  Widget _buildNoTopicView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'トピックがありません',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'この日のトピックはまだ作成されていません',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// トピック読み込みエラー表示
+  Widget _buildTopicLoadErrorView(String error) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'エラーが発生しました',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 日付選択UI
+  Widget _buildDateSelector(BuildContext context, WidgetRef ref) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    final today = DateTime.now();
+    final isToday = selectedDate.year == today.year &&
+        selectedDate.month == today.month &&
+        selectedDate.day == today.day;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 前の日へ
+        IconButton(
+          icon: const Icon(Icons.chevron_left, color: Colors.black87),
+          onPressed: () => _goToPreviousDay(ref),
+          tooltip: '前の日',
+        ),
+        // 日付表示（タップでDatePicker表示）
+        InkWell(
+          onTap: () => _showDatePicker(context, ref),
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  DateFormat('M/d (E)', 'ja').format(selectedDate),
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.calendar_today, size: 16, color: Colors.black87),
+              ],
+            ),
+          ),
+        ),
+        // 次の日へ（今日より先には進めない）
+        IconButton(
+          icon: Icon(
+            Icons.chevron_right,
+            color: isToday ? Colors.grey.shade300 : Colors.black87,
+          ),
+          onPressed: isToday ? null : () => _goToNextDay(ref),
+          tooltip: '次の日',
+        ),
+      ],
+    );
+  }
+
+  /// 前の日へ移動
+  void _goToPreviousDay(WidgetRef ref) {
+    final currentDate = ref.read(selectedDateProvider);
+    final previousDay = DateTime(
+      currentDate.year,
+      currentDate.month,
+      currentDate.day - 1,
+    );
+    ref.read(selectedDateProvider.notifier).setDate(previousDay);
+  }
+
+  /// 次の日へ移動
+  void _goToNextDay(WidgetRef ref) {
+    final currentDate = ref.read(selectedDateProvider);
+    final today = DateTime.now();
+    final nextDay = DateTime(
+      currentDate.year,
+      currentDate.month,
+      currentDate.day + 1,
+    );
+
+    // 今日より先には進めない
+    if (nextDay.year <= today.year &&
+        nextDay.month <= today.month &&
+        nextDay.day <= today.day) {
+      ref.read(selectedDateProvider.notifier).setDate(nextDay);
+    }
+  }
+
+  /// DatePickerを表示
+  Future<void> _showDatePicker(BuildContext context, WidgetRef ref) async {
+    final currentDate = ref.read(selectedDateProvider);
+    final today = DateTime.now();
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: DateTime(2020, 1, 1), // 適切な過去の日付を設定
+      lastDate: today, // 今日まで
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.blue.shade600,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selectedDate != null) {
+      ref.read(selectedDateProvider.notifier).setDate(selectedDate);
+    }
   }
 
   Widget _buildBody(
@@ -64,6 +247,7 @@ class OpinionListScreen extends ConsumerWidget {
     WidgetRef ref,
     OpinionListState state,
     OpinionListNotifier notifier,
+    String currentTopicId,
   ) {
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -80,7 +264,7 @@ class OpinionListScreen extends ConsumerWidget {
           // トピックセクション
           SliverList(
             delegate: SliverChildListDelegate([
-              _buildTopicSection(ref),
+              _buildTopicSection(ref, currentTopicId),
               const SizedBox(height: 8),
             ]),
           ),
@@ -89,6 +273,14 @@ class OpinionListScreen extends ConsumerWidget {
           SliverList(
             delegate: SliverChildListDelegate([
               _buildStatsSection(state),
+              const SizedBox(height: 16),
+            ]),
+          ),
+
+          // フィードバックセクション（投稿済みユーザーのみ表示）
+          SliverList(
+            delegate: SliverChildListDelegate([
+              _buildFeedbackSection(ref, currentTopicId),
               const SizedBox(height: 16),
             ]),
           ),
@@ -109,7 +301,7 @@ class OpinionListScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _OpinionCard(
                         opinion: opinion,
-                        topicId: topicId,
+                        topicId: currentTopicId,
                       ),
                     );
                   },
@@ -129,15 +321,43 @@ class OpinionListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopicSection(WidgetRef ref) {
-    final topicState = ref.watch(dailyTopicProvider);
-    final topic = topicState.currentTopic;
+  Widget _buildTopicSection(WidgetRef ref, String currentTopicId) {
+    final selectedDate = ref.watch(selectedDateProvider);
+    final topicAsync = ref.watch(topicByDateProvider(selectedDate));
 
-    if (topic == null) {
+    // トピックが既にロード済みなので、単純に表示
+    return topicAsync.maybeWhen(
+      data: (topic) => topic != null ? TopicCard(topic: topic) : const SizedBox.shrink(),
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+
+  /// フィードバックセクション
+  Widget _buildFeedbackSection(WidgetRef ref, String currentTopicId) {
+    final postState = ref.watch(opinionPostProvider(currentTopicId));
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    // 投稿していないユーザーには表示しない
+    if (!postState.hasPosted || currentUser == null) {
       return const SizedBox.shrink();
     }
 
-    return TopicCard(topic: topic);
+    final selectedDate = ref.watch(selectedDateProvider);
+    final topicAsync = ref.watch(topicByDateProvider(selectedDate));
+
+    return topicAsync.when(
+      data: (topic) {
+        if (topic == null) return const SizedBox.shrink();
+
+        return _FeedbackCard(
+          topic: topic,
+          selectedDate: selectedDate,
+          userId: currentUser.uid,
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
   }
 
   Widget _buildStatsSection(OpinionListState state) {
@@ -612,6 +832,246 @@ class _ReactionButton extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: hasReacted ? FontWeight.bold : FontWeight.normal,
                   color: hasReacted ? Colors.blue : Colors.grey.shade700,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// トピックフィードバックカード
+class _FeedbackCard extends ConsumerStatefulWidget {
+  final Topic topic;
+  final DateTime selectedDate;
+  final String userId;
+
+  const _FeedbackCard({
+    required this.topic,
+    required this.selectedDate,
+    required this.userId,
+  });
+
+  @override
+  ConsumerState<_FeedbackCard> createState() => _FeedbackCardState();
+}
+
+class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
+  String? _userFeedback;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserFeedback();
+  }
+
+  @override
+  void didUpdateWidget(_FeedbackCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 日付が変わったら再読み込み
+    if (oldWidget.selectedDate != widget.selectedDate) {
+      _loadUserFeedback();
+    }
+  }
+
+  Future<void> _loadUserFeedback() async {
+    final repository = ref.read(dailyTopicRepositoryProvider);
+    final feedback = await repository.getUserFeedback(
+      date: widget.selectedDate,
+      userId: widget.userId,
+    );
+    if (mounted) {
+      setState(() {
+        _userFeedback = feedback;
+      });
+    }
+  }
+
+  Future<void> _submitFeedback(TopicFeedback feedback) async {
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final repository = ref.read(dailyTopicRepositoryProvider);
+      await repository.submitFeedback(
+        date: widget.selectedDate,
+        userId: widget.userId,
+        feedbackType: feedback.key,
+      );
+
+      if (mounted) {
+        setState(() {
+          _userFeedback = feedback.key;
+          _isSubmitting = false;
+        });
+
+        // トピックを再読み込みして最新のフィードバック数を取得
+        ref.invalidate(topicByDateProvider(widget.selectedDate));
+
+        // スナックバーで通知
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('フィードバックを送信しました: ${feedback.displayName}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('エラーが発生しました: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.feedback_outlined, size: 20, color: Colors.blue.shade700),
+              const SizedBox(width: 8),
+              const Text(
+                'このトピックはどうでしたか？',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '意見を投稿したあなたの評価をお聞かせください',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: TopicFeedback.values.map((feedback) {
+              final count = widget.topic.feedbackCounts[feedback.key] ?? 0;
+              final isSelected = _userFeedback == feedback.key;
+
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _FeedbackButton(
+                    feedback: feedback,
+                    count: count,
+                    isSelected: isSelected,
+                    isSubmitting: _isSubmitting,
+                    onTap: () => _submitFeedback(feedback),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// フィードバックボタン
+class _FeedbackButton extends StatelessWidget {
+  final TopicFeedback feedback;
+  final int count;
+  final bool isSelected;
+  final bool isSubmitting;
+  final VoidCallback onTap;
+
+  const _FeedbackButton({
+    required this.feedback,
+    required this.count,
+    required this.isSelected,
+    required this.isSubmitting,
+    required this.onTap,
+  });
+
+  Color _getColor() {
+    switch (feedback) {
+      case TopicFeedback.good:
+        return Colors.green;
+      case TopicFeedback.normal:
+        return Colors.orange;
+      case TopicFeedback.bad:
+        return Colors.red;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getColor();
+
+    return InkWell(
+      onTap: isSubmitting ? null : onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.15) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              feedback.emoji,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              feedback.displayName,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? color : Colors.grey.shade700,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? color : Colors.grey.shade600,
                 ),
               ),
             ],
