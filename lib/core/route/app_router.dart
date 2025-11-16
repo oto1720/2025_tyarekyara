@@ -44,9 +44,10 @@ final GoRouter router = GoRouter(
     final tutorialCompleted = prefs.getBool('tutorial_completed') ?? false;
     final isAuthenticated = FirebaseAuth.instance.currentUser != null;
 
-    // 認証関連ページは常にアクセス可能
+    // 認証関連ページとディベート関連ページは常にアクセス可能
     final authPages = ['/login', '/signup', '/profile-setup'];
-    if (authPages.contains(currentPath)) {
+    final debatePages = currentPath.startsWith('/debate/');
+    if (authPages.contains(currentPath) || debatePages) {
       return null;
     }
 

@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
+import '../../models/debate_room.dart';
 import '../../providers/debate_match_provider.dart';
+import '../../providers/debate_room_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/matching_status_widget.dart';
 
@@ -35,7 +37,7 @@ class DebateMatchDetailPage extends ConsumerWidget {
               orElse: () => null,
             );
 
-            return _buildMatchDetail(context, match, userId);
+            return _buildMatchDetail(context, ref, match, userId);
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => _buildError(context, error),
@@ -47,9 +49,28 @@ class DebateMatchDetailPage extends ConsumerWidget {
   /// マッチ詳細表示
   Widget _buildMatchDetail(
     BuildContext context,
+    WidgetRef ref,
     DebateMatch match,
     String? userId,
   ) {
+    // ルーム状態を監視してアクティブになったら自動遷移
+    if (match.roomId != null) {
+      final roomAsync = ref.watch(roomDetailProvider(match.roomId!));
+
+      roomAsync.whenData((room) {
+        if (room != null && room.status == RoomStatus.inProgress) {
+          // ルームがアクティブ → ディベート画面へ自動遷移
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.of(context).pushReplacementNamed(
+                '/debate/room/${match.id}',
+              );
+            }
+          });
+        }
+      });
+    }
+
     return CustomScrollView(
       slivers: [
         _buildAppBar(context, match),

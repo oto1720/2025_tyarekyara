@@ -433,7 +433,7 @@ class DebateEventDetailPage extends ConsumerWidget {
     return entryAsync.when(
       data: (entry) {
         if (entry != null) {
-          return _buildAlreadyEntered(context, entry);
+          return _buildAlreadyEntered(context, event, entry);
         }
         return _buildEntryButton(context, event);
       },
@@ -443,41 +443,68 @@ class DebateEventDetailPage extends ConsumerWidget {
   }
 
   /// エントリー済み表示
-  Widget _buildAlreadyEntered(BuildContext context, entry) {
-    return Card(
-      color: Colors.blue[50],
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.blue, size: 32),
-            const SizedBox(width: 16),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'エントリー済み',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+  Widget _buildAlreadyEntered(BuildContext context, DebateEvent event, entry) {
+    return Column(
+      children: [
+        Card(
+          color: Colors.blue[50],
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.blue, size: 32),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'エントリー済み',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'マッチング完了までお待ちください',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    'マッチング完了までお待ちください',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton.icon(
+            onPressed: () => _navigateToWaitingRoom(context, event),
+            icon: const Icon(Icons.hourglass_empty, size: 28),
+            label: const Text(
+              '待機画面へ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -516,7 +543,16 @@ class DebateEventDetailPage extends ConsumerWidget {
 
   /// エントリー画面へ遷移
   void _navigateToEntry(BuildContext context, DebateEvent event) {
+    print('🚀 Navigating to entry page: /debate/event/${event.id}/entry');
     context.push('/debate/event/${event.id}/entry');
+    print('✅ Navigation command executed');
+  }
+
+  /// 待機画面へ遷移
+  void _navigateToWaitingRoom(BuildContext context, DebateEvent event) {
+    print('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
+    context.push('/debate/event/${event.id}/waiting');
+    print('✅ Navigation command executed');
   }
 
   /// 見つからない表示

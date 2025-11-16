@@ -36,11 +36,11 @@ final teamMessagesProvider = StreamProvider.autoDispose.family<List<DebateMessag
   },
 );
 
-/// マッチIDからルーム取得 Provider
-final debateRoomByMatchProvider = FutureProvider.autoDispose.family<DebateRoom?, String>(
-  (ref, matchId) async {
+/// マッチIDからルーム取得 Provider（リアルタイム監視）
+final debateRoomByMatchProvider = StreamProvider.autoDispose.family<DebateRoom?, String>(
+  (ref, matchId) {
     final repository = ref.watch(debateRoomRepositoryProvider);
-    return await repository.getRoomByMatchId(matchId);
+    return repository.watchRoomByMatchId(matchId);
   },
 );
 
