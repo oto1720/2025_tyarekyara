@@ -11,6 +11,15 @@ import {
   TopicSource,
   NewsItem,
 } from "../types/topic";
+import {findDuplicates} from "./topicDuplicateDetector";
+import {
+  recommendCategory,
+  recommendDifficulty,
+} from "./topicQualityService";
+import {
+  recommendBalancedCategory,
+  recommendBalancedDifficulty,
+} from "./categoryBalanceService";
 
 /**
  * カテゴリの日本語マッピング
@@ -308,14 +317,13 @@ export async function generateMultipleTopics(
   while (topics.length < count && retries < maxRetries) {
     const topic = await generateTopic();
 
-    // 重複チェック
-    const isDuplicate = existingTopics
+    // 高度な重複チェック
+    const allExistingTexts = existingTopics
       .concat(topics)
-      .some((existingTopic) =>
-        calculateSimilarity(topic.text, existingTopic.text) > 0.8
-      );
+      .map((t) => t.text);
+    const duplicateCheck = findDuplicates(topic.text, allExistingTexts, 0.75);
 
-    if (!isDuplicate) {
+    if (!duplicateCheck.hasDuplicates) {
       topics.push(topic);
     } else {
       logger.info("Duplicate topic detected, retrying...");
@@ -333,36 +341,80 @@ export async function generateMultipleTopics(
 }
 
 /**
- * 文字列の類似度を計算（レーベンシュタイン距離ベース）
- * @param {string} str1 文字列1
- * @param {string} str2 文字列2
- * @return {number} 類似度（0-1の範囲）
+ * スマートトピック生成（全自動最適化版）
+ * - 品質評価に基づくカテゴリ推薦
+ * - バランスを考慮した難易度選択
+ * - 高度な重複検出
+ * @param {Topic[]} existingTopics 既存のトピック配列
+ * @return {Promise<Topic>} 生成されたトピック
  */
-function calculateSimilarity(str1: string, str2: string): number {
-  const len1 = str1.length;
-  const len2 = str2.length;
-  const matrix: number[][] = [];
+export async function generateSmartTopic(
+  existingTopics: Topic[] = []
+): Promise<Topic> {
+  logger.info("Starting smart topic generation with optimization");
 
-  for (let i = 0; i <= len1; i++) {
-    matrix[i] = [i];
-  }
+  // 1. 品質評価に基づくカテゴリ推薦
+  const qualityCategory = await recommendCategory();
 
-  for (let j = 0; j <= len2; j++) {
-    matrix[0][j] = j;
-  }
+  // 2. バランスを考慮したカテゴリ推薦
+  const balancedCategory = await recommendBalancedCategory(7);
 
-  for (let i = 1; i <= len1; i++) {
-    for (let j = 1; j <= len2; j++) {
-      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1, // 削除
-        matrix[i][j - 1] + 1, // 挿入
-        matrix[i - 1][j - 1] + cost // 置換
-      );
+  // 3. 両方を考慮して最終決定（品質を優先、バランスも考慮）
+  const finalCategory = Math.random() > 0.3 ?
+    qualityCategory :
+    balancedCategory;
+
+  logger.info("Category selection:", {
+    qualityRecommendation: qualityCategory,
+    balanceRecommendation: balancedCategory,
+    finalSelection: finalCategory,
+  });
+
+  // 4. 品質評価とバランスを考慮した難易度決定
+  const qualityDifficulty = await recommendDifficulty();
+  const balancedDifficulty = await recommendBalancedDifficulty(7);
+
+  const finalDifficulty = Math.random() > 0.4 ?
+    qualityDifficulty :
+    balancedDifficulty;
+
+  logger.info("Difficulty selection:", {
+    qualityRecommendation: qualityDifficulty,
+    balanceRecommendation: balancedDifficulty,
+    finalSelection: finalDifficulty,
+  });
+
+  // 5. トピック生成（重複チェック付き）
+  const maxRetries = 5;
+  let retries = 0;
+
+  while (retries < maxRetries) {
+    const topic = await generateTopic(finalCategory, finalDifficulty);
+
+    // 高度な重複検出を実施
+    const existingTexts = existingTopics.map((t) => t.text);
+    const duplicateCheck = findDuplicates(topic.text, existingTexts, 0.75);
+
+    if (!duplicateCheck.hasDuplicates) {
+      logger.info("Smart topic generated successfully:", {
+        text: topic.text,
+        category: topic.category,
+        difficulty: topic.difficulty,
+        retries,
+      });
+      return topic;
     }
+
+    logger.warn("Duplicate detected, regenerating...", {
+      attempt: retries + 1,
+      maxSimilarity: duplicateCheck.maxSimilarity,
+      duplicates: duplicateCheck.duplicates.length,
+    });
+
+    retries++;
   }
 
-  const distance = matrix[len1][len2];
-  const maxLength = Math.max(len1, len2);
-  return 1 - distance / maxLength;
+  // 最大試行回数に達した場合でも最後に生成したものを返す
+  logger.warn("Max retries reached, using last generated topic");
+  return generateTopic(finalCategory, finalDifficulty);
 }

@@ -4,7 +4,7 @@
 
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
-import {generateTopic} from "./topicGenerationService";
+import {generateSmartTopic} from "./topicGenerationService";
 import {Topic, TopicGenerationResult} from "../types/topic";
 
 /**
@@ -80,9 +80,12 @@ export async function createTodayTopic(): Promise<TopicGenerationResult> {
       };
     }
 
-    // 新しいトピックを生成
-    logger.info(`Generating new topic for ${todayDate}`);
-    const topic = await generateTopic();
+    // 過去のトピックを取得（重複チェック用）
+    const recentTopics = await getRecentTopics(30);
+
+    // スマート生成（品質評価+バランス+重複検出）
+    logger.info(`Generating smart topic for ${todayDate}`);
+    const topic = await generateSmartTopic(recentTopics);
 
     // Firestoreに保存
     const topicData = {
