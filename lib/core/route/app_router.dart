@@ -298,7 +298,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/challenge',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: DebateWaitingRoomPage(eventId: '')),
+              const NoTransitionPage(child: ChallengePage()),
         ),
         // ディベートイベント一覧画面
         GoRoute(

@@ -16,6 +16,7 @@ import * as admin from "firebase-admin";
 import {judgeDebate} from "./services/debateJudgmentService";
 import {processMatching} from "./services/debateMatchingService";
 import {updateEventStatuses} from "./services/eventStatusService";
+import {progressDebatePhases} from "./services/debatePhaseService";
 
 // Firebase Admin初期化
 admin.initializeApp();
@@ -261,6 +262,51 @@ export const manualEventStatusUpdate = onCall(
     } catch (error) {
       logger.error("Error in manual event status update:", error);
       throw new HttpsError("internal", "Event status update failed");
+    }
+  }
+);
+
+/**
+ * ディベートフェーズ自動進行（1分ごとに実行）
+ */
+export const scheduledDebatePhaseProgress = onSchedule(
+  {
+    schedule: "every 1 minutes",
+    region: "asia-northeast1",
+    timeZone: "Asia/Tokyo",
+  },
+  async () => {
+    try {
+      logger.info("Scheduled debate phase progress triggered");
+      await progressDebatePhases();
+    } catch (error) {
+      logger.error("Error in scheduled debate phase progress:", error);
+    }
+  }
+);
+
+/**
+ * 手動フェーズ進行（デバッグ用）
+ */
+export const manualDebatePhaseProgress = onCall(
+  {
+    region: "asia-northeast1",
+  },
+  async (request) => {
+    // 認証チェック
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
+    try {
+      await progressDebatePhases();
+      return {
+        success: true,
+        message: "Debate phase progress completed",
+      };
+    } catch (error) {
+      logger.error("Error in manual debate phase progress:", error);
+      throw new HttpsError("internal", "Debate phase progress failed");
     }
   }
 );

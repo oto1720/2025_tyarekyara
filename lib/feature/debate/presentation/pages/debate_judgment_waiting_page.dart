@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../models/debate_match.dart';
 import '../../providers/debate_match_provider.dart';
@@ -75,9 +76,7 @@ class _DebateJudgmentWaitingPageState
         if (judgment != null) {
           timer.cancel();
           // 判定結果画面へ遷移
-          Navigator.of(context).pushReplacementNamed(
-            '/debate/result/${widget.matchId}',
-          );
+          context.pushReplacement('/debate/result/${widget.matchId}');
         }
       });
     });
@@ -86,6 +85,21 @@ class _DebateJudgmentWaitingPageState
   @override
   Widget build(BuildContext context) {
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
+    final roomAsync = ref.watch(debateRoomByMatchProvider(widget.matchId));
+
+    // ルームのフェーズを監視して結果フェーズになったら遷移
+    roomAsync.whenData((room) {
+      if (room != null &&
+          (room.currentPhase.name == 'result' ||
+           room.currentPhase.name == 'completed')) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            print('🎯 結果フェーズに変更！結果画面へ遷移');
+            context.pushReplacement('/debate/result/${widget.matchId}');
+          }
+        });
+      }
+    });
 
     return Scaffold(
       body: Container(
