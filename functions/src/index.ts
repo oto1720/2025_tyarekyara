@@ -17,6 +17,7 @@ import {judgeDebate} from "./services/debateJudgmentService";
 import {processMatching} from "./services/debateMatchingService";
 import {updateEventStatuses} from "./services/eventStatusService";
 import {progressDebatePhases} from "./services/debatePhaseService";
+import {createTodayTopic} from "./services/dailyTopicService";
 
 // Firebase Admin初期化
 admin.initializeApp();
@@ -307,6 +308,68 @@ export const manualDebatePhaseProgress = onCall(
     } catch (error) {
       logger.error("Error in manual debate phase progress:", error);
       throw new HttpsError("internal", "Debate phase progress failed");
+    }
+  }
+);
+
+/**
+ * 毎朝9時にAIトピックを自動生成
+ */
+export const scheduledDailyTopicGeneration = onSchedule(
+  {
+    schedule: "0 9 * * *", // 毎日9:00 (JST)
+    region: "asia-northeast1",
+    timeZone: "Asia/Tokyo",
+  },
+  async () => {
+    try {
+      logger.info("Scheduled daily topic generation triggered");
+      const result = await createTodayTopic();
+
+      logger.info(
+        `Daily topic generated successfully: ${result.topic.text}`
+      );
+      logger.info(`Debate event created: ${result.eventId}`);
+    } catch (error) {
+      logger.error("Error in scheduled daily topic generation:", error);
+      // エラー通知などを追加する場合はここに実装
+    }
+  }
+);
+
+/**
+ * 手動トピック生成（デバッグ・テスト用）
+ */
+export const manualDailyTopicGeneration = onCall(
+  {
+    region: "asia-northeast1",
+  },
+  async (request) => {
+    // 認証チェック
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Authentication required");
+    }
+
+    try {
+      logger.info("Manual daily topic generation triggered");
+      const result = await createTodayTopic();
+
+      return {
+        success: true,
+        topic: {
+          id: result.topic.id,
+          text: result.topic.text,
+          category: result.topic.category,
+          difficulty: result.topic.difficulty,
+          tags: result.topic.tags,
+          relatedNews: result.topic.relatedNews,
+        },
+        eventId: result.eventId,
+        message: "Daily topic generated successfully",
+      };
+    } catch (error) {
+      logger.error("Error in manual daily topic generation:", error);
+      throw new HttpsError("internal", "Topic generation failed");
     }
   }
 );

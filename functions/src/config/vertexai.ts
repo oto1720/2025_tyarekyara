@@ -2,8 +2,8 @@ import {VertexAI} from "@google-cloud/vertexai";
 
 // Vertex AI初期化
 export const vertexAI = new VertexAI({
-  project: process.env.GCLOUD_PROJECT || "your-project-id",
-  location: "us-central1", // または 'asia-northeast1'
+  project: process.env.GCLOUD_PROJECT || "tyarekyara-85659",
+  location: "asia-northeast1", // 東京リージョン
 });
 
 // モデル設定
