@@ -84,7 +84,7 @@ class ChallengeRepository {
       final challenges = snapshot.docs
           .map((doc) {
             try {
-              return Challenge.fromJson(doc.data());
+              return Challenge.fromFirestore(doc.data());
             } catch (e) {
               print('❌ [Repository] ドキュメント ${doc.id} のパースに失敗: $e');
               rethrow;
@@ -129,7 +129,7 @@ class ChallengeRepository {
           .get();
 
       if (!doc.exists) return null;
-      return Challenge.fromJson(doc.data()!);
+      return Challenge.fromFirestore(doc.data()!);
     } catch (e) {
       print('Error getting user challenge: $e');
       return null;
@@ -180,7 +180,7 @@ class ChallengeRepository {
         .snapshots()
         .map((snapshot) {
           final challenges = snapshot.docs
-              .map((doc) => Challenge.fromJson(doc.data()))
+              .map((doc) => Challenge.fromFirestore(doc.data()))
               .toList();
 
           // チャレンジを完了日時でソート
@@ -225,7 +225,7 @@ class ChallengeRepository {
 
       int totalPoints = 0;
       for (final doc in snapshot.docs) {
-        final challenge = Challenge.fromJson(doc.data());
+        final challenge = Challenge.fromFirestore(doc.data());
         totalPoints += challenge.earnedPoints ?? 0;
       }
 
