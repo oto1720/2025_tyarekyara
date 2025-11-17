@@ -8,6 +8,27 @@ import {generateSmartTopic} from "./topicGenerationService";
 import {Topic, TopicGenerationResult} from "../types/topic";
 
 /**
+ * FirestoreのTimestampをDateに安全に変換
+ * @param {any} timestamp FirestoreのTimestampまたはDate
+ * @return {Date} Dateオブジェクト
+ */
+function toDateSafe(timestamp: any): Date {
+  if (!timestamp) {
+    return new Date();
+  }
+  // 既にDateオブジェクトの場合
+  if (timestamp instanceof Date) {
+    return timestamp;
+  }
+  // Timestampオブジェクトの場合
+  if (timestamp && typeof timestamp.toDate === "function") {
+    return timestamp.toDate();
+  }
+  // その他の場合（文字列など）
+  return new Date(timestamp);
+}
+
+/**
  * 今日の日付を YYYY-MM-DD 形式で取得
  * @return {string} YYYY-MM-DD形式の日付文字列
  */
@@ -33,10 +54,16 @@ export async function getTodayTopic(): Promise<Topic | null> {
     if (doc.exists) {
       const data = doc.data();
       if (data) {
+        // relatedNewsのpublishedAtも安全に変換
+        const relatedNews = (data.relatedNews || []).map((news: any) => ({
+          ...news,
+          publishedAt: news.publishedAt ? toDateSafe(news.publishedAt) : null,
+        }));
+
         return {
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          relatedNews: data.relatedNews || [],
+          createdAt: toDateSafe(data.createdAt),
+          relatedNews,
           feedbackCounts: data.feedbackCounts || {},
           feedbackUsers: data.feedbackUsers || {},
         } as Topic;
@@ -194,10 +221,16 @@ export async function getRecentTopics(days = 30): Promise<Topic[]> {
 
     snapshot.forEach((doc) => {
       const data = doc.data();
+      // relatedNewsのpublishedAtも安全に変換
+      const relatedNews = (data.relatedNews || []).map((news: any) => ({
+        ...news,
+        publishedAt: news.publishedAt ? toDateSafe(news.publishedAt) : null,
+      }));
+
       topics.push({
         ...data,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        relatedNews: data.relatedNews || [],
+        createdAt: toDateSafe(data.createdAt),
+        relatedNews,
         feedbackCounts: data.feedbackCounts || {},
         feedbackUsers: data.feedbackUsers || {},
       } as Topic);
