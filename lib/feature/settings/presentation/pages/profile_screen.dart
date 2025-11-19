@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import '../../providers/profile_edit_provider.dart';
 import '../widgets/profile_widgets.dart';
 
@@ -89,11 +91,36 @@ class ProfileScreen extends ConsumerWidget {
       );
 
       if (pickedFile != null) {
+        print('画像選択成功: ${pickedFile.path}');
+
+        // XFileからバイトデータを読み込み、一時ディレクトリに保存
+        final bytes = await pickedFile.readAsBytes();
+        print('バイトデータ読み込み成功: ${bytes.length} bytes');
+
+        final tempDir = await getTemporaryDirectory();
+        print('一時ディレクトリ: ${tempDir.path}');
+
+        final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
+        final tempFile = File('${tempDir.path}/$fileName');
+
+        await tempFile.writeAsBytes(bytes);
+        print('一時ファイル作成成功: ${tempFile.path}');
+
+        final exists = await tempFile.exists();
+        print('ファイル存在確認: $exists');
+
         ref
             .read(profileEditProvider.notifier)
-            .updateSelectedImage(File(pickedFile.path));
+            .updateSelectedImage(tempFile);
+
+        print('画像選択処理完了');
+      } else {
+        print('画像が選択されませんでした');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('画像選択エラー: $e');
+      print('スタックトレース: $stackTrace');
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -187,6 +214,7 @@ class ProfileScreen extends ConsumerWidget {
                 // プロフィール画像
                 ProfileImageDisplay(
                   selectedImage: editState.selectedImage,
+                  iconUrl: editState.uploadedImageUrl,
                   onTap: () {
                     ImagePickerDialog.show(
                       context,

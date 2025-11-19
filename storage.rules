@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// Firebase Storageのセキュリティルール
+service firebase.storage {
+  match /b/{bucket}/o {
+    // プロフィール画像
+    match /profile_images/{fileName} {
+      // 誰でも読み取り可能
+      allow read: if true;
+      // 認証済みユーザーが自分の画像のみアップロード可能
+      // ファイル名が "userId.拡張子" の形式であることを確認
+      allow write: if request.auth != null && fileName.matches('^' + request.auth.uid + '\\..*$');
+    }
+
+    // 他のすべてのファイルはデフォルトで拒否
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
