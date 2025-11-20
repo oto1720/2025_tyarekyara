@@ -58,6 +58,7 @@ dependencies:
   device_preview: ^1.2.0
   url_launcher: ^6.3.1
   intl: ^0.20.2
+  liquid_glass_renderer: ^0.2.0-dev.4
 
 dev_dependencies:
   flutter_test:
