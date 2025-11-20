@@ -9,10 +9,10 @@ import {Topic, TopicGenerationResult} from "../types/topic";
 
 /**
  * FirestoreのTimestampをDateに安全に変換
- * @param {any} timestamp FirestoreのTimestampまたはDate
+ * @param {unknown} timestamp FirestoreのTimestampまたはDate
  * @return {Date} Dateオブジェクト
  */
-function toDateSafe(timestamp: any): Date {
+function toDateSafe(timestamp: unknown): Date {
   if (!timestamp) {
     return new Date();
   }
@@ -21,11 +21,16 @@ function toDateSafe(timestamp: any): Date {
     return timestamp;
   }
   // Timestampオブジェクトの場合
-  if (timestamp && typeof timestamp.toDate === "function") {
+  if (
+    timestamp &&
+    typeof timestamp === "object" &&
+    "toDate" in timestamp &&
+    typeof timestamp.toDate === "function"
+  ) {
     return timestamp.toDate();
   }
   // その他の場合（文字列など）
-  return new Date(timestamp);
+  return new Date(String(timestamp));
 }
 
 /**
@@ -55,10 +60,14 @@ export async function getTodayTopic(): Promise<Topic | null> {
       const data = doc.data();
       if (data) {
         // relatedNewsのpublishedAtも安全に変換
-        const relatedNews = (data.relatedNews || []).map((news: any) => ({
-          ...news,
-          publishedAt: news.publishedAt ? toDateSafe(news.publishedAt) : null,
-        }));
+        const relatedNews = (data.relatedNews || []).map(
+          (news: Record<string, unknown>) => ({
+            ...news,
+            publishedAt: news.publishedAt ?
+              toDateSafe(news.publishedAt) :
+              null,
+          })
+        );
 
         return {
           ...data,
@@ -222,10 +231,14 @@ export async function getRecentTopics(days = 30): Promise<Topic[]> {
     snapshot.forEach((doc) => {
       const data = doc.data();
       // relatedNewsのpublishedAtも安全に変換
-      const relatedNews = (data.relatedNews || []).map((news: any) => ({
-        ...news,
-        publishedAt: news.publishedAt ? toDateSafe(news.publishedAt) : null,
-      }));
+      const relatedNews = (data.relatedNews || []).map(
+        (news: Record<string, unknown>) => ({
+          ...news,
+          publishedAt: news.publishedAt ?
+            toDateSafe(news.publishedAt) :
+            null,
+        })
+      );
 
       topics.push({
         ...data,

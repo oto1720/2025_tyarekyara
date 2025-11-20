@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/setting_item.dart';
 import '../../../../core/providers/theme_provider.dart';
@@ -20,9 +21,9 @@ class SettingsScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
+            child: const Text(
               'キャンセル',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           TextButton(
@@ -33,9 +34,9 @@ class SettingsScreen extends ConsumerWidget {
                 context.go('/login');
               }
             },
-            child: Text(
+            child: const Text(
               'ログアウト',
-              style: TextStyle(color: Colors.red[600]),
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -179,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
     final currentUserAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text(
           '設定',
@@ -187,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: false,
       ),

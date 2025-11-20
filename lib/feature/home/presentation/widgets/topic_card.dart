@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/topic.dart';
 
 /// カテゴリー付きトピックカード
@@ -16,11 +17,11 @@ class TopicCard extends StatelessWidget {
   Color getCategoryColor() {
     switch (topic.category) {
       case TopicCategory.social:
-        return Colors.blue;
+        return AppColors.categorySocial;
       case TopicCategory.value:
-        return Colors.orange;
+        return AppColors.categoryValue;
       case TopicCategory.daily:
-        return Colors.green;
+        return AppColors.categoryDaily;
     }
   }
 
@@ -40,11 +41,11 @@ class TopicCard extends StatelessWidget {
   Color getDifficultyColor() {
     switch (topic.difficulty) {
       case TopicDifficulty.easy:
-        return Colors.teal;
+        return AppColors.difficultyEasy;
       case TopicDifficulty.medium:
-        return Colors.amber;
+        return AppColors.difficultyNormal;
       case TopicDifficulty.hard:
-        return Colors.red;
+        return AppColors.difficultyHard;
     }
   }
 
@@ -70,7 +71,7 @@ class TopicCard extends StatelessWidget {
         border: Border.all(color: categoryColor.withOpacity(0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: AppColors.shadow,
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -135,19 +136,19 @@ class TopicCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.2),
+                    color: AppColors.aiGenerated.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.smart_toy, size: 12, color: Colors.purple),
+                      const Icon(Icons.smart_toy, size: 12, color: AppColors.aiGenerated),
                       const SizedBox(width: 4),
                       Text(
                         'AI生成',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.purple.shade700,
+                          color: AppColors.aiGenerated,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -161,11 +162,11 @@ class TopicCard extends StatelessWidget {
           // 投稿日時
           Row(
             children: [
-              Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+              const Icon(Icons.schedule, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 4),
               Text(
                 _getDateText(),
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -177,7 +178,7 @@ class TopicCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
               height: 1.5,
             ),
           ),
@@ -187,9 +188,9 @@ class TopicCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               topic.description!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade800,
+                color: AppColors.textSecondary,
                 height: 1.6,
               ),
             ),
@@ -205,14 +206,14 @@ class TopicCard extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     '#$tag',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 11,
-                      color: Colors.grey.shade700,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 );
