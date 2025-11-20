@@ -7,8 +7,9 @@ export const vertexAI = new VertexAI({
 });
 
 // モデル設定
+// 速度重視: gemini-1.5-flash, 精度重視: gemini-1.5-pro
 export const MODEL_CONFIG = {
-  model: "gemini-1.5-flash-002", // 速度重視: gemini-1.5-flash-002, 精度重視: gemini-1.5-pro-002
+  model: "gemini-2.0-flash",
   temperature: 0.7,
   maxOutputTokens: 2048,
   topP: 0.95,
