@@ -13,6 +13,8 @@ class Badge with _$Badge {
     DateTime? earnedAt,
     required DateTime createdAt,
     required DateTime updatedAt,
+    Map<String, dynamic>? criteria,
+    String? awardedBy,
   }) = _Badge;
 
   factory Badge.fromJson(Map<String, dynamic> json) => _$BadgeFromJson(json);

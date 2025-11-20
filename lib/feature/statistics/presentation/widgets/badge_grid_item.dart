@@ -22,38 +22,47 @@ class BadgeGridItemImpl extends StatelessWidget {
           color: earned ? const Color(0xFFFDE68A) : Colors.transparent,
         ),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           CircleAvatar(
-            radius: 28,
+            radius: 20,
             backgroundColor: earned
                 ? const Color(0xFFFFF7ED)
                 : const Color(0xFFF3F0FF),
             child:
                 icon ??
-                const Icon(Icons.emoji_events, color: Color(0xFF4F39F6)),
+                const Icon(
+                  Icons.emoji_events,
+                  size: 20,
+                  color: Color(0xFF4F39F6),
+                ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            name ?? '',
-            style: const TextStyle(fontSize: 12),
-            textAlign: TextAlign.center,
+          const SizedBox(height: 4),
+          Flexible(
+            child: Text(
+              name ?? '',
+              style: const TextStyle(fontSize: 10),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(height: 8),
-          if (earned)
+          if (earned) ...[
+            const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFEDD5),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Text(
                 '獲得済み',
-                style: TextStyle(color: Color(0xFFB45309), fontSize: 12),
+                style: TextStyle(color: Color(0xFFB45309), fontSize: 9),
               ),
             ),
+          ],
         ],
       ),
     );

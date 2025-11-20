@@ -16,6 +16,8 @@ _$BadgeImpl _$$BadgeImplFromJson(Map<String, dynamic> json) => _$BadgeImpl(
       : DateTime.parse(json['earnedAt'] as String),
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  criteria: json['criteria'] as Map<String, dynamic>?,
+  awardedBy: json['awardedBy'] as String?,
 );
 
 Map<String, dynamic> _$$BadgeImplToJson(_$BadgeImpl instance) =>
@@ -27,4 +29,6 @@ Map<String, dynamic> _$$BadgeImplToJson(_$BadgeImpl instance) =>
       'earnedAt': instance.earnedAt?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'criteria': instance.criteria,
+      'awardedBy': instance.awardedBy,
     };
