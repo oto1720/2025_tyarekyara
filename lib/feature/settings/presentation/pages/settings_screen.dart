@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/setting_item.dart';
 import '../../../../core/providers/theme_provider.dart';
@@ -20,9 +21,9 @@ class SettingsScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
+            child: const Text(
               'キャンセル',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
           TextButton(
@@ -33,15 +34,85 @@ class SettingsScreen extends ConsumerWidget {
                 context.go('/login');
               }
             },
-            child: Text(
+            child: const Text(
               'ログアウト',
-              style: TextStyle(color: Colors.red[600]),
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
       ),
     );
   }
+  Widget _buildProfileImage(BuildContext context, String? iconUrl) {
+    print('=== SettingsScreen._buildProfileImage ===');
+    print('iconUrl (raw): $iconUrl');
+
+    // 保存済みの画像URLを表示
+    if (iconUrl != null && iconUrl.isNotEmpty) {
+      // URLをトリム（あらゆる種類の空白文字を除去）
+      final cleanUrl = iconUrl.replaceAll(RegExp(r'\s+'), '');
+      print('iconUrlが存在 (cleaned): $cleanUrl');
+      print('iconUrl length: ${iconUrl.length}, cleanUrl length: ${cleanUrl.length}');
+
+      // アセット画像かネットワーク画像かを判定
+      if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+        print('ネットワーク画像として読み込み開始');
+        return Image.network(
+          cleanUrl,
+          width: 64,
+          height: 64,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // ネットワークエラー時はデフォルトアイコンを表示
+            print('❌ Settings画像読み込みエラー: $error');
+            print('スタックトレース: $stackTrace');
+            return Container(
+              color: Colors.red[50],
+              child: Icon(
+                Icons.error_outline,
+                size: 24,
+                color: Colors.red,
+              ),
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              print('✅ Settings画像読み込み完了');
+              return child;
+            }
+            final progress = loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                : null;
+            print('Settings画像読み込み中: ${progress != null ? "${(progress * 100).toStringAsFixed(0)}%" : "不明"}');
+            return Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  value: progress,
+                ),
+              ),
+            );
+          },
+        );
+      } else {
+        print('⚠️ iconUrlがhttp/httpsで始まっていません: $cleanUrl');
+      }
+    } else {
+      print('iconUrlが空またはnull');
+    }
+
+    // デフォルトアイコン
+    print('デフォルトアイコンを表示');
+    return Icon(
+      Icons.person,
+      size: 32,
+      color: Theme.of(context).primaryColor,
+    );
+  }
+
   void _showThemeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -109,7 +180,7 @@ class SettingsScreen extends ConsumerWidget {
     final currentUserAsync = ref.watch(currentUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         title: const Text(
           '設定',
@@ -117,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: false,
       ),
@@ -132,8 +203,14 @@ class SettingsScreen extends ConsumerWidget {
               currentUserAsync.when(
                 data: (user) {
                   if (user == null) {
+                    print('⚠️ SettingsScreen: ユーザー情報がnull');
                     return const SizedBox.shrink();
                   }
+                  print('=== SettingsScreen: ユーザー情報取得 ===');
+                  print('  - nickname: ${user.nickname}');
+                  print('  - ageRange: ${user.ageRange}');
+                  print('  - region: ${user.region}');
+                  print('  - iconUrl: ${user.iconUrl}');
                   return GestureDetector(
                     onTap: () {
                       // ★ プロフィール画面へ遷移
@@ -177,11 +254,7 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           ),
                           child: ClipOval(
-                            child: Icon(
-                              Icons.person,
-                              size: 32,
-                              color: Theme.of(context).primaryColor,
-                            ),
+                            child: _buildProfileImage(context, user.iconUrl),
                           ),
                         ),
                         const SizedBox(width: 16),

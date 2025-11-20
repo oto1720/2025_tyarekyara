@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:liquid_glass_renderer/liquid_glass_renderer.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// Bottom Navigationの設定
 /// 新しいタブを追加する場合は、[navigationItems]に追加してください
@@ -9,7 +11,6 @@ class BottomNavigationConfig {
     NavigationItem(icon: Icons.shuffle, label: 'チャレンジ', route: '/challenge'),
     NavigationItem(icon: Icons.chat, label: 'ディベート', route: '/debate'),
     NavigationItem(icon: Icons.bar_chart, label: '統計', route: '/statistics'),
-    NavigationItem(icon: Icons.person, label: 'プロフィール', route: '/profile'),
     NavigationItem(icon: Icons.bug_report, label: 'マッチングデバッグ', route: '/debug/matching'),
     NavigationItem(icon: Icons.settings, label: '設定', route: '/settings'),
   ];
@@ -36,22 +37,47 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // bodyをBottomNavigationBarの下まで拡張し、ガラス効果で背景が透けて見えるようにする
+      extendBody: true,
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        // 固定タイプにして、アイテム数が4つ以上になっても
-        // 背景が透明になる（shiftingによる）挙動を抑制します。
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        currentIndex: _calculateSelectedIndex(context),
-        onTap: (index) => _onItemTapped(index, context),
-        items: BottomNavigationConfig.navigationItems
-            .map(
-              (item) => BottomNavigationBarItem(
-                icon: Icon(item.icon),
-                label: item.label,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.only(left: 8, right: 8, bottom: 25),
+        child: LiquidGlassLayer(
+          settings: LiquidGlassSettings(
+            thickness: 15,
+            blur: 20,
+            glassColor: AppColors.background.withValues(alpha: 0.3),
+          ),
+          child: LiquidGlass(
+            shape: const LiquidRoundedSuperellipse(borderRadius: 30),
+            child: SizedBox(
+              height: 70,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                child: BottomNavigationBar(
+                // 固定タイプにして、アイテム数が4つ以上になっても
+                // 背景が透明になる（shiftingによる）挙動を抑制します。
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: AppColors.primary,
+                unselectedItemColor: AppColors.textTertiary,
+                currentIndex: _calculateSelectedIndex(context),
+                onTap: (index) => _onItemTapped(index, context),
+                items: BottomNavigationConfig.navigationItems
+                    .map(
+                      (item) => BottomNavigationBarItem(
+                        icon: Icon(item.icon),
+                        label: item.label,
+                      ),
+                    )
+                    .toList(),
+                ),
               ),
-            )
-            .toList(),
+            ),
+          ),
+        ),
       ),
     );
   }

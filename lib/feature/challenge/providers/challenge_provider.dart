@@ -1,6 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
+import 'package:tyarekyara/feature/challenge/models/challenge_state.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:tyarekyara/feature/challenge/repositories/challenge_repositories.dart';
 
@@ -12,248 +14,299 @@ enum ChallengeFilter {
 }
 
 // リポジトリプロバイダー
-final challengeRepositoryProvider = riverpod.Provider<ChallengeRepository>((ref) {
+final challengeRepositoryProvider = Provider<ChallengeRepository>((ref) {
   return ChallengeRepository();
 });
 
-class ChallengeState {
-  // 元のProviderが持っていた変数をここに入れる
-  final List<Challenge> allChallenges;
-  final ChallengeFilter currentFilter;
-  final int currentPoints;
-  final int maxPoints;
-  final bool isLoading;
+// フィルタNotifier
+class ChallengeFilterNotifier extends Notifier<ChallengeFilter> {
+  @override
+  ChallengeFilter build() => ChallengeFilter.available;
 
-  // コンストラクタ
-  const ChallengeState({
-    required this.allChallenges,
-    this.currentFilter = ChallengeFilter.available, // フィルタの初期値を設定
-    this.currentPoints = 0, // Firestoreから計算
-    this.maxPoints = 500, // 仮の最大値
-    this.isLoading = false,
-  });
-
-  // 状態をコピーして新しい状態を作るためのメソッド
-  // (状態を変更するときに使う)
-  ChallengeState copyWith({
-    List<Challenge>? allChallenges,
-    ChallengeFilter? currentFilter,
-    int? currentPoints,
-    int? maxPoints,
-    bool? isLoading,
-  }) {
-    return ChallengeState(
-      allChallenges: allChallenges ?? this.allChallenges,
-      currentFilter: currentFilter ?? this.currentFilter,
-      currentPoints: currentPoints ?? this.currentPoints,
-      maxPoints: maxPoints ?? this.maxPoints,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-
-  List<Challenge> get filteredChallenges {
-    if (currentFilter == ChallengeFilter.available) {
-      // 「可能」が選ばれていたら、statusがavailableのものだけを絞り込む
-      return allChallenges.where((c) => c.status == ChallengeStatus.available).toList();
-    } else {
-      // 「済み」が選ばれていたら、statusがcompletedのものだけを絞り込む
-      return allChallenges.where((c) => c.status == ChallengeStatus.completed).toList();
-    }
+  void setFilter(ChallengeFilter filter) {
+    state = filter;
   }
 }
 
+// ポイントNotifier
+class CurrentPointsNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void setPoints(int points) {
+    state = points;
+  }
+
+  void addPoints(int points) {
+    state = state + points;
+  }
+}
+
+// フィルタプロバイダー（独立した状態として管理）
+final challengeFilterProvider = NotifierProvider<ChallengeFilterNotifier, ChallengeFilter>(() {
+  return ChallengeFilterNotifier();
+});
+
+// 現在のポイントプロバイダー（独立した状態として管理）
+final currentPointsProvider = NotifierProvider<CurrentPointsNotifier, int>(() {
+  return CurrentPointsNotifier();
+});
+
+// ChallengeStateはmodels/challenge_state.dartに移動（Freezed使用）
+
+// フィルタリングされたチャレンジを提供するプロバイダー
+final filteredChallengesProvider = Provider<List<Challenge>>((ref) {
+  final asyncValue = ref.watch(challengeProvider);
+  final filter = ref.watch(challengeFilterProvider);
+
+  // AsyncValueからデータを取得
+  final state = asyncValue.value;
+
+  // データがない場合は空リストを返す
+  if (state == null || state.isLoading) {
+    return [];
+  }
+
+  if (filter == ChallengeFilter.available) {
+    return state.challenges
+        .where((c) => c.status == ChallengeStatus.available)
+        .toList();
+  } else {
+    return state.challenges
+        .where((c) => c.status == ChallengeStatus.completed)
+        .toList();
+  }
+});
+
 // -----------------------------------------------------------------
-// ステップ3: 状態を操作する「Notifier」クラスを定義
+// AsyncNotifier を使用した非同期状態管理
 // -----------------------------------------------------------------
-class ChallengeNotifier extends riverpod.Notifier<ChallengeState> {
+class ChallengeNotifier extends AsyncNotifier<ChallengeState> {
   ChallengeRepository get repository => ref.read(challengeRepositoryProvider);
 
   @override
-  ChallengeState build() {
-    // 非同期でデータを読み込む
-    Future.microtask(() => loadChallenges());
-    return ChallengeState(
-      allChallenges: _createDummyData(), // 初期状態はダミーデータ
-      currentFilter: ChallengeFilter.available,
-      isLoading: true,
-    );
+  Future<ChallengeState> build() async {
+    // AsyncNotifierを使用することで、build()内で適切に非同期処理が可能
+    return await _loadChallenges();
   }
 
-  /// チャレンジデータを読み込む
-  Future<void> loadChallenges() async {
-    print('📊 [Challenge] ========== loadChallenges() 開始 ==========');
+  /// チャレンジデータを読み込む（内部メソッド）
+  Future<ChallengeState> _loadChallenges() async {
+    if (kDebugMode) {
+      print('📊 [Challenge] ========== _loadChallenges() 開始 ==========');
+    }
+
     final currentUser = FirebaseAuth.instance.currentUser;
 
     // ログインしていない場合はダミーデータのみ表示
     if (currentUser == null) {
-      print('⚠️ [Challenge] ユーザーがログインしていません。ダミーデータを使用します。');
-      state = state.copyWith(
-        allChallenges: _createDummyData(),
-        isLoading: false,
+      if (kDebugMode) {
+        print('⚠️ [Challenge] ユーザーがログインしていません。ダミーデータを使用します。');
+      }
+      return const ChallengeState(
+        challenges: [], // ダミーデータは後で追加
       );
-      return;
     }
 
-    print('✅ [Challenge] ログイン中のユーザーID: ${currentUser.uid}');
-    state = state.copyWith(isLoading: true);
+    if (kDebugMode) {
+      print('✅ [Challenge] ログイン中のユーザーID: ${currentUser.uid}');
+    }
 
     try {
       // 1. ユーザーの投稿した意見からチャレンジを生成
-      print('🔍 [Challenge] ユーザーの投稿意見からチャレンジ生成開始...');
-      final opinionBasedChallenges = await repository.getChallengesFromUserOpinions(currentUser.uid);
-      print('📦 [Challenge] 生成されたチャレンジ数: ${opinionBasedChallenges.length}');
+      if (kDebugMode) {
+        print('🔍 [Challenge] ユーザーの投稿意見からチャレンジ生成開始...');
+      }
+      final opinionBasedChallenges =
+          await repository.getChallengesFromUserOpinions(currentUser.uid);
+
+      if (kDebugMode) {
+        print('📦 [Challenge] 生成されたチャレンジ数: ${opinionBasedChallenges.length}');
+      }
 
       // 2. Firestoreからユーザーのチャレンジ完了状況を取得
-      print('🔍 [Challenge] Firestoreから完了データ取得開始...');
+      if (kDebugMode) {
+        print('🔍 [Challenge] Firestoreから完了データ取得開始...');
+      }
       final completedChallenges = await repository.getUserChallenges(currentUser.uid);
-      print('📦 [Challenge] Firestoreから取得した完了チャレンジ数: ${completedChallenges.length}');
 
-      // 取得したデータの詳細をログ出力
-      if (completedChallenges.isEmpty) {
-        print('  ⚪ Firestoreに完了データが存在しません');
-      } else {
-        for (var challenge in completedChallenges) {
-          print('  - ID:${challenge.id} / ステータス:${challenge.status.name} / '
-                '反対意見:${challenge.oppositeOpinionText != null ? "あり(${challenge.oppositeOpinionText!.length}文字)" : "なし"} / '
-                'ポイント:${challenge.earnedPoints ?? 0}');
-        }
+      if (kDebugMode) {
+        print('📦 [Challenge] Firestoreから取得した完了チャレンジ数: ${completedChallenges.length}');
       }
 
       // 3. 獲得ポイントの合計を計算
       final totalPoints = await repository.getTotalEarnedPoints(currentUser.uid);
-      print('💰 [Challenge] 合計獲得ポイント: $totalPoints');
-
-      // 4. 意見ベースのチャレンジとFirestoreの完了データをマージ
-      print('🔄 [Challenge] データマージ処理開始...');
-      print('  意見ベースチャレンジ数: ${opinionBasedChallenges.length}');
-      print('  完了済みチャレンジ数: ${completedChallenges.length}');
-
-      List<Challenge> mergedChallenges;
-
-      if (opinionBasedChallenges.isEmpty) {
-        // 意見がない場合はダミーデータを使用
-        print('⚠️ [Challenge] 投稿意見がないため、ダミーデータを使用します');
-        final dummyChallenges = _createDummyData();
-        mergedChallenges = dummyChallenges.map((dummy) {
-          // Firestoreに該当するチャレンジがあるか確認
-          final completed = completedChallenges.firstWhere(
-            (c) => c.id == dummy.id,
-            orElse: () => dummy,
-          );
-          return completed;
-        }).toList();
-      } else {
-        // 意見ベースのチャレンジを使用
-        mergedChallenges = opinionBasedChallenges.map((challenge) {
-          // Firestoreに該当する完了チャレンジがあるか確認
-          final completed = completedChallenges.firstWhere(
-            (c) => c.id == challenge.id,
-            orElse: () {
-              print('  ⚪ ID:${challenge.id} 未完了（挑戦可能）');
-              return challenge;
-            },
-          );
-
-          if (completed.oppositeOpinionText != null) {
-            print('  ✅ ID:${challenge.id} 完了済み（${completed.earnedPoints}P）');
-          }
-
-          return completed;
-        }).toList();
+      if (kDebugMode) {
+        print('💰 [Challenge] 合計獲得ポイント: $totalPoints');
       }
 
-      print('✅ [Challenge] データマージ完了。最終チャレンジ数: ${mergedChallenges.length}');
+      // ポイントを別プロバイダーに反映
+      ref.read(currentPointsProvider.notifier).setPoints(totalPoints);
 
-      // 完了済みの数を確認
-      final completedCount = mergedChallenges.where((c) => c.status == ChallengeStatus.completed).length;
-      print('  完了済み: $completedCount件 / 未完了: ${mergedChallenges.length - completedCount}件');
-
-      state = state.copyWith(
-        allChallenges: mergedChallenges,
-        currentPoints: totalPoints,
-        isLoading: false,
+      // 4. データマージ処理（最適化版）
+      final mergedChallenges = _mergeChallenges(
+        opinionBasedChallenges.isEmpty ? _createDummyData() : opinionBasedChallenges,
+        completedChallenges,
       );
 
-      print('🎉 [Challenge] loadChallenges() 正常終了');
-      print('📊 [Challenge] ========================================\n');
+      if (kDebugMode) {
+        final completedCount = mergedChallenges
+            .where((c) => c.status == ChallengeStatus.completed)
+            .length;
+        print('✅ [Challenge] データマージ完了。最終チャレンジ数: ${mergedChallenges.length}');
+        print('  完了済み: $completedCount件 / 未完了: ${mergedChallenges.length - completedCount}件');
+        print('🎉 [Challenge] _loadChallenges() 正常終了');
+        print('📊 [Challenge] ========================================\n');
+      }
+
+      return ChallengeState(
+        challenges: mergedChallenges,
+      );
     } catch (e, stackTrace) {
-      print('❌ [Challenge] エラー発生！');
-      print('   エラー内容: $e');
-      print('   スタックトレース: $stackTrace');
-      state = state.copyWith(
-        allChallenges: _createDummyData(),
-        isLoading: false,
+      if (kDebugMode) {
+        print('❌ [Challenge] エラー発生！');
+        print('   エラー内容: $e');
+        print('   スタックトレース: $stackTrace');
+        print('📊 [Challenge] ========================================\n');
+      }
+
+      return ChallengeState(
+        challenges: _createDummyData(),
+        errorMessage: e.toString(),
       );
-      print('📊 [Challenge] ========================================\n');
     }
   }
 
-  // フィルタを変更するメソッド
-  void setFilter(ChallengeFilter filter) {
-    if (state.currentFilter != filter) {
-      state = state.copyWith(currentFilter: filter);
+  /// データマージ処理（最適化版）
+  /// O(n×m) → O(n+m) に改善
+  List<Challenge> _mergeChallenges(
+    List<Challenge> baseChallenges,
+    List<Challenge> completedChallenges,
+  ) {
+    if (kDebugMode) {
+      print('🔄 [Challenge] データマージ処理開始...');
+      print('  ベースチャレンジ数: ${baseChallenges.length}');
+      print('  完了済みチャレンジ数: ${completedChallenges.length}');
     }
+
+    // MapベースでO(1)のルックアップを実現
+    final completedMap = <String, Challenge>{
+      for (var c in completedChallenges) c.id: c
+    };
+
+    // マージ処理
+    final merged = baseChallenges.map((challenge) {
+      final completed = completedMap[challenge.id];
+      if (completed != null) {
+        if (kDebugMode && completed.oppositeOpinionText != null) {
+          print('  ✅ ID:${challenge.id} 完了済み（${completed.earnedPoints}P）');
+        }
+        return completed;
+      } else {
+        if (kDebugMode) {
+          print('  ⚪ ID:${challenge.id} 未完了（挑戦可能）');
+        }
+        return challenge;
+      }
+    }).toList();
+
+    return merged;
+  }
+
+  // フィルタを変更するメソッド（非推奨 - challengeFilterProviderを直接使用）
+  @Deprecated('Use challengeFilterProvider instead')
+  void setFilter(ChallengeFilter filter) {
+    ref.read(challengeFilterProvider.notifier).state = filter;
   }
 
   /// チャレンジを完了にする
-  Future<void> completeChallenge(String challengeId, String oppositeOpinion, int earnedPoints) async {
-    print('✍️ [Challenge] ========== completeChallenge() 開始 ==========');
-    print('   チャレンジID: $challengeId');
-    print('   反対意見の文字数: ${oppositeOpinion.length}文字');
-    print('   獲得ポイント: $earnedPoints');
+  Future<void> completeChallenge(
+    String challengeId,
+    String oppositeOpinion,
+    int earnedPoints,
+  ) async {
+    if (kDebugMode) {
+      print('✍️ [Challenge] ========== completeChallenge() 開始 ==========');
+      print('   チャレンジID: $challengeId');
+      print('   反対意見の文字数: ${oppositeOpinion.length}文字');
+      print('   獲得ポイント: $earnedPoints');
+    }
 
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
-      print('❌ [Challenge] ユーザーがログインしていません。処理を中断します。');
-      return;
+      if (kDebugMode) {
+        print('❌ [Challenge] ユーザーがログインしていません。処理を中断します。');
+      }
+      throw Exception('ユーザーがログインしていません');
     }
 
-    print('✅ [Challenge] ユーザーID: ${currentUser.uid}');
+    if (kDebugMode) {
+      print('✅ [Challenge] ユーザーID: ${currentUser.uid}');
+    }
 
-    // 1. allChallenges リストをコピー（新しいリストを作成）
-    final updatedChallenges = List<Challenge>.from(state.allChallenges);
+    // 現在の状態を取得（AsyncValueから）
+    final currentState = state.value;
+    if (currentState == null) {
+      throw Exception('状態が初期化されていません');
+    }
 
-    // 2. 該当するチャレンジのインデックスを探す
-    final index = updatedChallenges.indexWhere((c) => c.id == challengeId);
+    // 該当するチャレンジを探す
+    final index = currentState.challenges.indexWhere((c) => c.id == challengeId);
 
-    if (index != -1) {
+    if (index == -1) {
+      if (kDebugMode) {
+        print('❌ [Challenge] 該当するチャレンジが見つかりません（ID: $challengeId）');
+      }
+      throw Exception('チャレンジが見つかりません');
+    }
+
+    if (kDebugMode) {
       print('✅ [Challenge] 該当チャレンジを発見（インデックス: $index）');
+    }
 
-      // 3. 該当チャレンジのステータスと意見を更新
-      final oldChallenge = updatedChallenges[index];
-      print('   元のステータス: ${oldChallenge.status.name}');
+    final oldChallenge = currentState.challenges[index];
+    final completedChallenge = Challenge(
+      id: oldChallenge.id,
+      title: oldChallenge.title,
+      stance: oldChallenge.stance,
+      difficulty: oldChallenge.difficulty,
+      originalOpinionText: oldChallenge.originalOpinionText,
+      status: ChallengeStatus.completed,
+      oppositeOpinionText: oppositeOpinion,
+      userId: currentUser.uid,
+      completedAt: DateTime.now(),
+      earnedPoints: earnedPoints,
+    );
 
-      final completedChallenge = Challenge(
-        id: oldChallenge.id,
-        title: oldChallenge.title,
-        stance: oldChallenge.stance,
-        difficulty: oldChallenge.difficulty,
-        originalOpinionText: oldChallenge.originalOpinionText,
-        status: ChallengeStatus.completed,
-        oppositeOpinionText: oppositeOpinion,
-        userId: currentUser.uid,
-        completedAt: DateTime.now(),
-        earnedPoints: earnedPoints,
-      );
+    // 楽観的UI更新用の新しいリスト
+    final updatedChallenges = List<Challenge>.from(currentState.challenges);
+    updatedChallenges[index] = completedChallenge;
 
-      print('✅ [Challenge] 新しいチャレンジオブジェクトを作成');
-      print('   ステータス: ${completedChallenge.status.name}');
-      print('   反対意見: ${completedChallenge.oppositeOpinionText?.substring(0, 20)}...');
-
-      updatedChallenges[index] = completedChallenge;
-
-      // 4. ローカル状態を即座に更新（楽観的UI更新）
+    // 楽観的UI更新
+    if (kDebugMode) {
       print('🔄 [Challenge] ローカル状態を更新（楽観的UI更新）');
-      state = state.copyWith(
-        allChallenges: updatedChallenges,
-        currentPoints: state.currentPoints + earnedPoints,
-      );
-      print('✅ [Challenge] ローカル状態更新完了（現在のポイント: ${state.currentPoints}）');
+    }
 
-      // 5. Firestoreに保存
+    final newState = currentState.copyWith(challenges: updatedChallenges);
+    state = AsyncValue.data(newState);
+
+    // ポイント更新
+    final currentPoints = ref.read(currentPointsProvider);
+    ref.read(currentPointsProvider.notifier).addPoints(earnedPoints);
+
+    if (kDebugMode) {
+      print('✅ [Challenge] ローカル状態更新完了（現在のポイント: ${currentPoints + earnedPoints}）');
+    }
+
+    // Firestoreに保存
+    if (kDebugMode) {
       print('💾 [Challenge] Firestoreに保存開始...');
-      try {
-        await repository.saveUserChallenge(completedChallenge);
+    }
+
+    try {
+      await repository.saveUserChallenge(completedChallenge);
+
+      if (kDebugMode) {
         print('✅ [Challenge] Firestoreへの保存成功！');
         print('   保存したデータ:');
         print('     - ID: ${completedChallenge.id}');
@@ -261,36 +314,44 @@ class ChallengeNotifier extends riverpod.Notifier<ChallengeState> {
         print('     - status: ${completedChallenge.status.name}');
         print('     - oppositeOpinionText: ${completedChallenge.oppositeOpinionText?.length}文字');
         print('     - earnedPoints: ${completedChallenge.earnedPoints}');
-      } catch (e, stackTrace) {
+      }
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
         print('❌ [Challenge] Firestoreへの保存失敗！');
         print('   エラー内容: $e');
         print('   スタックトレース: $stackTrace');
-        print('🔄 [Challenge] データを再読み込みします...');
-        // エラー時は元に戻す
-        await loadChallenges();
+        print('🔄 [Challenge] 状態をロールバックします...');
       }
-    } else {
-      print('❌ [Challenge] 該当するチャレンジが見つかりません（ID: $challengeId）');
+
+      // エラー時は元の状態に戻す（正確なロールバック）
+      state = AsyncValue.data(currentState);
+      ref.read(currentPointsProvider.notifier).setPoints(currentPoints);
+
+      rethrow; // エラーを再スロー
     }
 
-    print('✍️ [Challenge] ========================================\n');
+    if (kDebugMode) {
+      print('✍️ [Challenge] ========================================\n');
+    }
   }
 
   /// データをリフレッシュ
-  Future<void> refresh() => loadChallenges();
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _loadChallenges());
+  }
 }
 
 final challengeProvider =
-    riverpod.NotifierProvider<ChallengeNotifier, ChallengeState>(() {
+    AsyncNotifierProvider<ChallengeNotifier, ChallengeState>(() {
   return ChallengeNotifier();
 });
 
 // -----------------------------------------------------------------
-// ステップ4: UIがアクセスするための「Provider」を定義
+// ダミーデータ生成
 // -----------------------------------------------------------------
 
 List<Challenge> _createDummyData() {
-  // ダミーデータ用の仮のユーザーID（実際のユーザーIDで上書きされる）
   const dummyUserId = 'dummy';
 
   return [
@@ -298,8 +359,8 @@ List<Challenge> _createDummyData() {
       id: '1',
       title: '週休3日制は導入すべきか？',
       difficulty: ChallengeDifficulty.easy,
-      originalStance: Stance.con, // 元の意見: 反対
-      stance: Stance.pro, // チャレンジ: 賛成の立場で考える
+      originalStance: Stance.con,
+      stance: Stance.pro,
       originalOpinionText: '週休3日制は、労働者のワークライフバランスを向上させ、生産性を高める可能性があります。',
       status: ChallengeStatus.available,
       userId: dummyUserId,
@@ -308,8 +369,8 @@ List<Challenge> _createDummyData() {
       id: '2',
       difficulty: ChallengeDifficulty.normal,
       title: '今日のご飯なに？',
-      originalStance: Stance.pro, // 元の意見: 賛成
-      stance: Stance.con, // チャレンジ: 反対の立場で考える
+      originalStance: Stance.pro,
+      stance: Stance.con,
       originalOpinionText: 'カレーライスが食べたいです。',
       status: ChallengeStatus.available,
       userId: dummyUserId,
@@ -318,8 +379,8 @@ List<Challenge> _createDummyData() {
       id: '3',
       difficulty: ChallengeDifficulty.hard,
       title: 'は？',
-      originalStance: Stance.con, // 元の意見: 反対
-      stance: Stance.pro, // チャレンジ: 賛成の立場で考える
+      originalStance: Stance.con,
+      stance: Stance.pro,
       originalOpinionText: 'は？',
       status: ChallengeStatus.available,
       userId: dummyUserId,
@@ -327,11 +388,11 @@ List<Challenge> _createDummyData() {
     Challenge(
       id: '4',
       title: 'お題C：SNSは社会に有益か？',
-      originalStance: Stance.pro, // 元の意見: 賛成
-      stance: Stance.con, // チャレンジ: 反対の立場で考える
+      originalStance: Stance.pro,
+      stance: Stance.con,
       difficulty: ChallengeDifficulty.normal,
       originalOpinionText: '遠くの人と繋がれる点で、非常に有益だ。',
-      status: ChallengeStatus.available, // デフォルトは挑戦可能に変更
+      status: ChallengeStatus.available,
       userId: dummyUserId,
     ),
   ];

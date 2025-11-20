@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'profile_setup_state.dart';
 import 'storage_service_provider.dart';
 import 'auth_provider.dart';
@@ -41,8 +43,15 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
       );
 
       if (pickedFile != null) {
+        // XFileからバイトデータを読み込み、一時ディレクトリに保存
+        final bytes = await pickedFile.readAsBytes();
+        final tempDir = await getTemporaryDirectory();
+        final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
+        final tempFile = File('${tempDir.path}/$fileName');
+        await tempFile.writeAsBytes(bytes);
+
         state = state.copyWith(
-          selectedImage: File(pickedFile.path),
+          selectedImage: tempFile,
           errorMessage: null,
         );
       }

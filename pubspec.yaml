@@ -38,6 +38,7 @@ dependencies:
   firebase_analytics:
   firebase_storage:
   image_picker:
+  path_provider:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.2
 
@@ -57,6 +58,7 @@ dependencies:
   device_preview: ^1.2.0
   url_launcher: ^6.3.1
   intl: ^0.20.2
+  liquid_glass_renderer: ^0.2.0-dev.4
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +73,7 @@ dev_dependencies:
   freezed: ^2.4.5
   build_runner: ^2.4.6
   json_serializable: ^6.7.1
+  mockito: ^5.4.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

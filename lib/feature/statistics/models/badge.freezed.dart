@@ -28,6 +28,8 @@ mixin _$Badge {
   DateTime? get earnedAt => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime get updatedAt => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get criteria => throw _privateConstructorUsedError;
+  String? get awardedBy => throw _privateConstructorUsedError;
 
   /// Serializes this Badge to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -51,6 +53,8 @@ abstract class $BadgeCopyWith<$Res> {
     DateTime? earnedAt,
     DateTime createdAt,
     DateTime updatedAt,
+    Map<String, dynamic>? criteria,
+    String? awardedBy,
   });
 }
 
@@ -76,6 +80,8 @@ class _$BadgeCopyWithImpl<$Res, $Val extends Badge>
     Object? earnedAt = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? criteria = freezed,
+    Object? awardedBy = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -107,6 +113,14 @@ class _$BadgeCopyWithImpl<$Res, $Val extends Badge>
                 ? _value.updatedAt
                 : updatedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            criteria: freezed == criteria
+                ? _value.criteria
+                : criteria // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
+            awardedBy: freezed == awardedBy
+                ? _value.awardedBy
+                : awardedBy // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -129,6 +143,8 @@ abstract class _$$BadgeImplCopyWith<$Res> implements $BadgeCopyWith<$Res> {
     DateTime? earnedAt,
     DateTime createdAt,
     DateTime updatedAt,
+    Map<String, dynamic>? criteria,
+    String? awardedBy,
   });
 }
 
@@ -153,6 +169,8 @@ class __$$BadgeImplCopyWithImpl<$Res>
     Object? earnedAt = freezed,
     Object? createdAt = null,
     Object? updatedAt = null,
+    Object? criteria = freezed,
+    Object? awardedBy = freezed,
   }) {
     return _then(
       _$BadgeImpl(
@@ -184,6 +202,14 @@ class __$$BadgeImplCopyWithImpl<$Res>
             ? _value.updatedAt
             : updatedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        criteria: freezed == criteria
+            ? _value._criteria
+            : criteria // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
+        awardedBy: freezed == awardedBy
+            ? _value.awardedBy
+            : awardedBy // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -200,7 +226,9 @@ class _$BadgeImpl implements _Badge {
     this.earnedAt,
     required this.createdAt,
     required this.updatedAt,
-  });
+    final Map<String, dynamic>? criteria,
+    this.awardedBy,
+  }) : _criteria = criteria;
 
   factory _$BadgeImpl.fromJson(Map<String, dynamic> json) =>
       _$$BadgeImplFromJson(json);
@@ -219,10 +247,22 @@ class _$BadgeImpl implements _Badge {
   final DateTime createdAt;
   @override
   final DateTime updatedAt;
+  final Map<String, dynamic>? _criteria;
+  @override
+  Map<String, dynamic>? get criteria {
+    final value = _criteria;
+    if (value == null) return null;
+    if (_criteria is EqualUnmodifiableMapView) return _criteria;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(value);
+  }
+
+  @override
+  final String? awardedBy;
 
   @override
   String toString() {
-    return 'Badge(id: $id, name: $name, description: $description, iconUrl: $iconUrl, earnedAt: $earnedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'Badge(id: $id, name: $name, description: $description, iconUrl: $iconUrl, earnedAt: $earnedAt, createdAt: $createdAt, updatedAt: $updatedAt, criteria: $criteria, awardedBy: $awardedBy)';
   }
 
   @override
@@ -240,7 +280,10 @@ class _$BadgeImpl implements _Badge {
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
             (identical(other.updatedAt, updatedAt) ||
-                other.updatedAt == updatedAt));
+                other.updatedAt == updatedAt) &&
+            const DeepCollectionEquality().equals(other._criteria, _criteria) &&
+            (identical(other.awardedBy, awardedBy) ||
+                other.awardedBy == awardedBy));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -254,6 +297,8 @@ class _$BadgeImpl implements _Badge {
     earnedAt,
     createdAt,
     updatedAt,
+    const DeepCollectionEquality().hash(_criteria),
+    awardedBy,
   );
 
   /// Create a copy of Badge
@@ -279,6 +324,8 @@ abstract class _Badge implements Badge {
     final DateTime? earnedAt,
     required final DateTime createdAt,
     required final DateTime updatedAt,
+    final Map<String, dynamic>? criteria,
+    final String? awardedBy,
   }) = _$BadgeImpl;
 
   factory _Badge.fromJson(Map<String, dynamic> json) = _$BadgeImpl.fromJson;
@@ -297,6 +344,10 @@ abstract class _Badge implements Badge {
   DateTime get createdAt;
   @override
   DateTime get updatedAt;
+  @override
+  Map<String, dynamic>? get criteria;
+  @override
+  String? get awardedBy;
 
   /// Create a copy of Badge
   /// with the given fields replaced by the non-null parameter values.

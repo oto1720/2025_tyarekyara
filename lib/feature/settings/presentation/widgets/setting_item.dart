@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// 設定項目Widget
 class SettingItem extends StatelessWidget {
@@ -26,8 +27,8 @@ class SettingItem extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.grey[200]!,
+        side: const BorderSide(
+          color: AppColors.border,
           width: 1,
         ),
       ),
@@ -41,13 +42,13 @@ class SettingItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: (iconColor ?? Theme.of(context).primaryColor)
+            color: (iconColor ?? AppColors.primary)
                 .withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: iconColor ?? Theme.of(context).primaryColor,
+            color: iconColor ?? AppColors.primary,
             size: 24,
           ),
         ),
@@ -61,16 +62,16 @@ class SettingItem extends StatelessWidget {
         subtitle: subtitle != null
             ? Text(
                 subtitle!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                 ),
               )
             : null,
         trailing: trailing ??
-            Icon(
+            const Icon(
               Icons.chevron_right,
-              color: Colors.grey[400],
+              color: AppColors.textTertiary,
             ),
       ),
     );
@@ -92,10 +93,10 @@ class SettingSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: Colors.grey[600],
+          color: AppColors.textSecondary,
           letterSpacing: 0.5,
         ),
       ),
@@ -124,7 +125,7 @@ class DangerSettingItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Colors.red[100]!,
+          color: AppColors.error.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -138,26 +139,26 @@ class DangerSettingItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.red[50],
+            color: AppColors.error.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: Colors.red[600],
+            color: AppColors.error,
             size: 24,
           ),
         ),
         title: Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.red[600],
+            color: AppColors.error,
           ),
         ),
         trailing: Icon(
           Icons.chevron_right,
-          color: Colors.red[400],
+          color: AppColors.error.withValues(alpha: 0.6),
         ),
       ),
     );

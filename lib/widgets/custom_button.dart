@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// カスタムボタン
 /// 統一されたデザインとローディング状態を提供
@@ -32,9 +33,9 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
-          foregroundColor: textColor ?? Colors.white,
-          disabledBackgroundColor: Colors.grey[300],
+          backgroundColor: backgroundColor ?? AppColors.primary,
+          foregroundColor: textColor ?? AppColors.textOnPrimary,
+          disabledBackgroundColor: AppColors.disabled,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -51,7 +52,7 @@ class CustomButton extends StatelessWidget {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.textOnPrimary),
                 ),
               )
             : Text(
@@ -59,7 +60,7 @@ class CustomButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: textColor ?? Colors.white,
+                  color: textColor ?? AppColors.textOnPrimary,
                 ),
               ),
       ),

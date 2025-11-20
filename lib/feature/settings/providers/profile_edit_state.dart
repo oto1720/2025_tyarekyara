@@ -22,11 +22,13 @@ class ProfileEditState with _$ProfileEditState {
     required String nickname,
     String? ageRange,
     String? region,
+    String? iconUrl,
   }) {
     return ProfileEditState(
       nickname: nickname,
       ageRange: ageRange,
       region: region,
+      uploadedImageUrl: iconUrl,
     );
   }
 }

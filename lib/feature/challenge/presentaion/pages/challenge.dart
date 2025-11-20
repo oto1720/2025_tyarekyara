@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
@@ -48,16 +47,45 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
 
   @override
   Widget build(BuildContext context) {
-    final challengeState = ref.watch(challengeProvider);
-    final currentPoints = challengeState.currentPoints; // Providerから取得
-    final maxPoints = challengeState.maxPoints; // Providerから取得
+    final asyncValue = ref.watch(challengeProvider);
+    final currentPoints = ref.watch(currentPointsProvider);
+    final challenges = ref.watch(filteredChallengesProvider);
+    final currentFilter = ref.watch(challengeFilterProvider);
+
+    const maxPoints = 500; // 定数化
+
     // currentProgressを計算で求める
     double currentProgress = maxPoints > 0 ? currentPoints / maxPoints : 0.0;
     // 1.0を超えないようにする
     if (currentProgress > 1.0) currentProgress = 1.0;
 
-    //Providerからフィルタリング済みのリストを取得
-    final List<Challenge> challenges = challengeState.filteredChallenges;
+    // AsyncValueのローディング・エラー状態をチェック
+    if (asyncValue.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (asyncValue.hasError) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('新機能')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('エラーが発生しました: ${asyncValue.error}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(challengeProvider),
+                child: const Text('再試行'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
 
     return Scaffold(
@@ -202,11 +230,11 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               // 7. 【変更】Providerの状態で色を決定
-                              backgroundColor: challengeState.currentFilter == ChallengeFilter.available 
-                                ? Colors.black 
+                              backgroundColor: currentFilter == ChallengeFilter.available
+                                ? Colors.black
                                 : Colors.white,
-                              foregroundColor: challengeState.currentFilter == ChallengeFilter.available 
-                                ? Colors.white 
+                              foregroundColor: currentFilter == ChallengeFilter.available
+                                ? Colors.white
                                 : Colors.black,
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
@@ -216,7 +244,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                             onPressed: () {
                               // 8. 【変更】Providerのメソッドを呼び出す (setStateは不要)
                               // readを呼び出す（状態の変更だけなので）
-                              ref.read(challengeProvider.notifier).setFilter(ChallengeFilter.available);
+                              ref.read(challengeFilterProvider.notifier).setFilter(ChallengeFilter.available);
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -240,11 +268,11 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               // 9. 【変更】Providerの状態で色を決定
-                              backgroundColor: challengeState.currentFilter == ChallengeFilter.completed 
-                                ? Colors.black 
+                              backgroundColor: currentFilter == ChallengeFilter.completed
+                                ? Colors.black
                                 : Colors.white,
-                              foregroundColor: challengeState.currentFilter == ChallengeFilter.completed 
-                                ? Colors.white 
+                              foregroundColor: currentFilter == ChallengeFilter.completed
+                                ? Colors.white
                                 : Colors.black,
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
@@ -253,7 +281,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                             ),
                             onPressed: () {
                               // 10. 【変更】Providerのメソッドを呼び出す
-                              ref.read(challengeProvider.notifier).setFilter(ChallengeFilter.completed);
+                              ref.read(challengeFilterProvider.notifier).setFilter(ChallengeFilter.completed);
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -278,7 +306,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
               //仮のチャレンジカードの表示
               ...challenges.map((challenge) {
                 //フィルタ状態を取得
-                final bool isAvailable = challengeState.currentFilter == ChallengeFilter.available;
+                final bool isAvailable = currentFilter == ChallengeFilter.available;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6.0),
                   child: isAvailable
