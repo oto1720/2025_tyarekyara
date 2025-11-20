@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../../providers/opinion_provider.dart';
@@ -41,14 +42,14 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     final notifier = ref.read(dailyTopicProvider.notifier);
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
           '今日のトピック',
           style: TextStyle(
-            color: Colors.black87,
+            color: AppColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
@@ -56,7 +57,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
         actions: [
           // デバッグ: トピック再生成ボタン
           IconButton(
-            icon: const Icon(Icons.bug_report, color: Colors.orange),
+            icon: const Icon(Icons.bug_report, color: AppColors.warning),
             tooltip: 'デバッグ: トピックを再生成',
             onPressed: state.isLoading || state.isGenerating
                 ? null
@@ -77,7 +78,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                           ElevatedButton(
                             onPressed: () => Navigator.pop(context, true),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: AppColors.warning,
                             ),
                             child: const Text('再生成'),
                           ),
@@ -91,7 +92,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
           ),
           // リロードボタン（管理者用）
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black87),
+            icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
             tooltip: 'リロード',
             onPressed: state.isLoading || state.isGenerating
                 ? null
@@ -142,23 +143,23 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'エラーが発生しました',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade600,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -182,9 +183,9 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
           const SizedBox(height: 16),
           Text(
             isGenerating ? '新しいトピックを生成中...' : '読み込み中...',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade600,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -199,23 +200,23 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lightbulb_outline,
-                size: 64, color: Colors.grey.shade300),
+            const Icon(Icons.lightbulb_outline,
+                size: 64, color: AppColors.disabled),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'トピックがありません',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               '新しいトピックを生成してください',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey.shade600,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -258,33 +259,33 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
+              color: AppColors.success.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200, width: 1.5),
+              border: Border.all(color: AppColors.success.withOpacity(0.3), width: 1.5),
             ),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.check_circle,
                   size: 48,
-                  color: Colors.green.shade600,
+                  color: AppColors.success,
                 ),
                 const SizedBox(height: 12),
-                Text(
+                const Text(
                   '投稿完了！',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green.shade800,
+                    color: AppColors.success,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'このトピックに既に意見を投稿しています',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade700,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 if (postState.userOpinion != null) ...[
@@ -292,29 +293,29 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Text(
+                            const Text(
                               'あなたの立場:',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey.shade600,
+                                color: AppColors.textSecondary,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
                               postState.userOpinion!.stance.displayName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade800,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ],
@@ -339,7 +340,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                 icon: const Icon(Icons.people),
                 label: const Text('みんなの意見を見る'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -386,7 +387,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.background,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -397,13 +398,13 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   '投稿後に他の人の意見が閲覧可能',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 16),
 
@@ -415,7 +416,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                         label: '賛成',
                         icon: Icons.thumb_up_outlined,
                         isSelected: _selectedStance == '賛成',
-                        color: Colors.blue,
+                        color: AppColors.agree,
                         onTap: () => setState(() => _selectedStance = '賛成'),
                       ),
                     ),
@@ -425,7 +426,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                         label: '反対',
                         icon: Icons.thumb_down_outlined,
                         isSelected: _selectedStance == '反対',
-                        color: Colors.red,
+                        color: AppColors.disagree,
                         onTap: () => setState(() => _selectedStance = '反対'),
                       ),
                     ),
@@ -435,7 +436,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                         label: '中立・どちらとも言えない',
                         icon: Icons.horizontal_rule,
                         isSelected: _selectedStance == '中立',
-                        color: Colors.grey,
+                        color: AppColors.neutral,
                         onTap: () => setState(() => _selectedStance = '中立'),
                       ),
                     ),
@@ -448,7 +449,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -458,16 +459,16 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                   maxLength: _maxLength,
                   decoration: InputDecoration(
                     hintText: 'あなたの考えを具体的に書いてください',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
+                    hintStyle: const TextStyle(
+                      color: AppColors.textTertiary,
                       fontSize: 14,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
+                      borderSide: const BorderSide(color: AppColors.border),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: AppColors.surface,
                     counterText: '',
                   ),
                   onChanged: (_) => setState(() {}),
@@ -482,16 +483,16 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                       _currentLength < _minLength
                           ? 'あと${_minLength - _currentLength}文字'
                           : '',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.orange.shade700,
+                        color: AppColors.warning,
                       ),
                     ),
                     Text(
                       '$_currentLength / $_maxLength文字',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -510,8 +511,8 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
               child: ElevatedButton(
                 onPressed: (_isValid && !isPosting) ? _submitOpinion : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  disabledBackgroundColor: Colors.grey.shade300,
+                  backgroundColor: AppColors.primary,
+                  disabledBackgroundColor: AppColors.disabled,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -525,7 +526,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                              AlwaysStoppedAnimation<Color>(AppColors.textOnPrimary),
                         ),
                       )
                     : Text(
@@ -533,7 +534,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: _isValid ? Colors.white : Colors.grey.shade500,
+                          color: _isValid ? AppColors.textOnPrimary : AppColors.textTertiary,
                         ),
                       ),
               ),
@@ -636,10 +637,10 @@ class _StanceButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          color: isSelected ? color.withOpacity(0.1) : AppColors.surfaceVariant,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? color : Colors.grey.shade300,
+            color: isSelected ? color : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -648,7 +649,7 @@ class _StanceButton extends StatelessWidget {
             Icon(
               icon,
               size: 24,
-              color: isSelected ? color : Colors.grey.shade600,
+              color: isSelected ? color : AppColors.textSecondary,
             ),
             const SizedBox(height: 4),
             Text(
@@ -657,7 +658,7 @@ class _StanceButton extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? color : Colors.grey.shade700,
+                color: isSelected ? color : AppColors.textSecondary,
               ),
             ),
           ],

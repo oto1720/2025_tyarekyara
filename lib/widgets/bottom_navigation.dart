@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// Bottom Navigationの設定
 /// 新しいタブを追加する場合は、[navigationItems]に追加してください
@@ -41,7 +42,9 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
         // 固定タイプにして、アイテム数が4つ以上になっても
         // 背景が透明になる（shiftingによる）挙動を抑制します。
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textTertiary,
         currentIndex: _calculateSelectedIndex(context),
         onTap: (index) => _onItemTapped(index, context),
         items: BottomNavigationConfig.navigationItems
