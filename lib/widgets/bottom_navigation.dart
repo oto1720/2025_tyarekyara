@@ -40,32 +40,42 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
       // bodyをBottomNavigationBarの下まで拡張し、ガラス効果で背景が透けて見えるようにする
       extendBody: true,
       body: child,
-      bottomNavigationBar: LiquidGlassLayer(
-        settings: LiquidGlassSettings(
-          thickness: 15,
-          blur: 20,
-          glassColor: AppColors.background.withValues(alpha: 0.3),
-        ),
-        child: LiquidGlass(
-          shape: const LiquidRoundedSuperellipse(borderRadius: 0),
-          child: BottomNavigationBar(
-            // 固定タイプにして、アイテム数が4つ以上になっても
-            // 背景が透明になる（shiftingによる）挙動を抑制します。
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textTertiary,
-            currentIndex: _calculateSelectedIndex(context),
-            onTap: (index) => _onItemTapped(index, context),
-            items: BottomNavigationConfig.navigationItems
-                .map(
-                  (item) => BottomNavigationBarItem(
-                    icon: Icon(item.icon),
-                    label: item.label,
-                  ),
-                )
-                .toList(),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.only(left: 8, right: 8, bottom: 25),
+        child: LiquidGlassLayer(
+          settings: LiquidGlassSettings(
+            thickness: 15,
+            blur: 20,
+            glassColor: AppColors.background.withValues(alpha: 0.3),
+          ),
+          child: LiquidGlass(
+            shape: const LiquidRoundedSuperellipse(borderRadius: 30),
+            child: SizedBox(
+              height: 70,
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                child: BottomNavigationBar(
+                // 固定タイプにして、アイテム数が4つ以上になっても
+                // 背景が透明になる（shiftingによる）挙動を抑制します。
+                type: BottomNavigationBarType.fixed,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: AppColors.primary,
+                unselectedItemColor: AppColors.textTertiary,
+                currentIndex: _calculateSelectedIndex(context),
+                onTap: (index) => _onItemTapped(index, context),
+                items: BottomNavigationConfig.navigationItems
+                    .map(
+                      (item) => BottomNavigationBarItem(
+                        icon: Icon(item.icon),
+                        label: item.label,
+                      ),
+                    )
+                    .toList(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
