@@ -100,7 +100,8 @@ class ProfileScreen extends ConsumerWidget {
         final tempDir = await getTemporaryDirectory();
         print('一時ディレクトリ: ${tempDir.path}');
 
-        final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
+        final fileName =
+            'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
         final tempFile = File('${tempDir.path}/$fileName');
 
         await tempFile.writeAsBytes(bytes);
@@ -109,9 +110,7 @@ class ProfileScreen extends ConsumerWidget {
         final exists = await tempFile.exists();
         print('ファイル存在確認: $exists');
 
-        ref
-            .read(profileEditProvider.notifier)
-            .updateSelectedImage(tempFile);
+        ref.read(profileEditProvider.notifier).updateSelectedImage(tempFile);
 
         print('画像選択処理完了');
       } else {
@@ -139,11 +138,13 @@ class ProfileScreen extends ConsumerWidget {
     if (!validation.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(validation.nicknameError ??
-              validation.currentPasswordError ??
-              validation.newPasswordError ??
-              validation.confirmPasswordError ??
-              '入力内容を確認してください'),
+          content: Text(
+            validation.nicknameError ??
+                validation.currentPasswordError ??
+                validation.newPasswordError ??
+                validation.confirmPasswordError ??
+                '入力内容を確認してください',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -173,10 +174,7 @@ class ProfileScreen extends ConsumerWidget {
         loading: () {},
         error: (error, _) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('エラー: $error'),
-              backgroundColor: Colors.red,
-            ),
+            SnackBar(content: Text('エラー: $error'), backgroundColor: Colors.red),
           );
         },
       );
@@ -196,186 +194,169 @@ class ProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(
           'プロフィール編集',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // プロフィール画像
-                ProfileImageDisplay(
-                  selectedImage: editState.selectedImage,
-                  iconUrl: editState.uploadedImageUrl,
-                  onTap: () {
-                    ImagePickerDialog.show(
-                      context,
-                      onGallery: () => _pickImage(
-                        context,
-                        ref,
-                        ImageSource.gallery,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // プロフィール画像
+              ProfileImageDisplay(
+                selectedImage: editState.selectedImage,
+                iconUrl: editState.uploadedImageUrl,
+                onTap: () {
+                  ImagePickerDialog.show(
+                    context,
+                    onGallery: () =>
+                        _pickImage(context, ref, ImageSource.gallery),
+                    onCamera: () =>
+                        _pickImage(context, ref, ImageSource.camera),
+                  );
+                },
+              ),
+              const SizedBox(height: 32),
+
+              // ニックネーム
+              const SectionTitle('ニックネーム'),
+              const SizedBox(height: 8),
+              StandardTextField(
+                initialValue: editState.nickname,
+                label: 'ニックネーム',
+                icon: Icons.person_outline,
+                errorText: validation.nicknameError,
+                onChanged: (value) {
+                  ref.read(profileEditProvider.notifier).updateNickname(value);
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // 年代
+              const SectionTitle('年代'),
+              const SizedBox(height: 8),
+              DropdownField(
+                value: editState.ageRange,
+                label: '年代を選択',
+                icon: Icons.cake_outlined,
+                items: _ageRanges,
+                onChanged: (value) {
+                  ref.read(profileEditProvider.notifier).updateAgeRange(value);
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // 地域
+              const SectionTitle('地域'),
+              const SizedBox(height: 8),
+              DropdownField(
+                value: editState.region,
+                label: '地域を選択',
+                icon: Icons.location_on_outlined,
+                items: _regions,
+                onChanged: (value) {
+                  ref.read(profileEditProvider.notifier).updateRegion(value);
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // パスワード変更セクション
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SectionTitle('パスワード'),
+                  TextButton(
+                    onPressed: () {
+                      ref
+                          .read(profileEditProvider.notifier)
+                          .togglePasswordEditing();
+                    },
+                    child: Text(
+                      editState.isEditingPassword ? 'キャンセル' : '変更する',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
                       ),
-                      onCamera: () => _pickImage(
-                        context,
-                        ref,
-                        ImageSource.camera,
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
 
-                // ニックネーム
-                const SectionTitle('ニックネーム'),
-                const SizedBox(height: 8),
-                StandardTextField(
-                  initialValue: editState.nickname,
-                  label: 'ニックネーム',
-                  icon: Icons.person_outline,
-                  errorText: validation.nicknameError,
+              if (editState.isEditingPassword) ...[
+                PasswordTextField(
+                  initialValue: editState.currentPassword,
+                  label: '現在のパスワード',
+                  errorText: validation.currentPasswordError,
                   onChanged: (value) {
-                    ref.read(profileEditProvider.notifier).updateNickname(value);
+                    ref
+                        .read(profileEditProvider.notifier)
+                        .updateCurrentPassword(value);
                   },
                 ),
-                const SizedBox(height: 24),
-
-                // 年代
-                const SectionTitle('年代'),
-                const SizedBox(height: 8),
-                DropdownField(
-                  value: editState.ageRange,
-                  label: '年代を選択',
-                  icon: Icons.cake_outlined,
-                  items: _ageRanges,
+                const SizedBox(height: 16),
+                PasswordTextField(
+                  initialValue: editState.newPassword,
+                  label: '新しいパスワード',
+                  errorText: validation.newPasswordError,
                   onChanged: (value) {
-                    ref.read(profileEditProvider.notifier).updateAgeRange(value);
+                    ref
+                        .read(profileEditProvider.notifier)
+                        .updateNewPassword(value);
                   },
                 ),
-                const SizedBox(height: 24),
-
-                // 地域
-                const SectionTitle('地域'),
-                const SizedBox(height: 8),
-                DropdownField(
-                  value: editState.region,
-                  label: '地域を選択',
-                  icon: Icons.location_on_outlined,
-                  items: _regions,
+                const SizedBox(height: 16),
+                PasswordTextField(
+                  initialValue: editState.confirmPassword,
+                  label: '新しいパスワード（確認）',
+                  errorText: validation.confirmPasswordError,
                   onChanged: (value) {
-                    ref.read(profileEditProvider.notifier).updateRegion(value);
+                    ref
+                        .read(profileEditProvider.notifier)
+                        .updateConfirmPassword(value);
                   },
                 ),
-                const SizedBox(height: 24),
-
-                // パスワード変更セクション
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SectionTitle('パスワード'),
-                    TextButton(
-                      onPressed: () {
-                        ref
-                            .read(profileEditProvider.notifier)
-                            .togglePasswordEditing();
-                      },
-                      child: Text(
-                        editState.isEditingPassword ? 'キャンセル' : '変更する',
+              ] else
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock_outline, color: Colors.grey[600]),
+                      const SizedBox(width: 12),
+                      Text(
+                        '••••••••',
                         style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                if (editState.isEditingPassword) ...[
-                  PasswordTextField(
-                    initialValue: editState.currentPassword,
-                    label: '現在のパスワード',
-                    errorText: validation.currentPasswordError,
-                    onChanged: (value) {
-                      ref
-                          .read(profileEditProvider.notifier)
-                          .updateCurrentPassword(value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  PasswordTextField(
-                    initialValue: editState.newPassword,
-                    label: '新しいパスワード',
-                    errorText: validation.newPasswordError,
-                    onChanged: (value) {
-                      ref
-                          .read(profileEditProvider.notifier)
-                          .updateNewPassword(value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  PasswordTextField(
-                    initialValue: editState.confirmPassword,
-                    label: '新しいパスワード（確認）',
-                    errorText: validation.confirmPasswordError,
-                    onChanged: (value) {
-                      ref
-                          .read(profileEditProvider.notifier)
-                          .updateConfirmPassword(value);
-                    },
-                  ),
-                ] else
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey[300]!,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.lock_outline,
+                          fontSize: 16,
                           color: Colors.grey[600],
+                          letterSpacing: 2,
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          '••••••••',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                            letterSpacing: 2,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-
-                const SizedBox(height: 32),
-
-                // 保存ボタン
-                SaveButton(
-                  onPressed: isLoading
-                      ? null
-                      : () => _saveProfile(context, ref),
-                  isLoading: isLoading,
                 ),
-                const SizedBox(height: 32),
-              ],
-            ),
+
+              const SizedBox(height: 32),
+
+              // 保存ボタン
+              SaveButton(
+                onPressed: isLoading ? null : () => _saveProfile(context, ref),
+                isLoading: isLoading,
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),
+      resizeToAvoidBottomInset: false,
     );
   }
 }
