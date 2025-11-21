@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/debate_event.dart';
 import '../../providers/debate_event_provider.dart';
 import '../../providers/debate_match_provider.dart';
@@ -133,16 +134,16 @@ class DebateEventDetailPage extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.blue[400]!,
-            Colors.purple[400]!,
+            AppColors.primary,
+            AppColors.primaryLight,
           ],
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.event,
           size: 80,
-          color: Colors.white54,
+          color: AppColors.textOnPrimary.withValues(alpha: 0.54),
         ),
       ),
     );
@@ -161,21 +162,21 @@ class DebateEventDetailPage extends ConsumerWidget {
               icon: Icons.calendar_today,
               label: '開催日時',
               value: dateFormat.format(event.scheduledAt),
-              color: Colors.blue,
+              color: AppColors.info,
             ),
             const Divider(height: 24),
             _buildInfoRow(
               icon: Icons.access_time,
               label: 'エントリー締切',
               value: dateFormat.format(event.entryDeadline),
-              color: Colors.orange,
+              color: AppColors.warning,
             ),
             const Divider(height: 24),
             _buildInfoRow(
               icon: Icons.people,
               label: '参加者数',
               value: '${event.currentParticipants} / ${event.maxParticipants}人',
-              color: Colors.green,
+              color: AppColors.success,
             ),
           ],
         ),
@@ -202,7 +203,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 4),
@@ -244,12 +245,13 @@ class DebateEventDetailPage extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue[50],
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
-              const Icon(Icons.topic, color: Colors.blue),
+              const Icon(Icons.topic, color: AppColors.primary),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -259,7 +261,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                       'ディベートテーマ',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.blue[700],
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -268,7 +270,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -297,7 +299,7 @@ class DebateEventDetailPage extends ConsumerWidget {
         _buildOptionCard(
           title: 'ディベート形式',
           icon: Icons.people,
-          color: Colors.purple,
+          color: AppColors.aiGenerated,
           options: event.availableFormats
               .map((format) => format.displayName)
               .toList(),
@@ -306,7 +308,7 @@ class DebateEventDetailPage extends ConsumerWidget {
         _buildOptionCard(
           title: 'ディベート時間',
           icon: Icons.timer,
-          color: Colors.orange,
+          color: AppColors.warning,
           options: event.availableDurations
               .map((duration) => duration.displayName)
               .toList(),
@@ -369,7 +371,7 @@ class DebateEventDetailPage extends ConsumerWidget {
     final remaining = event.maxParticipants - event.currentParticipants;
 
     return Card(
-      color: progress >= 0.9 ? Colors.red[50] : Colors.green[50],
+      color: progress >= 0.9 ? AppColors.error.withValues(alpha: 0.1) : AppColors.success.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -399,9 +401,9 @@ class DebateEventDetailPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: Colors.grey[200],
+                backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  progress >= 0.9 ? Colors.red : Colors.green,
+                  progress >= 0.9 ? AppColors.error : AppColors.success,
                 ),
                 minHeight: 12,
               ),
@@ -411,7 +413,7 @@ class DebateEventDetailPage extends ConsumerWidget {
               remaining > 0 ? '残り$remaining枠' : '満員',
               style: TextStyle(
                 fontSize: 14,
-                color: remaining > 0 ? Colors.green[700] : Colors.red[700],
+                color: remaining > 0 ? AppColors.success : AppColors.error,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -447,14 +449,14 @@ class DebateEventDetailPage extends ConsumerWidget {
     return Column(
       children: [
         Card(
-          color: Colors.blue[50],
+          color: AppColors.success.withValues(alpha: 0.1),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.blue, size: 32),
+                const Icon(Icons.check_circle, color: AppColors.success, size: 32),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -463,7 +465,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: AppColors.success,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -471,7 +473,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                         'マッチング完了までお待ちください',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.blue,
+                          color: AppColors.success,
                         ),
                       ),
                     ],
@@ -496,8 +498,8 @@ class DebateEventDetailPage extends ConsumerWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.warning,
+              foregroundColor: AppColors.textOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -524,8 +526,8 @@ class DebateEventDetailPage extends ConsumerWidget {
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.textOnPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -561,7 +563,7 @@ class DebateEventDetailPage extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.event_busy, size: 80, color: Colors.grey),
+          const Icon(Icons.event_busy, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           const Text(
             'イベントが見つかりません',
@@ -570,6 +572,10 @@ class DebateEventDetailPage extends ConsumerWidget {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text('戻る'),
           ),
         ],
@@ -583,12 +589,16 @@ class DebateEventDetailPage extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          const Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
           Text('エラー: $error'),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             child: const Text('戻る'),
           ),
         ],

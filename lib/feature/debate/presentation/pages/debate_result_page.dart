@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/judgment_result.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_room_provider.dart';
@@ -111,10 +112,10 @@ class DebateResultPage extends ConsumerWidget {
     bool isDraw,
   ) {
     final Color appBarColor = isDraw
-        ? Colors.grey
+        ? AppColors.textSecondary
         : isUserWinner
-            ? Colors.green
-            : Colors.orange;
+            ? AppColors.success
+            : AppColors.warning;
 
     return SliverAppBar(
       expandedHeight: 200,
@@ -125,6 +126,7 @@ class DebateResultPage extends ConsumerWidget {
           isDraw ? '引き分け' : isUserWinner ? '勝利！' : '結果発表',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
+            color: AppColors.textOnPrimary,
             shadows: [
               Shadow(
                 offset: Offset(0, 1),
@@ -140,10 +142,10 @@ class DebateResultPage extends ConsumerWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDraw
-                  ? [Colors.grey[400]!, Colors.grey[600]!]
+                  ? [AppColors.textTertiary, AppColors.textSecondary]
                   : isUserWinner
-                      ? [Colors.green[400]!, Colors.blue[400]!]
-                      : [Colors.orange[400]!, Colors.red[400]!],
+                      ? [AppColors.success, AppColors.info]
+                      : [AppColors.warning, AppColors.error],
             ),
           ),
           child: Center(
@@ -154,7 +156,7 @@ class DebateResultPage extends ConsumerWidget {
                       ? Icons.emoji_events
                       : Icons.assessment,
               size: 80,
-              color: Colors.white54,
+              color: AppColors.textOnPrimary.withValues(alpha: 0.54),
             ),
           ),
         ),
@@ -174,10 +176,10 @@ class DebateResultPage extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDraw
-                ? [Colors.grey[100]!, Colors.grey[50]!]
+                ? [AppColors.surfaceVariant, AppColors.surface]
                 : judgment.winningSide == DebateStance.pro
-                    ? [Colors.blue[50]!, Colors.blue[100]!]
-                    : [Colors.red[50]!, Colors.red[100]!],
+                    ? [AppColors.agree.withValues(alpha: 0.1), AppColors.agree.withValues(alpha: 0.2)]
+                    : [AppColors.disagree.withValues(alpha: 0.1), AppColors.disagree.withValues(alpha: 0.2)],
           ),
           borderRadius: BorderRadius.circular(20),
         ),
@@ -187,17 +189,17 @@ class DebateResultPage extends ConsumerWidget {
               isDraw ? Icons.handshake : Icons.star,
               size: 64,
               color: isDraw
-                  ? Colors.grey
+                  ? AppColors.textSecondary
                   : judgment.winningSide == DebateStance.pro
-                      ? Colors.blue
-                      : Colors.red,
+                      ? AppColors.agree
+                      : AppColors.disagree,
             ),
             const SizedBox(height: 16),
             Text(
               isDraw ? '引き分け' : '勝者',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -208,8 +210,8 @@ class DebateResultPage extends ConsumerWidget {
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: judgment.winningSide == DebateStance.pro
-                      ? Colors.blue
-                      : Colors.red,
+                      ? AppColors.agree
+                      : AppColors.disagree,
                 ),
               ),
             const SizedBox(height: 16),
@@ -219,7 +221,7 @@ class DebateResultPage extends ConsumerWidget {
                 _buildScoreBadge(
                   judgment.proTeamScore.totalScore,
                   '賛成',
-                  Colors.blue,
+                  AppColors.agree,
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -228,14 +230,14 @@ class DebateResultPage extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
                 _buildScoreBadge(
                   judgment.conTeamScore.totalScore,
                   '反対',
-                  Colors.red,
+                  AppColors.disagree,
                 ),
               ],
             ),
@@ -260,7 +262,7 @@ class DebateResultPage extends ConsumerWidget {
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppColors.textOnPrimary,
               fontFamily: 'monospace',
             ),
           ),
@@ -294,14 +296,14 @@ class DebateResultPage extends ConsumerWidget {
         JudgmentScoreWidget(
           teamScore: judgment.proTeamScore,
           teamLabel: '賛成チーム',
-          teamColor: Colors.blue,
+          teamColor: AppColors.agree,
           isWinner: judgment.winningSide == DebateStance.pro,
         ),
         const SizedBox(height: 16),
         JudgmentScoreWidget(
           teamScore: judgment.conTeamScore,
           teamLabel: '反対チーム',
-          teamColor: Colors.red,
+          teamColor: AppColors.disagree,
           isWinner: judgment.winningSide == DebateStance.con,
         ),
       ],
@@ -327,8 +329,8 @@ class DebateResultPage extends ConsumerWidget {
   /// MVPセクション
   Widget _buildMVPSection(JudgmentResult judgment, DebateMatch match) {
     final mvpTeamColor = match.proTeam.memberIds.contains(judgment.mvpUserId)
-        ? Colors.blue
-        : Colors.red;
+        ? AppColors.agree
+        : AppColors.disagree;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +370,7 @@ class DebateResultPage extends ConsumerWidget {
             comment: judgment.overallComment!,
             title: '総合評価',
             icon: Icons.assessment,
-            color: Colors.purple,
+            color: AppColors.aiGenerated,
           ),
         const SizedBox(height: 12),
         if (judgment.proTeamComment != null)
@@ -376,7 +378,7 @@ class DebateResultPage extends ConsumerWidget {
             comment: judgment.proTeamComment!,
             title: '賛成チームへのフィードバック',
             icon: Icons.thumb_up,
-            color: Colors.blue,
+            color: AppColors.agree,
           ),
         const SizedBox(height: 12),
         if (judgment.conTeamComment != null)
@@ -384,7 +386,7 @@ class DebateResultPage extends ConsumerWidget {
             comment: judgment.conTeamComment!,
             title: '反対チームへのフィードバック',
             icon: Icons.thumb_down,
-            color: Colors.red,
+            color: AppColors.disagree,
           ),
       ],
     );
@@ -411,8 +413,8 @@ class DebateResultPage extends ConsumerWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -439,8 +441,8 @@ class DebateResultPage extends ConsumerWidget {
               ),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.blue,
-              side: const BorderSide(color: Colors.blue, width: 2),
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -454,17 +456,25 @@ class DebateResultPage extends ConsumerWidget {
   /// 見つからない
   Widget _buildNotFound(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('エラー')),
+      appBar: AppBar(
+        title: const Text('エラー'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 80, color: Colors.grey),
+            const Icon(Icons.search_off, size: 80, color: AppColors.textTertiary),
             const SizedBox(height: 16),
             const Text('判定結果が見つかりません'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+              ),
               child: const Text('戻る'),
             ),
           ],
@@ -476,17 +486,25 @@ class DebateResultPage extends ConsumerWidget {
   /// エラー
   Widget _buildError(BuildContext context, Object error) {
     return Scaffold(
-      appBar: AppBar(title: const Text('エラー')),
+      appBar: AppBar(
+        title: const Text('エラー'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 80, color: Colors.red),
+            const Icon(Icons.error_outline, size: 80, color: AppColors.error),
             const SizedBox(height: 16),
             Text('エラー: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+              ),
               child: const Text('戻る'),
             ),
           ],

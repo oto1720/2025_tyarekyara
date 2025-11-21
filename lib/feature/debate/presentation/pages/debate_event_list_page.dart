@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/debate_event.dart';
 import '../../providers/debate_event_provider.dart';
 import '../widgets/event_card.dart';
@@ -35,8 +36,13 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートイベント'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
         bottom: TabBar(
           controller: _tabController,
+          labelColor: AppColors.textOnPrimary,
+          unselectedLabelColor: AppColors.textOnPrimary.withValues(alpha: 0.7),
+          indicatorColor: AppColors.textOnPrimary,
           tabs: const [
             Tab(text: '開催予定'),
             Tab(text: '過去のイベント'),
@@ -129,14 +135,14 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           Icon(
             icon,
             size: 80,
-            color: Colors.grey[400],
+            color: AppColors.textTertiary,
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -153,14 +159,14 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           const Icon(
             Icons.error_outline,
             size: 80,
-            color: Colors.red,
+            color: AppColors.error,
           ),
           const SizedBox(height: 16),
           Text(
             'エラーが発生しました',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -168,7 +174,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
             error.toString(),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[500],
+              color: AppColors.textTertiary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -178,6 +184,10 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
               ref.invalidate(upcomingEventsProvider);
               ref.invalidate(completedEventsProvider);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.textOnPrimary,
+            ),
             icon: const Icon(Icons.refresh),
             label: const Text('再読み込み'),
           ),

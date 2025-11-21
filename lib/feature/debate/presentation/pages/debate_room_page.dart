@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/debate_room.dart';
 import '../../models/debate_match.dart';
 import '../../models/debate_event.dart';
@@ -133,13 +134,13 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
         automaticallyImplyLeading: false, // 戻るボタンを非表示
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Container(
-            color: Colors.blue[700],
+            color: AppColors.primaryLight,
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
@@ -189,7 +190,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
+      color: AppColors.surface,
       child: Column(
         children: [
           Row(
@@ -198,7 +199,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                 child: _buildTeamInfo(
                   match.proTeam,
                   '賛成',
-                  Colors.blue,
+                  AppColors.agree,
                   userId,
                 ),
               ),
@@ -206,14 +207,14 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    const Icon(Icons.compare_arrows, size: 32),
+                    Icon(Icons.compare_arrows, size: 32, color: AppColors.textSecondary),
                     const SizedBox(height: 4),
                     Text(
                       'VS',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -223,7 +224,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                 child: _buildTeamInfo(
                   match.conTeam,
                   '反対',
-                  Colors.red,
+                  AppColors.disagree,
                   userId,
                 ),
               ),
@@ -248,10 +249,10 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isMyTeam ? color.withValues(alpha: 0.2) : Colors.white,
+        color: isMyTeam ? color.withValues(alpha: 0.2) : AppColors.background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isMyTeam ? color : Colors.grey[300]!,
+          color: isMyTeam ? color : AppColors.border,
           width: isMyTeam ? 2 : 1,
         ),
       ),
@@ -267,7 +268,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               child: const Text(
                 'あなたのチーム',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textOnPrimary,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
@@ -295,7 +296,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
             '${team.memberIds.length}人',
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -306,12 +307,12 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   /// タブバー
   Widget _buildTabBar() {
     return Container(
-      color: Colors.white,
+      color: AppColors.background,
       child: TabBar(
         controller: _tabController,
-        labelColor: Colors.blue,
-        unselectedLabelColor: Colors.grey,
-        indicatorColor: Colors.blue,
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textTertiary,
+        indicatorColor: AppColors.primary,
         tabs: const [
           Tab(
             icon: Icon(Icons.public),
@@ -351,12 +352,14 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('ディベート準備中'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(color: AppColors.primary),
             const SizedBox(height: 24),
             const Text(
               'ディベートルームを準備しています...',
@@ -370,7 +373,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               'しばらくお待ちください',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -389,17 +392,25 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   /// 未認証
   Widget _buildNotAuthenticated(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('エラー')),
+      appBar: AppBar(
+        title: const Text('エラー'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock, size: 80, color: Colors.grey),
+            const Icon(Icons.lock, size: 80, color: AppColors.textTertiary),
             const SizedBox(height: 16),
             const Text('ログインが必要です'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+              ),
               child: const Text('戻る'),
             ),
           ],
@@ -411,17 +422,25 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   /// 見つからない
   Widget _buildNotFound(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('エラー')),
+      appBar: AppBar(
+        title: const Text('エラー'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 80, color: Colors.grey),
+            const Icon(Icons.search_off, size: 80, color: AppColors.textTertiary),
             const SizedBox(height: 16),
             const Text('マッチが見つかりません'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+              ),
               child: const Text('戻る'),
             ),
           ],
@@ -433,17 +452,25 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   /// エラー
   Widget _buildError(BuildContext context, Object error) {
     return Scaffold(
-      appBar: AppBar(title: const Text('エラー')),
+      appBar: AppBar(
+        title: const Text('エラー'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.textOnPrimary,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 80, color: Colors.red),
+            const Icon(Icons.error_outline, size: 80, color: AppColors.error),
             const SizedBox(height: 16),
             Text('エラー: $error'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textOnPrimary,
+              ),
               child: const Text('戻る'),
             ),
           ],
@@ -567,18 +594,18 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isWarning ? Colors.red : Colors.blue,
+        color: isWarning ? AppColors.error : AppColors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.timer, color: Colors.white, size: 16),
+          const Icon(Icons.timer, color: AppColors.textOnPrimary, size: 16),
           const SizedBox(width: 6),
           Text(
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textOnPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               fontFamily: 'monospace',
