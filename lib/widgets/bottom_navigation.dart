@@ -37,8 +37,8 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // bodyをBottomNavigationBarの下まで拡張し、ガラス効果で背景が透けて見えるようにする
-      extendBody: true,
+      // extendBodyをfalseにして、コンテンツがBottomNavigationBarと重ならないようにする
+      extendBody: false,
       body: child,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 8, right: 8, bottom: 25),
