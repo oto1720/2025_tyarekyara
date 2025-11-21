@@ -37,6 +37,9 @@ class Challenge with _$Challenge {
     DateTime? completedAt, // 完了日時
     int? earnedPoints, // 獲得ポイント
     String? opinionId, // 元の意見ID
+    String? feedbackText, // AIフィードバック本文
+    int? feedbackScore, // 評価スコア（0-100）
+    DateTime? feedbackGeneratedAt, // フィードバック生成日時
   }) = _Challenge;
 
   /// Firestoreから読み込む際のファクトリ
@@ -52,7 +55,10 @@ class Challenge with _$Challenge {
       if (jsonCopy['completedAt'] is Timestamp) {
         jsonCopy['completedAt'] = (jsonCopy['completedAt'] as Timestamp).toDate().toIso8601String();
       }
-      
+      if (jsonCopy['feedbackGeneratedAt'] is Timestamp) {
+        jsonCopy['feedbackGeneratedAt'] = (jsonCopy['feedbackGeneratedAt'] as Timestamp).toDate().toIso8601String();
+      }
+
       return _$ChallengeFromJson(jsonCopy);
     } catch (e, stackTrace) {
       print('❌ [Challenge] fromFirestore変換エラー: $e');
@@ -68,6 +74,9 @@ class Challenge with _$Challenge {
     // DateTime を Timestamp に変換
     if (completedAt != null) {
       json['completedAt'] = Timestamp.fromDate(completedAt!);
+    }
+    if (feedbackGeneratedAt != null) {
+      json['feedbackGeneratedAt'] = Timestamp.fromDate(feedbackGeneratedAt!);
     }
     return json;
   }

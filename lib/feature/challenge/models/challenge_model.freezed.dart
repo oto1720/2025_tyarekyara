@@ -33,7 +33,10 @@ mixin _$Challenge {
   String get userId => throw _privateConstructorUsedError;
   DateTime? get completedAt => throw _privateConstructorUsedError; // 完了日時
   int? get earnedPoints => throw _privateConstructorUsedError; // 獲得ポイント
-  String? get opinionId => throw _privateConstructorUsedError;
+  String? get opinionId => throw _privateConstructorUsedError; // 元の意見ID
+  String? get feedbackText => throw _privateConstructorUsedError; // AIフィードバック本文
+  int? get feedbackScore => throw _privateConstructorUsedError; // 評価スコア（0-100）
+  DateTime? get feedbackGeneratedAt => throw _privateConstructorUsedError;
 
   /// Serializes this Challenge to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -63,6 +66,9 @@ abstract class $ChallengeCopyWith<$Res> {
     DateTime? completedAt,
     int? earnedPoints,
     String? opinionId,
+    String? feedbackText,
+    int? feedbackScore,
+    DateTime? feedbackGeneratedAt,
   });
 }
 
@@ -93,6 +99,9 @@ class _$ChallengeCopyWithImpl<$Res, $Val extends Challenge>
     Object? completedAt = freezed,
     Object? earnedPoints = freezed,
     Object? opinionId = freezed,
+    Object? feedbackText = freezed,
+    Object? feedbackScore = freezed,
+    Object? feedbackGeneratedAt = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -144,6 +153,18 @@ class _$ChallengeCopyWithImpl<$Res, $Val extends Challenge>
                 ? _value.opinionId
                 : opinionId // ignore: cast_nullable_to_non_nullable
                       as String?,
+            feedbackText: freezed == feedbackText
+                ? _value.feedbackText
+                : feedbackText // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            feedbackScore: freezed == feedbackScore
+                ? _value.feedbackScore
+                : feedbackScore // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            feedbackGeneratedAt: freezed == feedbackGeneratedAt
+                ? _value.feedbackGeneratedAt
+                : feedbackGeneratedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
           )
           as $Val,
     );
@@ -172,6 +193,9 @@ abstract class _$$ChallengeImplCopyWith<$Res>
     DateTime? completedAt,
     int? earnedPoints,
     String? opinionId,
+    String? feedbackText,
+    int? feedbackScore,
+    DateTime? feedbackGeneratedAt,
   });
 }
 
@@ -201,6 +225,9 @@ class __$$ChallengeImplCopyWithImpl<$Res>
     Object? completedAt = freezed,
     Object? earnedPoints = freezed,
     Object? opinionId = freezed,
+    Object? feedbackText = freezed,
+    Object? feedbackScore = freezed,
+    Object? feedbackGeneratedAt = freezed,
   }) {
     return _then(
       _$ChallengeImpl(
@@ -252,6 +279,18 @@ class __$$ChallengeImplCopyWithImpl<$Res>
             ? _value.opinionId
             : opinionId // ignore: cast_nullable_to_non_nullable
                   as String?,
+        feedbackText: freezed == feedbackText
+            ? _value.feedbackText
+            : feedbackText // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        feedbackScore: freezed == feedbackScore
+            ? _value.feedbackScore
+            : feedbackScore // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        feedbackGeneratedAt: freezed == feedbackGeneratedAt
+            ? _value.feedbackGeneratedAt
+            : feedbackGeneratedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
       ),
     );
   }
@@ -273,6 +312,9 @@ class _$ChallengeImpl extends _Challenge {
     this.completedAt,
     this.earnedPoints,
     this.opinionId,
+    this.feedbackText,
+    this.feedbackScore,
+    this.feedbackGeneratedAt,
   }) : super._();
 
   factory _$ChallengeImpl.fromJson(Map<String, dynamic> json) =>
@@ -309,10 +351,19 @@ class _$ChallengeImpl extends _Challenge {
   // 獲得ポイント
   @override
   final String? opinionId;
+  // 元の意見ID
+  @override
+  final String? feedbackText;
+  // AIフィードバック本文
+  @override
+  final int? feedbackScore;
+  // 評価スコア（0-100）
+  @override
+  final DateTime? feedbackGeneratedAt;
 
   @override
   String toString() {
-    return 'Challenge(id: $id, title: $title, stance: $stance, originalStance: $originalStance, difficulty: $difficulty, status: $status, originalOpinionText: $originalOpinionText, oppositeOpinionText: $oppositeOpinionText, userId: $userId, completedAt: $completedAt, earnedPoints: $earnedPoints, opinionId: $opinionId)';
+    return 'Challenge(id: $id, title: $title, stance: $stance, originalStance: $originalStance, difficulty: $difficulty, status: $status, originalOpinionText: $originalOpinionText, oppositeOpinionText: $oppositeOpinionText, userId: $userId, completedAt: $completedAt, earnedPoints: $earnedPoints, opinionId: $opinionId, feedbackText: $feedbackText, feedbackScore: $feedbackScore, feedbackGeneratedAt: $feedbackGeneratedAt)';
   }
 
   @override
@@ -338,7 +389,13 @@ class _$ChallengeImpl extends _Challenge {
             (identical(other.earnedPoints, earnedPoints) ||
                 other.earnedPoints == earnedPoints) &&
             (identical(other.opinionId, opinionId) ||
-                other.opinionId == opinionId));
+                other.opinionId == opinionId) &&
+            (identical(other.feedbackText, feedbackText) ||
+                other.feedbackText == feedbackText) &&
+            (identical(other.feedbackScore, feedbackScore) ||
+                other.feedbackScore == feedbackScore) &&
+            (identical(other.feedbackGeneratedAt, feedbackGeneratedAt) ||
+                other.feedbackGeneratedAt == feedbackGeneratedAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -357,6 +414,9 @@ class _$ChallengeImpl extends _Challenge {
     completedAt,
     earnedPoints,
     opinionId,
+    feedbackText,
+    feedbackScore,
+    feedbackGeneratedAt,
   );
 
   /// Create a copy of Challenge
@@ -387,6 +447,9 @@ abstract class _Challenge extends Challenge {
     final DateTime? completedAt,
     final int? earnedPoints,
     final String? opinionId,
+    final String? feedbackText,
+    final int? feedbackScore,
+    final DateTime? feedbackGeneratedAt,
   }) = _$ChallengeImpl;
   const _Challenge._() : super._();
 
@@ -416,7 +479,13 @@ abstract class _Challenge extends Challenge {
   @override
   int? get earnedPoints; // 獲得ポイント
   @override
-  String? get opinionId;
+  String? get opinionId; // 元の意見ID
+  @override
+  String? get feedbackText; // AIフィードバック本文
+  @override
+  int? get feedbackScore; // 評価スコア（0-100）
+  @override
+  DateTime? get feedbackGeneratedAt;
 
   /// Create a copy of Challenge
   /// with the given fields replaced by the non-null parameter values.

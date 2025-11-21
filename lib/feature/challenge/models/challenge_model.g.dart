@@ -27,6 +27,11 @@ _$ChallengeImpl _$$ChallengeImplFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['completedAt'] as String),
       earnedPoints: (json['earnedPoints'] as num?)?.toInt(),
       opinionId: json['opinionId'] as String?,
+      feedbackText: json['feedbackText'] as String?,
+      feedbackScore: (json['feedbackScore'] as num?)?.toInt(),
+      feedbackGeneratedAt: json['feedbackGeneratedAt'] == null
+          ? null
+          : DateTime.parse(json['feedbackGeneratedAt'] as String),
     );
 
 Map<String, dynamic> _$$ChallengeImplToJson(_$ChallengeImpl instance) =>
@@ -43,6 +48,9 @@ Map<String, dynamic> _$$ChallengeImplToJson(_$ChallengeImpl instance) =>
       'completedAt': instance.completedAt?.toIso8601String(),
       'earnedPoints': instance.earnedPoints,
       'opinionId': instance.opinionId,
+      'feedbackText': instance.feedbackText,
+      'feedbackScore': instance.feedbackScore,
+      'feedbackGeneratedAt': instance.feedbackGeneratedAt?.toIso8601String(),
     };
 
 const _$StanceEnumMap = {Stance.pro: 'pro', Stance.con: 'con'};
