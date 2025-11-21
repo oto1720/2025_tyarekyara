@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 class ChallengePage extends ConsumerStatefulWidget {
   const ChallengePage({super.key});
@@ -119,10 +120,11 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
             children: [
               // --- ここからがポイントゲージの部分 ---
               Card(
-                color: const Color.fromARGB(255, 239, 212, 244),
-                elevation: 4.0, // 影の濃さ
+                color: AppColors.surface,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0), // カードの角の丸み
+                  borderRadius: BorderRadius.circular(12.0),
+                  side: const BorderSide(color: AppColors.border),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0), // カード内部の余白
@@ -134,31 +136,31 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                         children: [
                           // 1. アイコンを表示
                           Icon(
-                            Icons.shuffle, // お好きなアイコンに変更してください
-                            color: Colors.purpleAccent[700],
-                            size: 20, // アイコンのサイズ
+                            Icons.shuffle,
+                            color: AppColors.primary,
+                            size: 20,
                           ),
-                          const SizedBox(width: 8), // アイコンとテキストの間隔
+                          const SizedBox(width: 8),
                           // 2. 説明テキスト
                           Text(
-                            '視点交換チャレンジ', // もっと長い説明
+                            '視点交換チャレンジ',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
+                      const SizedBox(height: 4),
                       Text(
                         '自分と反対の立場で考えることで、多角的な思考力を鍛えましょう',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600], // 少し薄い色に
+                          color: AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 8), // 少し間隔をあける
+                      const SizedBox(height: 8),
 
                       Row(
                         children: [
@@ -167,14 +169,14 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                             '累計獲得ポイント',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                           // 間のスペースを最大まで広げる
                           const Spacer(),
                           Icon(
                             Icons.emoji_events_outlined,
-                            color: Colors.amber[700],
+                            color: AppColors.difficultyNormal,
                             size: 20,
                           ),
                           // 右側のテキスト（分数）
@@ -183,7 +185,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.normal,
-                              color: Colors.grey[800], // 少し濃い色に
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -321,12 +323,16 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                                 if (result != null && mounted) {
                                   final int earnedPoints = result['points'];
                                   final String opinionText = result['opinion'];
+                                  final String? feedbackText = result['feedbackText'];
+                                  final int? feedbackScore = result['feedbackScore'];
 
-                                  // 10. [修正] Providerのメソッドを呼び出して状態を更新
+                                  // Providerのメソッドを呼び出して状態を更新（フィードバック含む）
                                   ref.read(challengeProvider.notifier).completeChallenge(
                                       challenge.id,
                                       opinionText, // 提出された意見
                                       earnedPoints, // 獲得ポイント
+                                      feedbackText: feedbackText,
+                                      feedbackScore: feedbackScore,
                                   );
 
                                   if (mounted) {

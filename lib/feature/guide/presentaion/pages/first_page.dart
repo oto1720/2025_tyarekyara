@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// アプリ起動時の最初のページ
 class FirstPage extends StatelessWidget {
@@ -8,7 +9,7 @@ class FirstPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -21,43 +22,16 @@ class FirstPage extends StatelessWidget {
                     children: [
                       const SizedBox(height: 60),
 
-                      // アプリアイコン
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF6366F1,
-                              ).withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.chat_bubble_outline,
-                          size: 60,
-                          color: Colors.white,
-                        ),
-                      ),
+                      // アプリアイコ
                       const SizedBox(height: 40),
 
                       // アプリ名
                       const Text(
-                        'critical',
+                        'Critica',
                         style: TextStyle(
-                          fontSize: 32,
+                          fontSize: 80,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF6366F1),
+                          color: AppColors.primary,
                           letterSpacing: 1.0,
                         ),
                         textAlign: TextAlign.center,
@@ -65,11 +39,11 @@ class FirstPage extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       // 説明文
-                      Text(
+                      const Text(
                         'あなたの意見を共有し、\n新しい発見をしよう',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Colors.grey[700],
+                          color: AppColors.textSecondary,
                           height: 1.6,
                           letterSpacing: 0.3,
                         ),
@@ -138,8 +112,8 @@ class FirstPage extends StatelessWidget {
                         context.go('/tutorial');
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textOnPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -163,16 +137,29 @@ class FirstPage extends StatelessWidget {
                     onPressed: () {
                       context.go('/login');
                     },
+                    style: TextButton.styleFrom(
+                      // inheritをfalseに設定してテーマとの補間エラーを回避
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        inherit: false,
+                      ),
+                    ),
                     child: RichText(
-                      text: TextSpan(
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                        children: const [
+                      text: const TextSpan(
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          inherit: false, // inheritを明示的にfalseに設定
+                        ),
+                        children: [
                           TextSpan(text: 'アカウントをお持ちの方は '),
                           TextSpan(
                             text: 'ログイン',
                             style: TextStyle(
-                              color: Color(0xFF6366F1),
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w600,
+                              inherit: false, // inheritを明示的にfalseに設定
                             ),
                           ),
                         ],

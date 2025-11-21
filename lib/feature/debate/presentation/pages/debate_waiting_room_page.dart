@@ -470,7 +470,10 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+              textStyle: const TextStyle(inherit: false), // inheritを明示的にfalseに設定
+            ),
             child: const Text('キャンセルする'),
           ),
         ],

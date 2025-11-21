@@ -101,6 +101,7 @@ class MyApp extends ConsumerWidget {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            inherit: false, // inheritを明示的にfalseに設定して補間エラーを回避
           ),
         ),
       ),
@@ -117,6 +118,7 @@ class MyApp extends ConsumerWidget {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            inherit: false, // inheritを明示的にfalseに設定して補間エラーを回避
           ),
         ),
       ),
@@ -128,6 +130,7 @@ class MyApp extends ConsumerWidget {
           textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
+            inherit: false, // inheritを明示的にfalseに設定して補間エラーを回避
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/tutorial_item.dart';
 import '../../providers/tutorial_provider.dart';
 import '../widgets/tutorial_card.dart';
@@ -69,7 +70,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
     final isLastPage = currentPage == _tutorialItems.length - 1;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -82,10 +83,10 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                   if (!isLastPage)
                     TextButton(
                       onPressed: _skipTutorial,
-                      child: Text(
+                      child: const Text(
                         'スキップ',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: AppColors.textSecondary,
                           fontSize: 16,
                         ),
                       ),
@@ -116,7 +117,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                     currentPage: currentPage,
                     totalPages: _tutorialItems.length,
                     activeColor: _tutorialItems[currentPage].primaryColor,
-                    inactiveColor: Colors.grey[300]!,
+                    inactiveColor: AppColors.border,
                   ),
                   const SizedBox(height: 32),
 
@@ -129,8 +130,8 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                         OutlinedButton(
                           onPressed: _goToPreviousPage,
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: Colors.grey[300]!,
+                            side: const BorderSide(
+                              color: AppColors.border,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -140,17 +141,17 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                               vertical: 16,
                             ),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
                               Icon(
                                 Icons.arrow_back,
-                                color: Colors.grey[700],
+                                color: AppColors.textSecondary,
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               Text(
                                 '戻る',
                                 style: TextStyle(
-                                  color: Colors.grey[700],
+                                  color: AppColors.textSecondary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -181,7 +182,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                             Text(
                               isLastPage ? '始める' : '次へ',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.textOnPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -189,7 +190,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
                             const SizedBox(width: 8),
                             Icon(
                               isLastPage ? Icons.check : Icons.arrow_forward,
-                              color: Colors.white,
+                              color: AppColors.textOnPrimary,
                             ),
                           ],
                         ),
