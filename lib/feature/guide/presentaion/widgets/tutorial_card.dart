@@ -5,10 +5,7 @@ import '../../models/tutorial_item.dart';
 class TutorialCard extends StatelessWidget {
   final TutorialItem item;
 
-  const TutorialCard({
-    super.key,
-    required this.item,
-  });
+  const TutorialCard({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +51,77 @@ class TutorialCard extends StatelessWidget {
                 const SizedBox(height: 60),
 
                 // 丸い画像/アイコン
+                Container(
+                  width: 380,
+                  height: 380,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color.fromRGBO(255, 255, 255, 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: item.primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        offset: const Offset(0, 15),
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: item.imagePath != null
+                      ? ClipOval(
+                          child:
+                              item.imagePath ==
+                                  'assets/images/onboarding/icon2.png'
+                              ? Image.asset(item.imagePath!, fit: BoxFit.cover)
+                              : Transform.scale(
+                                  scale: 1.3,
+                                  child: Image.asset(
+                                    item.imagePath!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+
+                          /*: Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Image.asset(
+                                    item.imagePath!,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),*/
+                        )
+                      : Icon(item.icon, size: 100, color: Colors.white),
+                ),
+                /*child: Padding(
+                        
+                            padding: const EdgeInsets.all(20), // ← 画像周りに余白を追加
+                            child: Image.asset(
+                              item.imagePath!,
+                              fit: BoxFit.contain, // ← cover から contain に変更
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        item.primaryColor,
+                                        item.secondaryColor,
+                                      ],
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    item.icon,
+                                    size: 100,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        )
+                      : Icon(item.icon, size: 100, color: Colors.white),
+                ),
+
                 Container(
                   width: 380,
                   height: 380,
@@ -112,7 +180,7 @@ class TutorialCard extends StatelessWidget {
                           size: 100,
                           color: Colors.white,
                         ),
-                ),
+                ),*/
               ],
             ),
           ),
