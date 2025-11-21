@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/debug/enhanced_matching_debug_page.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_feedback_page.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';
@@ -163,6 +164,24 @@ final GoRouter router = GoRouter(
         return NoTransitionPage(
           // Challenge オブジェクトを詳細ページに渡す
           child: ChallengeDetailPage(challenge: challenge),
+        );
+      },
+    ),
+
+    // チャレンジフィードバックページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/challenge/:challengeId/feedback',
+      pageBuilder: (context, state) {
+        // extra から Challenge オブジェクトと回答を取り出す
+        final extra = state.extra as Map<String, dynamic>;
+        final challenge = extra['challenge'] as Challenge;
+        final challengeAnswer = extra['challengeAnswer'] as String;
+
+        return NoTransitionPage(
+          child: ChallengeFeedbackPage(
+            challenge: challenge,
+            challengeAnswer: challengeAnswer,
+          ),
         );
       },
     ),

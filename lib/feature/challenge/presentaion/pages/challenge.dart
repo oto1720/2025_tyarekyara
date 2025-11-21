@@ -323,12 +323,16 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                                 if (result != null && mounted) {
                                   final int earnedPoints = result['points'];
                                   final String opinionText = result['opinion'];
+                                  final String? feedbackText = result['feedbackText'];
+                                  final int? feedbackScore = result['feedbackScore'];
 
-                                  // 10. [修正] Providerのメソッドを呼び出して状態を更新
+                                  // Providerのメソッドを呼び出して状態を更新（フィードバック含む）
                                   ref.read(challengeProvider.notifier).completeChallenge(
                                       challenge.id,
                                       opinionText, // 提出された意見
                                       earnedPoints, // 獲得ポイント
+                                      feedbackText: feedbackText,
+                                      feedbackScore: feedbackScore,
                                   );
 
                                   if (mounted) {

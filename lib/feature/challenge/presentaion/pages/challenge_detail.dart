@@ -314,23 +314,22 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  onPressed: () {
-                                    
-                                    // TODO: 意見を送信する処理
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      
-                                      // バリデーションが通ったら（trueが返されたら）
-                                      // TODO: 意見を送信する処理
-                                      // (例: _opinionController.text を使ってデータを送信)
-                                        
-                                      //送信するデータをMapにまとめる
-                                      final result = {
-                                        'points': widget.challenge.difficulty.points,
-                                        'opinion': _opinionController.text, // 入力された意見
-                                      };
-                                        
-                                      //Mapをpopで返す
-                                      GoRouter.of(context).pop(result);
+                                      // バリデーションが通ったらフィードバック画面に遷移
+                                      final result = await context.push(
+                                        '/challenge/${widget.challenge.id}/feedback',
+                                        extra: {
+                                          'challenge': widget.challenge,
+                                          'challengeAnswer': _opinionController.text,
+                                        },
+                                      );
+                                      // フィードバック画面から戻ってきたら結果を返す
+                                      if (result != null && mounted) {
+                                        if (context.mounted) {
+                                          GoRouter.of(context).pop(result);
+                                        }
+                                      }
                                     }
                                   },
                                   child: const Row(

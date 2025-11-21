@@ -123,9 +123,9 @@ class GeminiRepository implements AIRepository {
       throw Exception('Gemini API key is not configured');
     }
 
-    // Gemini 1.5 Flash（最新バージョン）
+    // Gemini 2.0 Flash
     final response = await http.post(
-      Uri.parse('$_baseUrl/models/gemini-1.5-flash-latest:generateContent?key=$_apiKey'),
+      Uri.parse('$_baseUrl/models/gemini-2.0-flash:generateContent?key=$_apiKey'),
       headers: {
         'Content-Type': 'application/json',
       },
