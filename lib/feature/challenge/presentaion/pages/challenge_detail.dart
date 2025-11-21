@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 class ChallengeDetailPage extends StatefulWidget {
   // どのチャレンジかを受け取るためのID
@@ -31,17 +31,18 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text('チャレンジ詳細 (ID: ${widget.challenge.id})')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Card(
-                color: const Color.fromARGB(255, 239, 212, 244),
-                elevation: 4.0, // 影の濃さ
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
+            child: Column(
+              children: [
+                Card(
+                color: AppColors.surface,
+                elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0), // カードの角の丸み
+                  borderRadius: BorderRadius.circular(12.0),
+                  side: const BorderSide(color: AppColors.border),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0), // カード内部の余白
@@ -53,19 +54,18 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                         children: [
                           // 1. アイコンを表示
                           Icon(
-                            Icons.shuffle, // お好きなアイコンに変更してください
-                            color: Colors.purpleAccent[700],
-                            size: 20, // アイコンのサイズ
+                            Icons.shuffle,
+                            color: AppColors.primary,
+                            size: 20,
                           ),
-                          const SizedBox(width: 8), // アイコンとテキストの間隔
-                          // 2. 説明テキスト
+                          const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              '視点交換チャレンジ', // もっと長い説明
+                              '視点交換チャレンジ',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.grey[700],
+                                color: AppColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -86,18 +86,18 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black, // 少し薄い色に
+                          color: AppColors.textPrimary,
                         ),
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8), // 少し間隔をあける
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(
-                            Icons.emoji_events_outlined, // お好きなアイコンに変更してください
-                            color: Colors.amber,
-                            size: 20, // アイコンのサイズ
+                            Icons.emoji_events_outlined,
+                            color: AppColors.difficultyNormal,
+                            size: 20,
                           ),
                           const SizedBox(width: 8),
                           Flexible(
@@ -105,7 +105,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               '${widget.challenge.difficulty.points}ポイント',
                               style: const TextStyle(
                                 fontSize: 18,
-                                color: Colors.black87, // 少し薄い色に
+                                color: AppColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -120,12 +120,12 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
               const SizedBox(height: 8),
               //元の意見表示のカード
               Card(
-                elevation: 0, // 影をなくす
-                  color: Colors.grey[100], // 背景色を少し変える
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    side: BorderSide(color: Colors.grey[300]!), // 薄い枠線
-                  ),
+                elevation: 0,
+                color: AppColors.surfaceVariant,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  side: const BorderSide(color: AppColors.border),
+                ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -133,21 +133,21 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       children: [
                         Text(
                           'あなたの元の意見 (${widget.challenge.stance == Stance.pro ? "賛成" : "反対"})',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey[900],
+                            color: AppColors.textPrimary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          widget.challenge.originalOpinionText, // 仮のデータから本文を表示
-                          style: TextStyle(
+                          widget.challenge.originalOpinionText,
+                          style: const TextStyle(
                             fontSize: 15,
-                            color: Colors.grey[800],
-                            height: 1.5, // 行間
+                            color: AppColors.textPrimary,
+                            height: 1.5,
                           ),
                         ),
                       ],
@@ -159,11 +159,11 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
               Form(
                 key: _formKey,
                 child: Card(
-                    elevation: 2.0, // 少し影をつける
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      side: BorderSide(color: Colors.purpleAccent[100]!,width: 1.0), // 薄い枠線
-                    ),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    side: const BorderSide(color: AppColors.border, width: 1.0),
+                  ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -172,10 +172,10 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           // 挑戦する側の立場を表示
                           Row(
                             children: [
-                              Icon(
-                                Icons.psychology_alt_outlined, // お好きなアイコンに変更してください
-                                color: Colors.purpleAccent[700],
-                                size: 20, // アイコンのサイズ
+                              const Icon(
+                                Icons.psychology_alt_outlined,
+                                color: AppColors.primary,
+                                size: 20,
                               ),
                               const SizedBox(width: 8),
                               const Flexible(
@@ -184,7 +184,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black, // テーマの色
+                                    color: AppColors.textPrimary,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -193,15 +193,15 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                                '反対の立場から、説得力のある意見を書いてみてください',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[600], // テーマの色
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            '反対の立場から、説得力のある意見を書いてみてください',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 20),
                           Row(
                             children: [
@@ -217,15 +217,14 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              // 7. _buildStanceTag を呼び出す
                               buildStanceTag(
                                 widget.challenge.stance == Stance.pro ? '反対' : '賛成',
                                 widget.challenge.stance == Stance.pro
-                                    ? const Color.fromARGB(255, 249, 209, 213)
-                                    : const Color.fromARGB(255, 214, 241, 215),
+                                    ? AppColors.disagree.withOpacity(0.2)
+                                    : AppColors.agree.withOpacity(0.2),
                                 widget.challenge.stance == Stance.pro
-                                    ? Colors.red[900]!
-                                    : Colors.green[900]!,
+                                    ? AppColors.disagree
+                                    : AppColors.agree,
                               ),
                             ],
                           ),
@@ -253,16 +252,15 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
 
                             decoration: InputDecoration(
                               filled: true,
-                              fillColor: Colors.grey[200],
-                              
+                              fillColor: AppColors.surface,
                               hintText: '${widget.challenge.stance == Stance.pro ? "反対" : "賛成"}の立場での意見を書いてみよう！',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: const BorderSide(color: AppColors.border),
                               ),
-                              enabledBorder: OutlineInputBorder( // 通常時の枠線
+                              enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
-                                borderSide: BorderSide(color: Colors.grey[300]!),
+                                borderSide: const BorderSide(color: AppColors.border),
                               ),
                             ),
                             // ↓↓↓ 13. バリデーター（100文字チェック）を追加
@@ -289,30 +287,29 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    side: BorderSide(color: Colors.grey[400]!), // 枠線の色
+                                    side: const BorderSide(color: AppColors.border),
                                   ),
                                   onPressed: () {
-                                    // キャンセルボタンが押された時の処理
                                     print('キャンセルボタンが押されました');
-                                    GoRouter.of(context).pop(null); // 前の画面に戻る
+                                    GoRouter.of(context).pop(null);
                                   },
                                   child: const Text(
                                     'キャンセル',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
+                                      color: AppColors.textPrimary,
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12), // ボタン同士の間隔
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.purple[300],
-                                    foregroundColor: Colors.white,
-                                    minimumSize: const Size(double.infinity, 50), // 横幅いっぱい、高さ50
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.textOnPrimary,
+                                    minimumSize: const Size(double.infinity, 50),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -364,43 +361,64 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
               ),
               //ヒントカード
               Card(
-                elevation: 2.0,
-                color: Colors.blue[50],
+                elevation: 0,
+                color: AppColors.surfaceVariant,
                 shape: RoundedRectangleBorder(
-                  side: BorderSide(color: Colors.lightBlue[100]!,width: 1.0), // 薄い枠線
+                  side: const BorderSide(color: AppColors.border, width: 1.0),
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                child: Padding(padding: const EdgeInsets.all(16.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Text.rich(
                     TextSpan(
                       children: [
                         WidgetSpan(
-                          alignment: PlaceholderAlignment.middle, // アイコンを中央揃え
-                          child: Icon(
+                          alignment: PlaceholderAlignment.middle,
+                          child: const Icon(
                             Icons.lightbulb_outline_sharp,
-                            color: Colors.amber[700],
+                            color: AppColors.difficultyNormal,
                             size: 20,
                           ),
                         ),
                         const WidgetSpan(
-                          child: SizedBox(width: 2), // アイコンとテキストの間隔
+                          child: SizedBox(width: 2),
                         ),
                         TextSpan(
                           text: 'ヒント : 相手の立場に立つことで、その意見が生まれる背景や価値観を理解できます。完全に同意する必要はありませんが、なぜそう考える人がいるのかを想像してみましょう。',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.blue[800],
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
-
                     ),
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
-                ))
+                  ),
+                ),
               )
-            ],
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// スタンスタグを構築するメソッド
+  Widget buildStanceTag(String text, Color backgroundColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: textColor,
         ),
       ),
     );

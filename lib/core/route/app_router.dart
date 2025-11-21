@@ -139,7 +139,26 @@ final GoRouter router = GoRouter(
       path: '/challenge/:challengeId', // ← :challengeId でIDを受け取る
       pageBuilder: (context, state) {
         // extra から Challenge オブジェクトを取り出す
-        final Challenge challenge = state.extra as Challenge;
+        Challenge challenge;
+        
+        if (state.extra == null) {
+          // extraがnullの場合はエラー
+          throw Exception('Challenge object is required for challenge detail page');
+        }
+        
+        if (state.extra is Challenge) {
+          // Challengeオブジェクトの場合
+          challenge = state.extra as Challenge;
+        } else if (state.extra is Map<String, dynamic>) {
+          // Map<String, dynamic>の場合はChallengeに変換
+          try {
+            challenge = Challenge.fromFirestore(state.extra as Map<String, dynamic>);
+          } catch (e) {
+            throw Exception('Failed to convert Map to Challenge: $e');
+          }
+        } else {
+          throw Exception('Invalid extra type: ${state.extra.runtimeType}');
+        }
 
         return NoTransitionPage(
           // Challenge オブジェクトを詳細ページに渡す

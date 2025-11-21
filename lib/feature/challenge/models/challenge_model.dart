@@ -44,11 +44,22 @@ class Challenge with _$Challenge {
 
   /// Firestoreから読み込む際のファクトリ（Timestamp変換あり）
   factory Challenge.fromFirestore(Map<String, dynamic> json) {
-    // Timestamp型の変換処理
-    if (json['completedAt'] is Timestamp) {
-      json['completedAt'] = (json['completedAt'] as Timestamp).toDate().toIso8601String();
+    try {
+      // jsonのコピーを作成（元のデータを変更しないように）
+      final jsonCopy = Map<String, dynamic>.from(json);
+      
+      // Timestamp型の変換処理
+      if (jsonCopy['completedAt'] is Timestamp) {
+        jsonCopy['completedAt'] = (jsonCopy['completedAt'] as Timestamp).toDate().toIso8601String();
+      }
+      
+      return _$ChallengeFromJson(jsonCopy);
+    } catch (e, stackTrace) {
+      print('❌ [Challenge] fromFirestore変換エラー: $e');
+      print('   スタックトレース: $stackTrace');
+      print('   JSONデータ: $json');
+      rethrow;
     }
-    return _$ChallengeFromJson(json);
   }
 
   /// Firestoreへ保存する際のカスタムtoJson
