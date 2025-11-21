@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/tutorial_item.dart';
 
 /// チュートリアルカードWidget（画面全体スライド方式）
@@ -12,7 +13,7 @@ class TutorialCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: Colors.white,
+      color: AppColors.background,
       child: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -39,9 +40,9 @@ class TutorialCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     item.description,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
-                      color: Colors.grey[700],
+                      color: AppColors.textSecondary,
                       height: 1.8,
                       letterSpacing: 0.3,
                     ),
@@ -56,7 +57,7 @@ class TutorialCard extends StatelessWidget {
                   height: 380,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color.fromRGBO(255, 255, 255, 1),
+                    color: AppColors.background,
                     boxShadow: [
                       BoxShadow(
                         color: item.primaryColor.withValues(alpha: 0.3),
@@ -73,7 +74,7 @@ class TutorialCard extends StatelessWidget {
                                   'assets/images/onboarding/icon2.png'
                               ? Image.asset(item.imagePath!, fit: BoxFit.cover)
                               : Transform.scale(
-                                  scale: 1.3,
+                                  scale: 1.5,
                                   child: Image.asset(
                                     item.imagePath!,
                                     fit: BoxFit.contain,
@@ -88,7 +89,7 @@ class TutorialCard extends StatelessWidget {
                                   ),
                                 ),*/
                         )
-                      : Icon(item.icon, size: 100, color: Colors.white),
+                      : Icon(item.icon, size: 100, color: AppColors.textOnPrimary),
                 ),
                 /*child: Padding(
                         
@@ -119,7 +120,7 @@ class TutorialCard extends StatelessWidget {
                             ),
                           ),
                         )
-                      : Icon(item.icon, size: 100, color: Colors.white),
+                      : Icon(item.icon, size: 100, color: AppColors.textOnPrimary),
                 ),
 
                 Container(
@@ -201,8 +202,8 @@ class PageIndicator extends StatelessWidget {
     super.key,
     required this.currentPage,
     required this.totalPages,
-    this.activeColor = Colors.blue,
-    this.inactiveColor = Colors.grey,
+    this.activeColor = AppColors.primary,
+    this.inactiveColor = AppColors.border,
   });
 
   @override
