@@ -30,14 +30,13 @@ class FirstPage extends StatelessWidget {
                           gradient: const LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF6366F1),
-                              Color(0xFF8B5CF6),
-                            ],
+                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF6366F1,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                               spreadRadius: 3,
@@ -54,7 +53,7 @@ class FirstPage extends StatelessWidget {
 
                       // アプリ名
                       const Text(
-                        'アプリ名',
+                        'critical',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -85,9 +84,10 @@ class FirstPage extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Image.asset(
-                            'assets/images/onboarding/hero.png',
+                            'assets/images/onboarding/icon.png',
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
+                            height: 250,
+                            /*errorBuilder: (context, error, stackTrace) {
                               // 画像がない場合はプレースホルダーを表示
                               return Container(
                                 height: 250,
@@ -114,7 +114,7 @@ class FirstPage extends StatelessWidget {
                                   ],
                                 ),
                               );
-                            },
+                            },*/
                           ),
                         ),
                       ),
@@ -165,10 +165,7 @@ class FirstPage extends StatelessWidget {
                     },
                     child: RichText(
                       text: TextSpan(
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         children: const [
                           TextSpan(text: 'アカウントをお持ちの方は '),
                           TextSpan(
