@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/opinion.dart';
 import '../../models/topic.dart';
@@ -45,6 +46,11 @@ class OpinionListScreen extends ConsumerWidget {
                   )
                 : const SizedBox.shrink(),
             orElse: () => const SizedBox.shrink(),
+          ),
+          // 設定ボタン
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.black87),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_topic.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -10,7 +11,15 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('トピック一覧')),
+      appBar: AppBar(
+        title: const Text('トピック一覧'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: ListView(
         children: [
           // トピックのリストを表示
