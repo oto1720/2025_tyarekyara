@@ -11,8 +11,6 @@ class BottomNavigationConfig {
     NavigationItem(icon: Icons.shuffle, label: 'チャレンジ', route: '/challenge'),
     NavigationItem(icon: Icons.chat, label: 'ディベート', route: '/debate'),
     NavigationItem(icon: Icons.bar_chart, label: '統計', route: '/statistics'),
-    NavigationItem(icon: Icons.bug_report, label: 'マッチングデバッグ', route: '/debug/matching'),
-    NavigationItem(icon: Icons.settings, label: '設定', route: '/settings'),
   ];
 }
 

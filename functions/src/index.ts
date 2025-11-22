@@ -317,7 +317,7 @@ export const manualDebatePhaseProgress = onCall(
  */
 export const scheduledDailyTopicGeneration = onSchedule(
   {
-    schedule: "0 15 * * *", // 毎日14:00 (JST)
+    schedule: "0 9 * * *", // 毎日9:00 (JST)
     region: "asia-northeast1",
     timeZone: "Asia/Tokyo",
   },
