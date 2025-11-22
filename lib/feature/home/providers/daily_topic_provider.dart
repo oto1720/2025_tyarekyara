@@ -70,7 +70,7 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
   DebateEventRepository get debateEventRepository =>
       ref.read(debateEventRepositoryProviderForDaily);
 
-  /// 今日のトピックを読み込む（存在しない場合は生成）
+  /// 今日のトピックを読み込む（サーバー側で生成されたものを取得）
   Future<void> loadTodayTopic() async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -85,8 +85,11 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
           isLoading: false,
         );
       } else {
-        // 存在しない場合は新規生成
-        await generateNewTopic();
+        // トピックがない場合はnull状態にする（サーバー側で9:00に生成される）
+        state = state.copyWith(
+          currentTopic: null,
+          isLoading: false,
+        );
       }
     } catch (e) {
       state = state.copyWith(
