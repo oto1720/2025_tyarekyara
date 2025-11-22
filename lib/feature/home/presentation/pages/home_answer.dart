@@ -860,21 +860,28 @@ class _FeedbackCard extends ConsumerStatefulWidget {
 
 class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
   String? _userFeedback;
-  bool _isSubmitting = false;
+  Map<String, int> _localFeedbackCounts = {};
 
   @override
   void initState() {
     super.initState();
+    _initializeLocalCounts();
     _loadUserFeedback();
   }
 
   @override
   void didUpdateWidget(_FeedbackCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 日付が変わったら再読み込み
-    if (oldWidget.selectedDate != widget.selectedDate) {
+    // 日付やトピックが変わったら再読み込み
+    if (oldWidget.selectedDate != widget.selectedDate ||
+        oldWidget.topic.id != widget.topic.id) {
+      _initializeLocalCounts();
       _loadUserFeedback();
     }
+  }
+
+  void _initializeLocalCounts() {
+    _localFeedbackCounts = Map.from(widget.topic.feedbackCounts);
   }
 
   Future<void> _loadUserFeedback() async {
@@ -891,10 +898,28 @@ class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
   }
 
   Future<void> _submitFeedback(TopicFeedback feedback) async {
-    if (_isSubmitting) return;
+    // 同じフィードバックを選択している場合は何もしない
+    if (_userFeedback == feedback.key) return;
+
+    // 楽観的更新: 即座にUIを更新
+    final previousFeedback = _userFeedback;
+    final previousCounts = Map<String, int>.from(_localFeedbackCounts);
 
     setState(() {
-      _isSubmitting = true;
+      // 前のフィードバックがあればカウントを減らす
+      if (previousFeedback != null) {
+        final prevCount = _localFeedbackCounts[previousFeedback] ?? 0;
+        if (prevCount > 0) {
+          _localFeedbackCounts[previousFeedback] = prevCount - 1;
+        }
+      }
+
+      // 新しいフィードバックのカウントを増やす
+      final newCount = _localFeedbackCounts[feedback.key] ?? 0;
+      _localFeedbackCounts[feedback.key] = newCount + 1;
+
+      // ユーザーのフィードバックを即座に更新
+      _userFeedback = feedback.key;
     });
 
     try {
@@ -906,26 +931,15 @@ class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
       );
 
       if (mounted) {
-        setState(() {
-          _userFeedback = feedback.key;
-          _isSubmitting = false;
-        });
-
-        // トピックを再読み込みして最新のフィードバック数を取得
+        // バックグラウンドでトピックを再読み込み（カウントの同期用）
         ref.invalidate(topicByDateProvider(widget.selectedDate));
-
-        // スナックバーで通知
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('フィードバックを送信しました: ${feedback.displayName}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
       }
     } catch (e) {
+      // エラー時はロールバック
       if (mounted) {
         setState(() {
-          _isSubmitting = false;
+          _userFeedback = previousFeedback;
+          _localFeedbackCounts = previousCounts;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -982,7 +996,7 @@ class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
           const SizedBox(height: 16),
           Row(
             children: TopicFeedback.values.map((feedback) {
-              final count = widget.topic.feedbackCounts[feedback.key] ?? 0;
+              final count = _localFeedbackCounts[feedback.key] ?? 0;
               final isSelected = _userFeedback == feedback.key;
 
               return Expanded(
@@ -992,7 +1006,6 @@ class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
                     feedback: feedback,
                     count: count,
                     isSelected: isSelected,
-                    isSubmitting: _isSubmitting,
                     onTap: () => _submitFeedback(feedback),
                   ),
                 ),
@@ -1010,14 +1023,12 @@ class _FeedbackButton extends StatelessWidget {
   final TopicFeedback feedback;
   final int count;
   final bool isSelected;
-  final bool isSubmitting;
   final VoidCallback onTap;
 
   const _FeedbackButton({
     required this.feedback,
     required this.count,
     required this.isSelected,
-    required this.isSubmitting,
     required this.onTap,
   });
 
@@ -1037,7 +1048,7 @@ class _FeedbackButton extends StatelessWidget {
     final color = _getColor();
 
     return InkWell(
-      onTap: isSubmitting ? null : onTap,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
