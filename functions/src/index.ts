@@ -227,7 +227,7 @@ export const manualMatching = onCall(
  */
 export const scheduledEventStatusUpdate = onSchedule(
   {
-    schedule: "every 5 minutes",
+    schedule: "every 3 minutes",
     region: "asia-northeast1",
     timeZone: "Asia/Tokyo",
   },

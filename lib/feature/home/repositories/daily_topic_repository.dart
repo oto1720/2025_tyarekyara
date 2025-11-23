@@ -6,6 +6,42 @@ class DailyTopicRepository {
   final FirebaseFirestore _firestore;
   static const String _collectionName = 'daily_topics';
 
+  /// FirestoreのTimestampをISO8601文字列に変換
+  static String? _timestampToString(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) {
+      return value.toDate().toIso8601String();
+    }
+    if (value is String) return value;
+    return null;
+  }
+
+  /// Firestoreのデータを変換（Timestamp→String）
+  static Map<String, dynamic> _convertFirestoreData(Map<String, dynamic> data) {
+    final converted = Map<String, dynamic>.from(data);
+
+    // createdAtを変換
+    if (converted['createdAt'] != null) {
+      converted['createdAt'] = _timestampToString(converted['createdAt']);
+    }
+
+    // relatedNews内のpublishedAtを変換
+    if (converted['relatedNews'] != null && converted['relatedNews'] is List) {
+      converted['relatedNews'] = (converted['relatedNews'] as List).map((news) {
+        if (news is Map<String, dynamic>) {
+          final newsMap = Map<String, dynamic>.from(news);
+          if (newsMap['publishedAt'] != null) {
+            newsMap['publishedAt'] = _timestampToString(newsMap['publishedAt']);
+          }
+          return newsMap;
+        }
+        return news;
+      }).toList();
+    }
+
+    return converted;
+  }
+
   DailyTopicRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -26,11 +62,12 @@ class DailyTopicRepository {
           .get();
 
       if (doc.exists && doc.data() != null) {
-        final data = doc.data()!;
+        final data = _convertFirestoreData(doc.data()!);
         return Topic.fromJson(data);
       }
       return null;
     } catch (e) {
+      print('Error getting today topic: $e');
       return null;
     }
   }
@@ -66,7 +103,8 @@ class DailyTopicRepository {
           .get();
 
       if (doc.exists && doc.data() != null) {
-        return Topic.fromJson(doc.data()!);
+        final data = _convertFirestoreData(doc.data()!);
+        return Topic.fromJson(data);
       }
       return null;
     } catch (e) {
@@ -85,7 +123,7 @@ class DailyTopicRepository {
           .get();
 
       return snapshot.docs
-          .map((doc) => Topic.fromJson(doc.data()))
+          .map((doc) => Topic.fromJson(_convertFirestoreData(doc.data())))
           .toList();
     } catch (e) {
       print('Error getting recent topics: $e');
