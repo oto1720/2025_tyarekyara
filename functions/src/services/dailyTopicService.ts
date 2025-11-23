@@ -181,24 +181,32 @@ async function createDebateEvent(
     const eventDate = new Date(date);
     eventDate.setHours(12, 0, 0, 0);
 
-    // イベント終了時刻: 今日の23:59
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
+    // エントリー締切時刻: 今日の23:59
+    const entryDeadlineDate = new Date(date);
+    entryDeadlineDate.setHours(23, 59, 59, 999);
 
     const eventData = {
       id: `event_${date}_${topic.id}`,
+      title: "今日のディベート",
       topic: topic.text,
-      topicId: topic.id,
-      category: topic.category,
-      difficulty: topic.difficulty,
-      date: date,
-      startTime: admin.firestore.Timestamp.fromDate(eventDate),
-      endTime: admin.firestore.Timestamp.fromDate(endDate),
-      status: "scheduled", // scheduled, active, completed, cancelled
-      maxParticipants: 100, // 最大参加者数
-      currentParticipants: 0,
+      description: topic.description ||
+        `${topic.category}に関するディベートです。`,
+      status: "accepting", // Flutter側のEventStatus enumに合わせる
+      scheduledAt: admin.firestore.Timestamp.fromDate(eventDate),
+      entryDeadline: admin.firestore.Timestamp.fromDate(entryDeadlineDate),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      availableDurations: ["short", "medium", "long"],
+      availableFormats: ["oneVsOne", "twoVsTwo"],
+      currentParticipants: 0,
+      maxParticipants: 100,
+      imageUrl: null,
+      metadata: {
+        topicId: topic.id,
+        category: topic.category,
+        difficulty: topic.difficulty,
+        date: date,
+      },
     };
 
     const eventRef = db.collection("debate_events").doc(eventData.id);
