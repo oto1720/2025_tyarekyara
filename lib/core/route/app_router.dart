@@ -114,6 +114,11 @@ final GoRouter router = GoRouter(
           const NoTransitionPage(child: LoginPage()),
     ),
     GoRoute(
+          path: '/profile',
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ProfileScreen()),
+        ),
+    GoRoute(
       path: '/signup',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: SignUpPage()),
@@ -320,12 +325,6 @@ final GoRouter router = GoRouter(
           path: '/statistics',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: StatisticPage()),
-        ),
-        // プロフィール画面
-        GoRoute(
-          path: '/profile',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: ProfileScreen()),
         ),
         // 設定画面
         GoRoute(
