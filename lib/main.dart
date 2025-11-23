@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:tyarekyara/core/route/app_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import 'firebase_options.dart';
@@ -14,6 +15,9 @@ void main() async {
 
   // Load environment variables
   await dotenv.load(fileName: '.env');
+
+  // 日本語ロケールの初期化（DateFormat用）
+  await initializeDateFormatting('ja_JP');
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
