@@ -71,7 +71,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
 
                 // Earned badges
                 EarnedBadgesCardImpl(earnedBadges: state.earnedBadges),
-                const SizedBox(height: 24),
+                const SizedBox(height: 95), // BottomNavigationBar分の余白
               ],
             ),
           ),

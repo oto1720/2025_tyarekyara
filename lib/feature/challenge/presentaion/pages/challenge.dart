@@ -358,6 +358,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                     ),
                 );
               }).toList(),
+              const SizedBox(height: 95), // BottomNavigationBar分の余白
             ],
           ),
         ),

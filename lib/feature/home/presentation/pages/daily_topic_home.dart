@@ -355,7 +355,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 80),
+          const SizedBox(height: 95), // BottomNavigationBar分の余白
         ],
       ),
     );
@@ -545,7 +545,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 80),
+          const SizedBox(height: 105), // BottomNavigationBar分の余白
         ],
       ),
     );

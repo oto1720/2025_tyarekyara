@@ -71,7 +71,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
             ref.invalidate(upcomingEventsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 95), // BottomNavigationBar分の余白
             itemCount: events.length,
             itemBuilder: (context, index) {
               return EventCard(
@@ -101,7 +101,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 95), // BottomNavigationBar分の余白
           itemCount: events.length,
           itemBuilder: (context, index) {
             return EventCard(

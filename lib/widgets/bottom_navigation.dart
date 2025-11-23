@@ -36,7 +36,7 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       // extendBodyをfalseにして、コンテンツがBottomNavigationBarと重ならないようにする
-      extendBody: false,
+      extendBody: true,
       body: child,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 8, right: 8, bottom: 25),
@@ -44,10 +44,13 @@ class ScaffoldWithBottomNavigation extends StatelessWidget {
           settings: LiquidGlassSettings(
             thickness: 15,
             blur: 20,
+            lightIntensity: 0.5,
+            saturation:1.8,
+            chromaticAberration: 0.5,
             glassColor: AppColors.background.withValues(alpha: 0.3),
           ),
           child: LiquidGlass(
-            shape: const LiquidRoundedSuperellipse(borderRadius: 30),
+            shape: const LiquidRoundedSuperellipse(borderRadius: 35),
             child: SizedBox(
               height: 70,
               child: MediaQuery.removePadding(
