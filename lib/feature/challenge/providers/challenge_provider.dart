@@ -223,13 +223,19 @@ class ChallengeNotifier extends AsyncNotifier<ChallengeState> {
   Future<void> completeChallenge(
     String challengeId,
     String oppositeOpinion,
-    int earnedPoints,
-  ) async {
+    int earnedPoints, {
+    String? feedbackText,
+    int? feedbackScore,
+  }) async {
     if (kDebugMode) {
       print('✍️ [Challenge] ========== completeChallenge() 開始 ==========');
       print('   チャレンジID: $challengeId');
       print('   反対意見の文字数: ${oppositeOpinion.length}文字');
       print('   獲得ポイント: $earnedPoints');
+      if (feedbackText != null) {
+        print('   フィードバック: ${feedbackText.length}文字');
+        print('   フィードバックスコア: $feedbackScore');
+      }
     }
 
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -276,6 +282,9 @@ class ChallengeNotifier extends AsyncNotifier<ChallengeState> {
       userId: currentUser.uid,
       completedAt: DateTime.now(),
       earnedPoints: earnedPoints,
+      feedbackText: feedbackText,
+      feedbackScore: feedbackScore,
+      feedbackGeneratedAt: feedbackText != null ? DateTime.now() : null,
     );
 
     // 楽観的UI更新用の新しいリスト

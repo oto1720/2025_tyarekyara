@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 Widget buildStanceTag(String text, Color backgroundColor, Color textColor) {
   return Container(
@@ -142,9 +143,87 @@ class CompletedCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // フィードバック表示セクション
+            if (challenge.feedbackText != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8.0),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.smart_toy_outlined,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'AIフィードバック',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const Spacer(),
+                        if (challenge.feedbackScore != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getScoreColor(challenge.feedbackScore!).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'スコア: ${challenge.feedbackScore}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: _getScoreColor(challenge.feedbackScore!),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      challenge.feedbackText!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[800],
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Color _getScoreColor(int score) {
+    if (score >= 80) {
+      return AppColors.agree;
+    } else if (score >= 60) {
+      return AppColors.difficultyNormal;
+    } else if (score >= 40) {
+      return AppColors.difficultyHard;
+    } else {
+      return AppColors.disagree;
+    }
   }
 }

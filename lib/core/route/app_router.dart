@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/debug/enhanced_matching_debug_page.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_detail.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge_feedback_page.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/daily_topic_home.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/home_answer.dart';
 import 'package:tyarekyara/feature/home/presentation/pages/my_opinion_detail.dart';
@@ -139,11 +140,48 @@ final GoRouter router = GoRouter(
       path: '/challenge/:challengeId', // ← :challengeId でIDを受け取る
       pageBuilder: (context, state) {
         // extra から Challenge オブジェクトを取り出す
-        final Challenge challenge = state.extra as Challenge;
+        Challenge challenge;
+        
+        if (state.extra == null) {
+          // extraがnullの場合はエラー
+          throw Exception('Challenge object is required for challenge detail page');
+        }
+        
+        if (state.extra is Challenge) {
+          // Challengeオブジェクトの場合
+          challenge = state.extra as Challenge;
+        } else if (state.extra is Map<String, dynamic>) {
+          // Map<String, dynamic>の場合はChallengeに変換
+          try {
+            challenge = Challenge.fromFirestore(state.extra as Map<String, dynamic>);
+          } catch (e) {
+            throw Exception('Failed to convert Map to Challenge: $e');
+          }
+        } else {
+          throw Exception('Invalid extra type: ${state.extra.runtimeType}');
+        }
 
         return NoTransitionPage(
           // Challenge オブジェクトを詳細ページに渡す
           child: ChallengeDetailPage(challenge: challenge),
+        );
+      },
+    ),
+
+    // チャレンジフィードバックページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/challenge/:challengeId/feedback',
+      pageBuilder: (context, state) {
+        // extra から Challenge オブジェクトと回答を取り出す
+        final extra = state.extra as Map<String, dynamic>;
+        final challenge = extra['challenge'] as Challenge;
+        final challengeAnswer = extra['challengeAnswer'] as String;
+
+        return NoTransitionPage(
+          child: ChallengeFeedbackPage(
+            challenge: challenge,
+            challengeAnswer: challengeAnswer,
+          ),
         );
       },
     ),

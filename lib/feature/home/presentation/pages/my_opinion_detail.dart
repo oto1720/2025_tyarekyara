@@ -103,6 +103,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
               label: const Text('編集'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.blue,
+                textStyle: const TextStyle(inherit: false), // inheritを明示的にfalseに設定
               ),
             ),
         ],

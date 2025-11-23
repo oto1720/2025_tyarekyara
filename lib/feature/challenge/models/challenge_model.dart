@@ -37,6 +37,9 @@ class Challenge with _$Challenge {
     DateTime? completedAt, // 完了日時
     int? earnedPoints, // 獲得ポイント
     String? opinionId, // 元の意見ID
+    String? feedbackText, // AIフィードバック本文
+    int? feedbackScore, // 評価スコア（0-100）
+    DateTime? feedbackGeneratedAt, // フィードバック生成日時
   }) = _Challenge;
 
   /// Firestoreから読み込む際のファクトリ
@@ -44,11 +47,25 @@ class Challenge with _$Challenge {
 
   /// Firestoreから読み込む際のファクトリ（Timestamp変換あり）
   factory Challenge.fromFirestore(Map<String, dynamic> json) {
-    // Timestamp型の変換処理
-    if (json['completedAt'] is Timestamp) {
-      json['completedAt'] = (json['completedAt'] as Timestamp).toDate().toIso8601String();
+    try {
+      // jsonのコピーを作成（元のデータを変更しないように）
+      final jsonCopy = Map<String, dynamic>.from(json);
+      
+      // Timestamp型の変換処理
+      if (jsonCopy['completedAt'] is Timestamp) {
+        jsonCopy['completedAt'] = (jsonCopy['completedAt'] as Timestamp).toDate().toIso8601String();
+      }
+      if (jsonCopy['feedbackGeneratedAt'] is Timestamp) {
+        jsonCopy['feedbackGeneratedAt'] = (jsonCopy['feedbackGeneratedAt'] as Timestamp).toDate().toIso8601String();
+      }
+
+      return _$ChallengeFromJson(jsonCopy);
+    } catch (e, stackTrace) {
+      print('❌ [Challenge] fromFirestore変換エラー: $e');
+      print('   スタックトレース: $stackTrace');
+      print('   JSONデータ: $json');
+      rethrow;
     }
-    return _$ChallengeFromJson(json);
   }
 
   /// Firestoreへ保存する際のカスタムtoJson
@@ -57,6 +74,9 @@ class Challenge with _$Challenge {
     // DateTime を Timestamp に変換
     if (completedAt != null) {
       json['completedAt'] = Timestamp.fromDate(completedAt!);
+    }
+    if (feedbackGeneratedAt != null) {
+      json['feedbackGeneratedAt'] = Timestamp.fromDate(feedbackGeneratedAt!);
     }
     return json;
   }
