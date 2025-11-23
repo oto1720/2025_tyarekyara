@@ -179,11 +179,11 @@ async function createDebateEvent(
   try {
     // イベント開始時刻: 今日の12:00（正午）
     const eventDate = new Date(date);
-    eventDate.setHours(12, 0, 0, 0);
+    eventDate.setHours(20, 0, 0, 0);
 
     // エントリー締切時刻: 今日の23:59
     const entryDeadlineDate = new Date(date);
-    entryDeadlineDate.setHours(23, 59, 59, 999);
+    entryDeadlineDate.setHours(19, 0, 0, 0);
 
     const eventData = {
       id: `event_${date}_${topic.id}`,
