@@ -66,19 +66,26 @@ class _DebateJudgmentWaitingPageState
   /// 判定結果を監視
   void _watchJudgmentResult() {
     // 定期的に判定結果をチェック
-    Timer.periodic(const Duration(seconds: 2), (timer) {
+    Timer.periodic(const Duration(seconds: 2), (timer) async {
       if (!mounted) {
         timer.cancel();
         return;
       }
 
-      ref.read(judgmentResultProvider(widget.matchId)).whenData((judgment) {
-        if (judgment != null) {
+      // キャッシュを無効化して最新データを取得
+      ref.invalidate(judgmentResultProvider(widget.matchId));
+
+      try {
+        final judgment = await ref.read(judgmentResultProvider(widget.matchId).future);
+        if (judgment != null && mounted) {
           timer.cancel();
           // 判定結果画面へ遷移
           context.pushReplacement('/debate/result/${widget.matchId}');
         }
-      });
+      } catch (e) {
+        // エラーの場合は次のポーリングで再試行
+        print('判定結果取得エラー: $e');
+      }
     });
   }
 

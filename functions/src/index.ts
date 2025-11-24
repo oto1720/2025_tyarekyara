@@ -223,11 +223,11 @@ export const manualMatching = onCall(
 );
 
 /**
- * イベントステータス自動更新（5分ごとに実行）
+ * イベントステータス自動更新（1分ごとに実行）
  */
 export const scheduledEventStatusUpdate = onSchedule(
   {
-    schedule: "every 3 minutes",
+    schedule: "every 1 minutes",
     region: "asia-northeast1",
     timeZone: "Asia/Tokyo",
   },
