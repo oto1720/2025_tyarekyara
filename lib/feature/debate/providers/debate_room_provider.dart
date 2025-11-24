@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debate_room.dart';
 import '../models/debate_message.dart';
+import '../models/debate_match.dart';
 import '../models/judgment_result.dart';
 import '../repositories/debate_room_repository.dart';
 
@@ -50,6 +51,20 @@ final debateMessagesProvider = StreamProvider.autoDispose.family<List<DebateMess
     final (roomId, messageType) = params;
     final repository = ref.watch(debateRoomRepositoryProvider);
     return repository.watchMessages(roomId, type: messageType);
+  },
+);
+
+/// チームメッセージ（スタンス別）Provider
+/// チームチャットでは自分のチームのメッセージのみ表示
+final teamMessagesWithStanceProvider = StreamProvider.autoDispose.family<List<DebateMessage>, (String, DebateStance)>(
+  (ref, params) {
+    final (roomId, stance) = params;
+    final repository = ref.watch(debateRoomRepositoryProvider);
+    return repository.watchMessages(
+      roomId,
+      type: MessageType.team,
+      senderStance: stance,
+    );
   },
 );
 

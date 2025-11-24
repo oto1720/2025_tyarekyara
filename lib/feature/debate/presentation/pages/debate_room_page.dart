@@ -371,6 +371,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       userId: userId,
       currentPhase: room.currentPhase,
       messageType: MessageType.team,
+      stance: stance, // チームのスタンスを渡してフィルタリング
     );
   }
 
