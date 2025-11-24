@@ -9,6 +9,7 @@ import '../../providers/debate_match_provider.dart';
 import '../../providers/debate_room_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/matching_status_widget.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// マッチ詳細画面（マッチング成立後）
 class DebateMatchDetailPage extends ConsumerWidget {
@@ -101,40 +102,15 @@ class DebateMatchDetailPage extends ConsumerWidget {
   /// AppBar
   Widget _buildAppBar(BuildContext context, DebateMatch match) {
     return SliverAppBar(
-      expandedHeight: 200,
       pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'マッチング成立',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(
-                offset: Offset(0, 1),
-                blurRadius: 3.0,
-                color: Colors.black45,
-              ),
-            ],
-          ),
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.green[400]!,
-                Colors.blue[400]!,
-              ],
-            ),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.celebration,
-              size: 80,
-              color: Colors.white54,
-            ),
-          ),
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
+      elevation: 1,
+      title: Text(
+        'マッチング成立',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
         ),
       ),
     );
@@ -143,20 +119,20 @@ class DebateMatchDetailPage extends ConsumerWidget {
   /// 成功カード
   Widget _buildSuccessCard() {
     return Card(
-      color: Colors.green[50],
+      color: AppColors.success.withValues(alpha: 0.1),
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.green[300]!, width: 2),
+        side: BorderSide(color: AppColors.success, width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle,
               size: 64,
-              color: Colors.green,
+              color: AppColors.success,
             ),
             const SizedBox(height: 16),
             Text(
@@ -164,7 +140,7 @@ class DebateMatchDetailPage extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.green[700],
+                color: AppColors.success,
               ),
             ),
             const SizedBox(height: 8),
@@ -172,7 +148,7 @@ class DebateMatchDetailPage extends ConsumerWidget {
               '対戦相手が見つかりました\n準備ができたらディベートを開始しましょう',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.green[900],
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -187,16 +163,18 @@ class DebateMatchDetailPage extends ConsumerWidget {
     final dateFormat = DateFormat('yyyy/MM/dd HH:mm', 'ja_JP');
 
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'マッチ情報',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -228,11 +206,12 @@ class DebateMatchDetailPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '対戦カード',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -250,14 +229,14 @@ class DebateMatchDetailPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Column(
                 children: [
-                  const Icon(Icons.compare_arrows, size: 32),
+                  Icon(Icons.compare_arrows, size: 32, color: AppColors.textSecondary),
                   const SizedBox(height: 4),
                   Text(
                     'VS',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -287,11 +266,11 @@ class DebateMatchDetailPage extends ConsumerWidget {
     final isMyTeam = userId != null && team.memberIds.contains(userId);
 
     return Card(
-      color: isMyTeam ? color.withOpacity(0.1) : null,
+      color: isMyTeam ? color.withOpacity(0.1) : AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isMyTeam ? color : Colors.grey[300]!,
+          color: isMyTeam ? color : AppColors.border,
           width: isMyTeam ? 3 : 1,
         ),
       ),
@@ -336,13 +315,13 @@ class DebateMatchDetailPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people, size: 16, color: Colors.grey[600]),
+                Icon(Icons.people, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   '${team.memberIds.length}人',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -356,16 +335,18 @@ class DebateMatchDetailPage extends ConsumerWidget {
   /// マッチ設定
   Widget _buildMatchSettings(DebateMatch match) {
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'ディベート設定',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -402,7 +383,7 @@ class DebateMatchDetailPage extends ConsumerWidget {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ),
         Text(
@@ -433,7 +414,7 @@ class DebateMatchDetailPage extends ConsumerWidget {
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -454,12 +435,19 @@ class DebateMatchDetailPage extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.search_off, size: 80, color: Colors.grey),
+          Icon(Icons.search_off, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('マッチが見つかりません'),
+          Text(
+            'マッチが見つかりません',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],
@@ -473,12 +461,19 @@ class DebateMatchDetailPage extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('エラー: $error'),
+          Text(
+            'エラー: $error',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],

@@ -11,6 +11,7 @@ import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// ディベートルーム画面
 class DebateRoomPage extends ConsumerStatefulWidget {
@@ -133,20 +134,47 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
         automaticallyImplyLeading: false, // 戻るボタンを非表示
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const Size.fromHeight(70),
           child: Container(
-            color: Colors.blue[700],
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border(
+                bottom: BorderSide(color: AppColors.border),
+              ),
+            ),
             child: Row(
               children: [
                 Expanded(
-                  child: PhaseIndicatorWidget(
-                    currentPhase: room.currentPhase,
-                    isCompact: true,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.play_circle_outline,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            room.currentPhase.displayName,
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -189,7 +217,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.blue[50],
+      color: AppColors.surface,
       child: Column(
         children: [
           Row(
@@ -306,12 +334,12 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   /// タブバー
   Widget _buildTabBar() {
     return Container(
-      color: Colors.white,
+      color: AppColors.background,
       child: TabBar(
         controller: _tabController,
-        labelColor: Colors.blue,
-        unselectedLabelColor: Colors.grey,
-        indicatorColor: Colors.blue,
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textTertiary,
+        indicatorColor: AppColors.primary,
         tabs: const [
           Tab(
             icon: Icon(Icons.public),
@@ -567,18 +595,18 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isWarning ? Colors.red : Colors.blue,
+        color: isWarning ? AppColors.error : AppColors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.timer, color: Colors.white, size: 16),
+          Icon(Icons.timer, color: AppColors.textOnPrimary, size: 16),
           const SizedBox(width: 6),
           Text(
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: AppColors.textOnPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               fontFamily: 'monospace',

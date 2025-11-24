@@ -5,6 +5,7 @@ import 'dart:async';
 import '../../models/debate_match.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../providers/debate_room_provider.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// AI判定待機画面
 class DebateJudgmentWaitingPage extends ConsumerStatefulWidget {
@@ -109,28 +110,21 @@ class _DebateJudgmentWaitingPageState
     });
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.indigo[400]!,
-              Colors.purple[600]!,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: matchAsync.when(
-            data: (match) {
-              if (match == null) {
-                return _buildError('マッチが見つかりません');
-              }
-              return _buildWaitingContent(match);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _buildError('エラー: $error'),
-          ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('AI判定中'),
+        automaticallyImplyLeading: false,
+      ),
+      body: SafeArea(
+        child: matchAsync.when(
+          data: (match) {
+            if (match == null) {
+              return _buildError('マッチが見つかりません');
+            }
+            return _buildWaitingContent(match);
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => _buildError('エラー: $error'),
         ),
       ),
     );
@@ -170,19 +164,16 @@ class _DebateJudgmentWaitingPageState
         height: 120,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white.withValues(alpha: 0.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.3),
-              blurRadius: 30,
-              spreadRadius: 10,
-            ),
-          ],
+          color: AppColors.primary.withValues(alpha: 0.1),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            width: 2,
+          ),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.psychology,
           size: 70,
-          color: Colors.white,
+          color: AppColors.primary,
         ),
       ),
     );
@@ -192,20 +183,20 @@ class _DebateJudgmentWaitingPageState
   Widget _buildTitle() {
     return Column(
       children: [
-        const Text(
-          'AI判定中',
+        Text(
+          'ディベート内容を分析しています',
           style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Text(
-          'ディベート内容を分析しています...',
+          'しばらくお待ちください...',
           style: TextStyle(
-            fontSize: 16,
-            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 14,
+            color: AppColors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -218,8 +209,8 @@ class _DebateJudgmentWaitingPageState
     return Column(
       children: [
         SizedBox(
-          width: 200,
-          height: 200,
+          width: 150,
+          height: 150,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -227,35 +218,21 @@ class _DebateJudgmentWaitingPageState
               RotationTransition(
                 turns: _progressController,
                 child: SizedBox(
-                  width: 180,
-                  height: 180,
+                  width: 120,
+                  height: 120,
                   child: CircularProgressIndicator(
-                    strokeWidth: 6,
+                    strokeWidth: 4,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white.withValues(alpha: 0.7),
+                      AppColors.primary,
                     ),
                   ),
                 ),
               ),
-              // 中央のパーセンテージ
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '分析中',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
+              // 中央のアイコン
+              Icon(
+                Icons.auto_awesome,
+                color: AppColors.primary,
+                size: 32,
               ),
             ],
           ),
@@ -293,13 +270,13 @@ class _DebateJudgmentWaitingPageState
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: done
-            ? Colors.white.withValues(alpha: 0.3)
-            : Colors.white.withValues(alpha: 0.1),
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: done
-              ? Colors.white.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.2),
+              ? AppColors.primary
+              : AppColors.border,
         ),
       ),
       child: Row(
@@ -307,14 +284,14 @@ class _DebateJudgmentWaitingPageState
         children: [
           Icon(
             done ? Icons.check_circle : icon,
-            color: Colors.white,
+            color: done ? AppColors.primary : AppColors.textTertiary,
             size: 20,
           ),
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: done ? AppColors.primary : AppColors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -332,18 +309,19 @@ class _DebateJudgmentWaitingPageState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.schedule, color: Colors.white, size: 20),
+          Icon(Icons.schedule, color: AppColors.textSecondary, size: 20),
           const SizedBox(width: 8),
           Text(
             '経過時間: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: AppColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
               fontFamily: 'monospace',
@@ -359,8 +337,9 @@ class _DebateJudgmentWaitingPageState
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
@@ -369,14 +348,14 @@ class _DebateJudgmentWaitingPageState
             children: [
               Icon(
                 Icons.lightbulb_outline,
-                color: Colors.yellow[300],
+                color: AppColors.primary,
                 size: 24,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 '判定について',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -401,8 +380,8 @@ class _DebateJudgmentWaitingPageState
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
               shape: BoxShape.circle,
             ),
           ),
@@ -411,7 +390,7 @@ class _DebateJudgmentWaitingPageState
             child: Text(
               text,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: AppColors.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -427,11 +406,11 @@ class _DebateJudgmentWaitingPageState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.white),
+          Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),

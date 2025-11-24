@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../models/judgment_result.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 判定グラフWidget（レーダーチャート）
 class JudgmentRadarChartWidget extends StatelessWidget {
@@ -18,23 +19,18 @@ class JudgmentRadarChartWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             '5つの評価項目',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 24),
@@ -129,9 +125,10 @@ class JudgmentRadarChartWidget extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -155,23 +152,18 @@ class JudgmentBarChartWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'スコア比較',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 24),
@@ -229,7 +221,7 @@ class JudgmentBarChartWidget extends StatelessWidget {
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
-                      color: Colors.grey[300]!,
+                      color: AppColors.border,
                       strokeWidth: 1,
                     );
                   },
@@ -309,9 +301,10 @@ class JudgmentBarChartWidget extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
           ),
         ),
       ],
