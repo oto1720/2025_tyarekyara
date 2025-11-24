@@ -116,7 +116,15 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 95), // BottomNavigationBar分の余白
           itemCount: matches.length,
           itemBuilder: (context, index) {
-            return _buildMatchHistoryCard(matches[index], user.uid);
+            final match = matches[index];
+            // イベント情報を取得してお題を表示
+            return FutureBuilder<String?>(
+              future: _getEventTopic(match.eventId),
+              builder: (context, snapshot) {
+                final topic = snapshot.data;
+                return _buildMatchHistoryCard(match, user.uid, topic);
+              },
+            );
           },
         );
       },
@@ -125,8 +133,20 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
     );
   }
 
+  /// イベントのお題を取得
+  Future<String?> _getEventTopic(String eventId) async {
+    try {
+      final repository = ref.read(debateEventRepositoryProvider);
+      final event = await repository.getEvent(eventId);
+      return event?.topic;
+    } catch (e) {
+      print('Error getting event topic: $e');
+      return null;
+    }
+  }
+
   /// マッチ履歴カード
-  Widget _buildMatchHistoryCard(DebateMatch match, String userId) {
+  Widget _buildMatchHistoryCard(DebateMatch match, String userId, String? topic) {
     // ユーザーがどちらのチームにいるか判定
     final isProTeam = match.proTeam.memberIds.contains(userId);
     final userTeam = isProTeam ? '賛成' : '反対';
@@ -232,7 +252,20 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              // お題
+              if (topic != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  topic,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 8),
               // 日時
               Row(
                 children: [
