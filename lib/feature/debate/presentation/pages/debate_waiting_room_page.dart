@@ -6,6 +6,7 @@ import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// ウェイティングルーム画面
 class DebateWaitingRoomPage extends ConsumerStatefulWidget {
@@ -155,28 +156,24 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: AppColors.primary.withValues(alpha: 0.1),
         border: Border(
-          bottom: BorderSide(color: Colors.blue[200]!, width: 1),
+          bottom: BorderSide(color: AppColors.border, width: 1),
         ),
       ),
       child: Row(
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              final confirm = await _showCancelConfirmDialog(context);
-              if (confirm == true && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: () => Navigator.of(context).pop(),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
               'マッチング待機中',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -198,8 +195,8 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
           shape: BoxShape.circle,
           gradient: LinearGradient(
             colors: [
-              Colors.blue[400]!,
-              Colors.purple[400]!,
+              AppColors.primary,
+              AppColors.primaryLight,
             ],
           ),
         ),
@@ -216,41 +213,43 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
   Widget _buildStatusCard(DebateEntry entry) {
     return Card(
       elevation: 4,
+      color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.hourglass_empty, color: Colors.blue, size: 28),
-                SizedBox(width: 12),
+                Icon(Icons.hourglass_empty, color: AppColors.primary, size: 28),
+                const SizedBox(width: 12),
                 Text(
                   'マッチング中',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '他の参加者を探しています\nしばらくお待ちください',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[400]!),
+              backgroundColor: AppColors.border,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ],
         ),
@@ -266,21 +265,22 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange[50],
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange[300]!),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.access_time, color: Colors.orange[700]),
+          Icon(Icons.access_time, color: AppColors.textSecondary),
           const SizedBox(width: 12),
           Text(
             '待機時間: ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.orange[900],
+              color: AppColors.textPrimary,
+              fontFamily: 'monospace',
             ),
           ),
         ],
@@ -291,16 +291,18 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
   /// エントリー情報
   Widget _buildEntryInfo(DebateEntry entry) {
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'あなたの設定',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -344,7 +346,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ),
         Text(
@@ -364,23 +366,23 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green[50],
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[300]!),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb, color: Colors.green[700]),
+              Icon(Icons.lightbulb, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
                 'マッチングのヒント',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[700],
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -406,7 +408,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: Colors.green[700],
+              color: AppColors.primary,
               shape: BoxShape.circle,
             ),
           ),
@@ -416,7 +418,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
               text,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.green[900],
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -443,8 +445,8 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
           ),
         ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.red,
-          side: const BorderSide(color: Colors.red, width: 2),
+          foregroundColor: AppColors.error,
+          side: BorderSide(color: AppColors.error, width: 2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -529,12 +531,19 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock, size: 80, color: Colors.grey),
+          Icon(Icons.lock, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('ログインが必要です'),
+          Text(
+            'ログインが必要です',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],
@@ -548,12 +557,19 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('エラー: $error'),
+          Text(
+            'エラー: $error',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],

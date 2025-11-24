@@ -6,6 +6,7 @@ import '../../providers/user_debate_stats_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/badge_display_widget.dart';
 import '../widgets/level_progress_widget.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// ディベート統計画面
 class DebateStatsPage extends ConsumerWidget {
@@ -79,16 +80,18 @@ class DebateStatsPage extends ConsumerWidget {
   /// 総合統計
   Widget _buildOverallStats(UserDebateStats stats) {
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '総合統計',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
@@ -99,7 +102,7 @@ class DebateStatsPage extends ConsumerWidget {
                     '参加回数',
                     '${stats.totalDebates}',
                     Icons.groups,
-                    Colors.blue,
+                    AppColors.primary,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -121,7 +124,7 @@ class DebateStatsPage extends ConsumerWidget {
                     '敗北数',
                     '${stats.losses}',
                     Icons.cancel,
-                    Colors.red,
+                    AppColors.error,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -130,7 +133,7 @@ class DebateStatsPage extends ConsumerWidget {
                     '引き分け',
                     '${stats.draws}',
                     Icons.handshake,
-                    Colors.grey,
+                    AppColors.textTertiary,
                   ),
                 ),
               ],
@@ -143,7 +146,7 @@ class DebateStatsPage extends ConsumerWidget {
                     '総ポイント',
                     '${stats.totalPoints}',
                     Icons.stars,
-                    Colors.purple,
+                    AppColors.primaryLight,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -195,7 +198,7 @@ class DebateStatsPage extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -216,16 +219,18 @@ class DebateStatsPage extends ConsumerWidget {
     final drawRate = stats.draws / totalMatches;
 
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '勝敗分布',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 24),
@@ -250,7 +255,7 @@ class DebateStatsPage extends ConsumerWidget {
                     PieChartSectionData(
                       value: stats.losses.toDouble(),
                       title: '${(lossRate * 100).toStringAsFixed(1)}%',
-                      color: Colors.red,
+                      color: AppColors.error,
                       radius: 60,
                       titleStyle: const TextStyle(
                         fontSize: 14,
@@ -262,7 +267,7 @@ class DebateStatsPage extends ConsumerWidget {
                       PieChartSectionData(
                         value: stats.draws.toDouble(),
                         title: '${(drawRate * 100).toStringAsFixed(1)}%',
-                        color: Colors.grey,
+                        color: AppColors.textTertiary,
                         radius: 60,
                         titleStyle: const TextStyle(
                           fontSize: 14,
@@ -279,9 +284,9 @@ class DebateStatsPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildLegendItem('勝利', Colors.amber, stats.wins),
-                _buildLegendItem('敗北', Colors.red, stats.losses),
+                _buildLegendItem('敗北', AppColors.error, stats.losses),
                 if (stats.draws > 0)
-                  _buildLegendItem('引分', Colors.grey, stats.draws),
+                  _buildLegendItem('引分', AppColors.textTertiary, stats.draws),
               ],
             ),
           ],
@@ -318,23 +323,25 @@ class DebateStatsPage extends ConsumerWidget {
   /// ポイント内訳
   Widget _buildPointsBreakdown(UserDebateStats stats) {
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'ポイント内訳',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 16),
             _buildPointRow(
               '参加ポイント',
               stats.totalDebates * 10, // 仮定: 1回10pt
-              Colors.blue,
+              AppColors.primary,
             ),
             const SizedBox(height: 8),
             _buildPointRow(
@@ -352,19 +359,20 @@ class DebateStatsPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '合計',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   '${stats.totalPoints} pt',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.purple,
+                    color: AppColors.primaryLight,
                     fontFamily: 'monospace',
                   ),
                 ),
@@ -414,6 +422,7 @@ class DebateStatsPage extends ConsumerWidget {
   /// バッジセクション
   Widget _buildBadgesSection(UserDebateStats stats) {
     return Card(
+      color: AppColors.surface,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -422,18 +431,19 @@ class DebateStatsPage extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   '獲得バッジ',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   '${stats.earnedBadges.length}/${BadgeType.values.length}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -454,14 +464,17 @@ class DebateStatsPage extends ConsumerWidget {
 
   /// 未認証
   Widget _buildNotAuthenticated() {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.lock, size: 80, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('ログインが必要です'),
+            Icon(Icons.lock, size: 80, color: AppColors.textTertiary),
+            const SizedBox(height: 16),
+            Text(
+              'ログインが必要です',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
           ],
         ),
       ),
@@ -475,21 +488,21 @@ class DebateStatsPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.assessment, size: 80, color: Colors.grey[400]),
+            Icon(Icons.assessment, size: 80, color: AppColors.textTertiary),
             const SizedBox(height: 16),
             Text(
               'まだディベート統計がありません',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'ディベートに参加して統計を蓄積しましょう！',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: AppColors.textTertiary,
               ),
             ),
           ],
@@ -505,9 +518,12 @@ class DebateStatsPage extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 80, color: Colors.red),
+            Icon(Icons.error_outline, size: 80, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('エラー: $error'),
+            Text(
+              'エラー: $error',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
           ],
         ),
       ),

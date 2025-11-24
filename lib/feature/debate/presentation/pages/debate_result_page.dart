@@ -7,6 +7,7 @@ import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/judgment_score_widget.dart';
 import '../widgets/judgment_chart_widget.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 判定結果画面
 class DebateResultPage extends ConsumerWidget {
@@ -29,6 +30,7 @@ class DebateResultPage extends ConsumerWidget {
     );
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: judgmentAsync.when(
         data: (judgment) {
           if (judgment == null) {
@@ -110,53 +112,16 @@ class DebateResultPage extends ConsumerWidget {
     bool isUserWinner,
     bool isDraw,
   ) {
-    final Color appBarColor = isDraw
-        ? Colors.grey
-        : isUserWinner
-            ? Colors.green
-            : Colors.orange;
-
     return SliverAppBar(
-      expandedHeight: 200,
       pinned: true,
-      backgroundColor: appBarColor,
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          isDraw ? '引き分け' : isUserWinner ? '勝利！' : '結果発表',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(
-                offset: Offset(0, 1),
-                blurRadius: 3.0,
-                color: Colors.black45,
-              ),
-            ],
-          ),
-        ),
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: isDraw
-                  ? [Colors.grey[400]!, Colors.grey[600]!]
-                  : isUserWinner
-                      ? [Colors.green[400]!, Colors.blue[400]!]
-                      : [Colors.orange[400]!, Colors.red[400]!],
-            ),
-          ),
-          child: Center(
-            child: Icon(
-              isDraw
-                  ? Icons.handshake
-                  : isUserWinner
-                      ? Icons.emoji_events
-                      : Icons.assessment,
-              size: 80,
-              color: Colors.white54,
-            ),
-          ),
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
+      elevation: 1,
+      title: Text(
+        isDraw ? '引き分け' : isUserWinner ? '勝利！' : '結果発表',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
         ),
       ),
     );
@@ -165,20 +130,20 @@ class DebateResultPage extends ConsumerWidget {
   /// 結果カード
   Widget _buildResultCard(JudgmentResult judgment, bool isDraw) {
     return Card(
-      elevation: 8,
+      elevation: 4,
+      color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: AppColors.border),
       ),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDraw
-                ? [Colors.grey[100]!, Colors.grey[50]!]
-                : judgment.winningSide == DebateStance.pro
-                    ? [Colors.blue[50]!, Colors.blue[100]!]
-                    : [Colors.red[50]!, Colors.red[100]!],
-          ),
+          color: isDraw
+              ? AppColors.surface
+              : judgment.winningSide == DebateStance.pro
+                  ? Colors.blue.withValues(alpha: 0.05)
+                  : Colors.red.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -187,7 +152,7 @@ class DebateResultPage extends ConsumerWidget {
               isDraw ? Icons.handshake : Icons.star,
               size: 64,
               color: isDraw
-                  ? Colors.grey
+                  ? AppColors.textTertiary
                   : judgment.winningSide == DebateStance.pro
                       ? Colors.blue
                       : Colors.red,
@@ -197,7 +162,7 @@ class DebateResultPage extends ConsumerWidget {
               isDraw ? '引き分け' : '勝者',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
@@ -228,7 +193,7 @@ class DebateResultPage extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -283,11 +248,12 @@ class DebateResultPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '詳細スコア',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -333,11 +299,12 @@ class DebateResultPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'MVP',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -355,11 +322,12 @@ class DebateResultPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'AI評価コメント',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 16),
@@ -368,7 +336,7 @@ class DebateResultPage extends ConsumerWidget {
             comment: judgment.overallComment!,
             title: '総合評価',
             icon: Icons.assessment,
-            color: Colors.purple,
+            color: AppColors.primary,
           ),
         const SizedBox(height: 12),
         if (judgment.proTeamComment != null)
@@ -411,7 +379,7 @@ class DebateResultPage extends ConsumerWidget {
               ),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -439,8 +407,8 @@ class DebateResultPage extends ConsumerWidget {
               ),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.blue,
-              side: const BorderSide(color: Colors.blue, width: 2),
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primary, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -454,17 +422,25 @@ class DebateResultPage extends ConsumerWidget {
   /// 見つからない
   Widget _buildNotFound(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('エラー')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 80, color: Colors.grey),
+            Icon(Icons.search_off, size: 80, color: AppColors.textTertiary),
             const SizedBox(height: 16),
-            const Text('判定結果が見つかりません'),
+            Text(
+              '判定結果が見つかりません',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('戻る'),
             ),
           ],
@@ -476,17 +452,25 @@ class DebateResultPage extends ConsumerWidget {
   /// エラー
   Widget _buildError(BuildContext context, Object error) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('エラー')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 80, color: Colors.red),
+            Icon(Icons.error_outline, size: 80, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('エラー: $error'),
+            Text(
+              'エラー: $error',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('戻る'),
             ),
           ],

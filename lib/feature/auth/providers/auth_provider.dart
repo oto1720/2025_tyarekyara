@@ -4,6 +4,7 @@ import '../repositories/auth_repository.dart';
 import '../services/auth_service.dart';
 import '../models/user/user_model.dart';
 import 'auth_state.dart';
+import '../../settings/services/notification_service.dart';
 
 final authServiceProvider = Provider<AuthRepository>((ref) {
   return AuthService();
@@ -61,6 +62,10 @@ class AuthController extends Notifier<AuthState> {
       );
 
       await _authRepository.saveUserData(userModel);
+
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
       state = AuthState.authenticated(userModel);
     } catch (e) {
       state = AuthState.error(e.toString());
@@ -89,6 +94,9 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
       state = AuthState.authenticated(userModel);
     } catch (e) {
       state = AuthState.error(e.toString());
@@ -98,6 +106,12 @@ class AuthController extends Notifier<AuthState> {
   Future<void> signOut() async {
     state = const AuthState.loading();
     try {
+      // 現在のユーザーIDを取得してFCMトークンを削除
+      final currentUser = _authRepository.getCurrentUser();
+      if (currentUser != null) {
+        await NotificationService().removeFcmToken(currentUser.uid);
+      }
+
       await _authRepository.signOut();
       state = const AuthState.unauthenticated();
     } catch (e) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../models/debate_message.dart';
 import '../../models/debate_room.dart';
+import '../../models/debate_match.dart';
 import '../../providers/debate_room_provider.dart';
 
 /// ディベートチャットWidget
@@ -11,6 +12,7 @@ class DebateChatWidget extends ConsumerStatefulWidget {
   final String userId;
   final DebatePhase currentPhase;
   final MessageType messageType;
+  final DebateStance? stance; // チームメッセージ用のスタンス
 
   const DebateChatWidget({
     super.key,
@@ -18,6 +20,7 @@ class DebateChatWidget extends ConsumerStatefulWidget {
     required this.userId,
     required this.currentPhase,
     this.messageType = MessageType.public,
+    this.stance,
   });
 
   @override
@@ -38,9 +41,10 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(
-      debateMessagesProvider((widget.roomId, widget.messageType)),
-    );
+    // チームメッセージの場合はstanceでフィルタリング
+    final messagesAsync = widget.messageType == MessageType.team && widget.stance != null
+        ? ref.watch(teamMessagesWithStanceProvider((widget.roomId, widget.stance!)))
+        : ref.watch(debateMessagesProvider((widget.roomId, widget.messageType)));
 
     return Column(
       children: [

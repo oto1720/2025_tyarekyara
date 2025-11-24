@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import '../../models/debate_event.dart';
+import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
+import '../../providers/debate_match_provider.dart';
 import '../widgets/event_card.dart';
 
 /// ディベートイベント一覧画面
@@ -39,7 +43,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           controller: _tabController,
           tabs: const [
             Tab(text: '開催予定'),
-            Tab(text: '過去のイベント'),
+            Tab(text: '参加履歴'),
           ],
         ),
       ),
@@ -87,33 +91,217 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
     );
   }
 
-  /// 過去のイベントタブ
+  /// 参加履歴タブ
   Widget _buildCompletedEventsTab() {
-    final eventsAsync = ref.watch(completedEventsProvider);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return _buildEmptyState(
+        icon: Icons.login,
+        message: 'ログインしてください',
+      );
+    }
 
-    return eventsAsync.when(
-      data: (events) {
-        if (events.isEmpty) {
+    final matchesAsync = ref.watch(matchHistoryProvider(user.uid));
+
+    return matchesAsync.when(
+      data: (matches) {
+        if (matches.isEmpty) {
           return _buildEmptyState(
             icon: Icons.history,
-            message: '過去のイベントはありません',
+            message: '参加履歴はありません',
           );
         }
 
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 95), // BottomNavigationBar分の余白
-          itemCount: events.length,
+          itemCount: matches.length,
           itemBuilder: (context, index) {
-            return EventCard(
-              event: events[index],
-              onTap: () => _navigateToEventDetail(events[index]),
-              isCompleted: true,
+            final match = matches[index];
+            // イベント情報を取得してお題を表示
+            return FutureBuilder<String?>(
+              future: _getEventTopic(match.eventId),
+              builder: (context, snapshot) {
+                final topic = snapshot.data;
+                return _buildMatchHistoryCard(match, user.uid, topic);
+              },
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildErrorState(error),
+    );
+  }
+
+  /// イベントのお題を取得
+  Future<String?> _getEventTopic(String eventId) async {
+    try {
+      final repository = ref.read(debateEventRepositoryProvider);
+      final event = await repository.getEvent(eventId);
+      return event?.topic;
+    } catch (e) {
+      print('Error getting event topic: $e');
+      return null;
+    }
+  }
+
+  /// マッチ履歴カード
+  Widget _buildMatchHistoryCard(DebateMatch match, String userId, String? topic) {
+    // ユーザーがどちらのチームにいるか判定
+    final isProTeam = match.proTeam.memberIds.contains(userId);
+    final userTeam = isProTeam ? '賛成' : '反対';
+    final teamColor = isProTeam ? Colors.blue : Colors.red;
+
+    // ステータスに応じた表示
+    String statusText;
+    Color statusColor;
+    bool canViewResult = false;
+
+    switch (match.status) {
+      case MatchStatus.completed:
+        statusText = '完了';
+        statusColor = Colors.green;
+        canViewResult = true;
+        break;
+      case MatchStatus.inProgress:
+        statusText = '進行中';
+        statusColor = Colors.orange;
+        break;
+      case MatchStatus.matched:
+        statusText = 'マッチング済み';
+        statusColor = Colors.blue;
+        break;
+      default:
+        statusText = match.status.name;
+        statusColor = Colors.grey;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: canViewResult
+            ? () => context.push('/debate/result/${match.id}')
+            : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ヘッダー行
+              Row(
+                children: [
+                  // チームバッジ
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: teamColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: teamColor),
+                    ),
+                    child: Text(
+                      userTeam,
+                      style: TextStyle(
+                        color: teamColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // 形式バッジ
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      match.format == DebateFormat.oneVsOne ? '1vs1' : '2vs2',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  // ステータス
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // お題
+              if (topic != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  topic,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: 8),
+              // 日時
+              Row(
+                children: [
+                  Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('yyyy/MM/dd HH:mm').format(match.matchedAt),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              // 結果確認ボタン
+              if (canViewResult) ...[
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => context.push('/debate/result/${match.id}'),
+                      icon: const Icon(Icons.assessment, size: 18),
+                      label: const Text('結果を見る'),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 

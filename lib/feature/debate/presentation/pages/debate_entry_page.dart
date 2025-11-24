@@ -7,6 +7,7 @@ import '../../providers/debate_event_provider.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/entry_form.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// ディベートエントリー画面
 class DebateEntryPage extends ConsumerStatefulWidget {
@@ -99,7 +100,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
   /// イベント情報表示
   Widget _buildEventInfo(DebateEvent event) {
     return Card(
-      color: Colors.blue[50],
+      color: AppColors.primary.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -107,15 +108,15 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.event, color: Colors.blue),
+                Icon(Icons.event, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     event.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -125,19 +126,20 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.topic, color: Colors.blue, size: 20),
+                  Icon(Icons.topic, color: AppColors.primary, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       event.topic,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -155,23 +157,23 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange[50],
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange[300]!),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.orange[700]),
+              Icon(Icons.info_outline, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
                 '注意事項',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.orange[700],
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -198,7 +200,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: Colors.orange[700],
+              color: AppColors.primary,
               shape: BoxShape.circle,
             ),
           ),
@@ -208,7 +210,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
               text,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.orange[900],
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -301,12 +303,19 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.event_busy, size: 80, color: Colors.grey),
+          Icon(Icons.event_busy, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('イベントが見つかりません'),
+          Text(
+            'イベントが見つかりません',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],
@@ -320,12 +329,19 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.lock, size: 80, color: Colors.grey),
+          Icon(Icons.lock, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
-          const Text('ログインが必要です'),
+          Text(
+            'ログインが必要です',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],
@@ -339,12 +355,19 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('エラー: $error'),
+          Text(
+            'エラー: $error',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('戻る'),
           ),
         ],
