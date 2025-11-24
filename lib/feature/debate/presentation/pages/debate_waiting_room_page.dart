@@ -165,12 +165,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
         children: [
           IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () async {
-              final confirm = await _showCancelConfirmDialog(context);
-              if (confirm == true && mounted) {
-                Navigator.of(context).pop();
-              }
-            },
+            onPressed: () => Navigator.of(context).pop(),
           ),
           Expanded(
             child: Text(
