@@ -8,11 +8,12 @@
  */
 
 import {setGlobalOptions} from "firebase-functions";
-import {onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
+import {getMessaging} from "firebase-admin/messaging";
 import {judgeDebate} from "./services/debateJudgmentService";
 import {processMatching} from "./services/debateMatchingService";
 import {updateEventStatuses} from "./services/eventStatusService";
@@ -371,5 +372,108 @@ export const manualDailyTopicGeneration = onCall(
       logger.error("Error in manual daily topic generation:", error);
       throw new HttpsError("internal", "Topic generation failed");
     }
+  }
+);
+
+/**
+ * マッチング成立時にプッシュ通知を送信
+ */
+export const onMatchCreated = onDocumentCreated(
+  {
+    document: "debate_matches/{matchId}",
+    region: "asia-northeast1",
+  },
+  async (event) => {
+    const matchId = event.params.matchId;
+    const matchData = event.data?.data();
+
+    if (!matchData) {
+      logger.warn("No match data in event");
+      return;
+    }
+
+    try {
+      logger.info(`Sending match notification for match: ${matchId}`);
+
+      // 全参加者のユーザーIDを取得
+      const proTeamIds: string[] = matchData.proTeam?.memberIds || [];
+      const conTeamIds: string[] = matchData.conTeam?.memberIds || [];
+      const allUserIds = [...proTeamIds, ...conTeamIds];
+
+      if (allUserIds.length === 0) {
+        logger.warn("No users to notify");
+        return;
+      }
+
+      // ユーザーのFCMトークンを取得
+      const tokens: string[] = [];
+      for (const userId of allUserIds) {
+        const userDoc = await admin
+          .firestore()
+          .collection("users")
+          .doc(userId)
+          .get();
+
+        const userData = userDoc.data();
+        if (userData?.fcmToken) {
+          tokens.push(userData.fcmToken);
+        }
+      }
+
+      if (tokens.length === 0) {
+        logger.warn("No FCM tokens found for users");
+        return;
+      }
+
+      // 通知を送信
+      const message: admin.messaging.MulticastMessage = {
+        tokens,
+        notification: {
+          title: "マッチング成立！",
+          body: "対戦相手が見つかりました。ディベートの準備をしましょう！",
+        },
+        data: {
+          matchId: matchId,
+          type: "match_created",
+        },
+        android: {
+          notification: {
+            channelId: "match_notification",
+            priority: "high",
+            sound: "default",
+          },
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default",
+              badge: 1,
+            },
+          },
+        },
+      };
+
+      const response = await getMessaging().sendEachForMulticast(message);
+
+      logger.info(
+        `Match notifications sent: ${response.successCount} successful, ` +
+        `${response.failureCount} failed`
+      );
+
+      // 失敗したトークンをログ
+      if (response.failureCount > 0) {
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success) {
+            logger.error(
+              `Failed to send to token ${tokens[idx]}: ${resp.error?.message}`
+            );
+          }
+        });
+      }
+    } catch (error) {
+      logger.error("Error sending match notification:", error);
+    }
+
+    return null;
   }
 );
