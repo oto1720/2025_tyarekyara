@@ -146,24 +146,38 @@ class DebateMatchRepository {
     try {
       // proTeamとconTeamの両方を検索して統合する必要がある
       // Firestoreの制限により、2回クエリを実行
+      // 注意: orderByは複合インデックスが必要なため、メモリ内でソートする
       final proMatches = await _firestore
           .collection(_collectionName)
           .where('proTeam.memberIds', arrayContains: userId)
-          .orderBy('matchedAt', descending: true)
-          .limit(limit)
           .get();
+
+      print('Pro matches found: ${proMatches.docs.length}');
 
       final conMatches = await _firestore
           .collection(_collectionName)
           .where('conTeam.memberIds', arrayContains: userId)
-          .orderBy('matchedAt', descending: true)
-          .limit(limit)
           .get();
 
-      final allMatches = [
-        ...proMatches.docs.map((doc) => DebateMatch.fromJson(doc.data())),
-        ...conMatches.docs.map((doc) => DebateMatch.fromJson(doc.data())),
-      ];
+      print('Con matches found: ${conMatches.docs.length}');
+
+      final allMatches = <DebateMatch>[];
+
+      for (final doc in proMatches.docs) {
+        try {
+          allMatches.add(DebateMatch.fromJson(doc.data()));
+        } catch (e) {
+          print('Error parsing pro match ${doc.id}: $e');
+        }
+      }
+
+      for (final doc in conMatches.docs) {
+        try {
+          allMatches.add(DebateMatch.fromJson(doc.data()));
+        } catch (e) {
+          print('Error parsing con match ${doc.id}: $e');
+        }
+      }
 
       // 重複を除去してソート
       final uniqueMatches = <String, DebateMatch>{};
@@ -173,6 +187,8 @@ class DebateMatchRepository {
 
       final result = uniqueMatches.values.toList()
         ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
+
+      print('Total unique matches: ${result.length}');
 
       return result.take(limit).toList();
     } catch (e) {
