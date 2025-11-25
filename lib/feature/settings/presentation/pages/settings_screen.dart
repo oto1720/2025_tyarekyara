@@ -134,7 +134,6 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (value) {
                       if (value != null) {
                         ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
                       }
                     },
                   ),
@@ -145,7 +144,6 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (value) {
                       if (value != null) {
                         ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
                       }
                     },
                   ),
@@ -156,7 +154,6 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (value) {
                       if (value != null) {
                         ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
                       }
                     },
                   ),
