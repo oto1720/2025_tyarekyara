@@ -9,7 +9,6 @@ import 'package:tyarekyara/core/route/app_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import 'firebase_options.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:tyarekyara/core/providers/theme_provider.dart';
 import 'package:tyarekyara/feature/settings/services/notification_service.dart';
 
 void main() async {
@@ -53,11 +52,8 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
-      themeMode: themeMode,
       theme: _buildLightTheme(),
-      darkTheme: ThemeData.dark(useMaterial3: true),
       routerConfig: router,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
