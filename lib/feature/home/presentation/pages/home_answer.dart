@@ -424,6 +424,15 @@ class OpinionListScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _StatItem(
+                  label: '中立',
+                  count: neutralCount,
+                  total: total,
+                  color: Colors.grey,
+                  icon: Icons.horizontal_rule,
+                ),
+              ),
+              Expanded(
+                child: _StatItem(
                   label: '反対',
                   count: disagreeCount,
                   total: total,
@@ -432,15 +441,6 @@ class OpinionListScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: _StatItem(
-                  label: '中立',
-                  count: neutralCount,
-                  total: total,
-                  color: Colors.grey,
-                  icon: Icons.horizontal_rule,
-                ),
-              ),
             ],
           ),
         ],

@@ -1,13 +1,15 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:tyarekyara/core/route/app_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import 'firebase_options.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:tyarekyara/core/providers/theme_provider.dart';
+import 'package:tyarekyara/feature/settings/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,9 +17,27 @@ void main() async {
   // Load environment variables
   await dotenv.load(fileName: '.env');
 
+  // 日本語ロケールの初期化（DateFormat用）
+  await initializeDateFormatting('ja_JP');
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // FCMバックグラウンドハンドラーを設定
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  // 通知サービスを初期化
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+
+  // 通知タップ時のナビゲーションを設定
+  notificationService.onMatchNotificationTapped = (matchId) {
+    if (matchId != null) {
+      // GoRouterを使用してマッチ詳細画面に遷移
+      router.push('/debate/match/$matchId');
+    }
+  };
 
   runApp(
     DevicePreview(
@@ -32,11 +52,8 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp.router(
-      themeMode: themeMode,
       theme: _buildLightTheme(),
-      darkTheme: ThemeData.dark(useMaterial3: true),
       routerConfig: router,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,

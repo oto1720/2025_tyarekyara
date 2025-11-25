@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/judgment_result.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 判定スコア表示Widget
 class JudgmentScoreWidget extends StatelessWidget {
@@ -20,10 +21,10 @@ class JudgmentScoreWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isWinner ? teamColor.withValues(alpha: 0.1) : Colors.white,
+        color: isWinner ? teamColor.withValues(alpha: 0.1) : AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isWinner ? teamColor : Colors.grey[300]!,
+          color: isWinner ? teamColor : AppColors.border,
           width: isWinner ? 3 : 1,
         ),
         boxShadow: isWinner
@@ -107,7 +108,7 @@ class JudgmentScoreWidget extends StatelessWidget {
                   '合計スコア',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -126,7 +127,7 @@ class JudgmentScoreWidget extends StatelessWidget {
             ' /50',
             style: TextStyle(
               fontSize: 20,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -194,9 +195,10 @@ class JudgmentScoreWidget extends StatelessWidget {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -206,7 +208,7 @@ class JudgmentScoreWidget extends StatelessWidget {
               Container(
                 height: 8,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: AppColors.border,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -354,7 +356,7 @@ class JudgmentCommentWidget extends StatelessWidget {
             comment,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[800],
+              color: AppColors.textPrimary,
               height: 1.6,
             ),
           ),

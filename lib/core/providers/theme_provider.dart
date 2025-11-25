@@ -2,18 +2,33 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Notifier for the theme mode
 class ThemeModeNotifier extends Notifier<ThemeMode> {
+  static const String _themeKey = 'theme_mode';
+
   @override
   ThemeMode build() {
-    // TODO: SharedPreferencesなどで永続化設定を読み込む
+    // 非同期で保存された設定を読み込む（デフォルトはsystem）
+    _loadThemeMode();
     return ThemeMode.system;
   }
 
-  void setThemeMode(ThemeMode mode) {
+  /// SharedPreferencesから保存されたテーマ設定を読み込む
+  Future<void> _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeIndex = prefs.getInt(_themeKey);
+    if (themeIndex != null && themeIndex < ThemeMode.values.length) {
+      state = ThemeMode.values[themeIndex];
+    }
+  }
+
+  /// テーマモードを設定し、SharedPreferencesに保存する
+  Future<void> setThemeMode(ThemeMode mode) async {
     state = mode;
-    // TODO: SharedPreferencesなどに永続化設定を保存する
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_themeKey, mode.index);
   }
 }
 

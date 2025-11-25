@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debate_room.dart';
 import '../models/debate_message.dart';
+import '../models/debate_match.dart';
 import '../models/judgment_result.dart';
 
 /// ディベートルームリポジトリ
@@ -91,6 +92,7 @@ class DebateRoomRepository {
   Stream<List<DebateMessage>> watchMessages(
     String roomId, {
     MessageType? type,
+    DebateStance? senderStance,
   }) {
     Query query = _firestore
         .collection(_roomsCollectionName)
@@ -100,6 +102,10 @@ class DebateRoomRepository {
 
     if (type != null) {
       query = query.where('type', isEqualTo: type.name);
+    }
+
+    if (senderStance != null) {
+      query = query.where('senderStance', isEqualTo: senderStance.name);
     }
 
     return query.snapshots().map((snapshot) {

@@ -112,21 +112,29 @@ class JudgmentResult with _$JudgmentResult {
   }) = _JudgmentResult;
 
   factory JudgmentResult.fromJson(Map<String, dynamic> json) {
+    // Cloud Functions互換: proTeamScoreにstanceを追加
+    final proScoreJson = Map<String, dynamic>.from(json['proTeamScore'] as Map<String, dynamic>);
+    proScoreJson['stance'] = 'pro';
+
+    final conScoreJson = Map<String, dynamic>.from(json['conTeamScore'] as Map<String, dynamic>);
+    conScoreJson['stance'] = 'con';
+
     return JudgmentResult(
       id: json['id'] as String,
       roomId: json['roomId'] as String,
       matchId: json['matchId'] as String,
-      proTeamScore:
-          TeamScore.fromJson(json['proTeamScore'] as Map<String, dynamic>),
-      conTeamScore:
-          TeamScore.fromJson(json['conTeamScore'] as Map<String, dynamic>),
+      proTeamScore: TeamScore.fromJson(proScoreJson),
+      conTeamScore: TeamScore.fromJson(conScoreJson),
       winningSide: json['winningSide'] != null
           ? DebateStance.values.firstWhere(
               (e) => e.name == json['winningSide'],
               orElse: () => DebateStance.pro,
             )
           : null,
-      summary: json['summary'] as String,
+      // Cloud Functions互換: summaryはoverallCommentから取得
+      summary: (json['summary'] as String?) ??
+               (json['overallComment'] as String?) ??
+               '',
       judgedAt: (json['judgedAt'] as Timestamp).toDate(),
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       individualEvaluations: (json['individualEvaluations'] as List<dynamic>?)

@@ -41,14 +41,14 @@ export async function processMatching(): Promise<void> {
 
     const db = admin.firestore();
 
-    // エントリー受付中のイベントを取得
+    // 締め切り後（マッチング中）のイベントのみを取得
     const eventsSnapshot = await db
       .collection("debate_events")
-      .where("status", "in", ["accepting", "matching"])
+      .where("status", "==", "matching")
       .get();
 
     if (eventsSnapshot.empty) {
-      logger.info("No events accepting entries");
+      logger.info("No events in matching status");
       return;
     }
 

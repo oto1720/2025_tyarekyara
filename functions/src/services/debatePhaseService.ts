@@ -124,11 +124,14 @@ export async function progressDebatePhases(): Promise<void> {
             updatedAt: now,
           });
 
-          // 判定フェーズに入った場合はAI判定を実行
+          // 判定フェーズに入った場合は即座にAI審査をトリガー
           if (nextPhase.phase === "judgment") {
-            logger.info(`Room ${roomId} entered judgment phase`);
-            // AI判定は既存のonDebateCompleteトリガーで実行される
-            // ここでは何もしない
+            logger.info(`Room ${roomId} entered judgment phase,`);
+            // statusをcompletedにしてonDebateCompleteトリガーを発火
+            await doc.ref.update({
+              status: "completed",
+              updatedAt: now,
+            });
           }
 
           // 判定フェーズが終わったら結果フェーズに進める

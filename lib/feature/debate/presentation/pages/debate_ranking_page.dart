@@ -4,6 +4,7 @@ import '../../models/user_debate_stats.dart';
 import '../../providers/user_debate_stats_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/level_progress_widget.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// ディベートランキング画面
 class DebateRankingPage extends ConsumerStatefulWidget {
@@ -164,12 +165,12 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue[400]!, Colors.purple[400]!],
+          colors: [AppColors.primary, AppColors.primaryLight],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -180,17 +181,17 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
           Container(
             width: 50,
             height: 50,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '$rank',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -235,10 +236,10 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isMyRank ? Colors.blue[50] : Colors.white,
+        color: isMyRank ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isMyRank ? Colors.blue : Colors.grey[300]!,
+          color: isMyRank ? AppColors.primary : AppColors.border,
           width: isMyRank ? 2 : 1,
         ),
         boxShadow: [
@@ -256,14 +257,14 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
           entry.userName ?? 'ユーザー',
           style: TextStyle(
             fontWeight: isMyRank ? FontWeight.bold : FontWeight.normal,
-            color: isMyRank ? Colors.blue : Colors.black,
+            color: isMyRank ? AppColors.primary : AppColors.textPrimary,
           ),
         ),
         subtitle: Text(
           value,
           style: TextStyle(
             fontSize: 14,
-            color: isMyRank ? Colors.blue[700] : Colors.grey[600],
+            color: isMyRank ? AppColors.primary : AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -313,7 +314,7 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: AppColors.border,
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -322,7 +323,7 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[700],
+            color: AppColors.textSecondary,
           ),
         ),
       ),
@@ -349,13 +350,13 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.emoji_events, size: 80, color: Colors.grey[400]),
+          Icon(Icons.emoji_events, size: 80, color: AppColors.textTertiary),
           const SizedBox(height: 16),
           Text(
             'まだランキングがありません',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -369,9 +370,12 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 80, color: Colors.red),
+          Icon(Icons.error_outline, size: 80, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('エラー: $error'),
+          Text(
+            'エラー: $error',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
         ],
       ),
     );
