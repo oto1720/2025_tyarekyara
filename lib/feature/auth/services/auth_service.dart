@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../repositories/auth_repository.dart';
 import '../models/user/user_model.dart';
 
@@ -144,6 +146,68 @@ class AuthService implements AuthRepository {
       await _auth.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
+    }
+  }
+
+  @override
+  Future<UserCredential> signInWithGoogle() async {
+    try {
+      // Googleサインインフローを開始
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) {
+        // ユーザーがサインインをキャンセル
+        throw 'Googleサインインがキャンセルされました';
+      }
+
+      // Google認証情報を取得
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Firebase認証用のクレデンシャルを作成
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Firebaseにサインイン
+      return await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Googleサインインに失敗しました: $e';
+    }
+  }
+
+  @override
+  Future<UserCredential> signInWithApple() async {
+    try {
+      // Apple Sign Inが利用可能かチェック
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        throw 'このデバイスではApple Sign Inを利用できません';
+      }
+
+      // Apple認証情報を取得
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      // Firebase認証用のOAuthクレデンシャルを作成
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      // Firebaseにサインイン
+      return await _auth.signInWithCredential(oauthCredential);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw 'Apple Sign Inに失敗しました: $e';
     }
   }
 

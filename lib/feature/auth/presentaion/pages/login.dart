@@ -180,6 +180,72 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		  ),
 		),
 		const SizedBox(height: 24),
+		// 区切り線
+		Row(
+		  children: [
+		    Expanded(child: Divider(color: Colors.grey[300])),
+		    Padding(
+		      padding: const EdgeInsets.symmetric(horizontal: 16),
+		      child: Text(
+			'または',
+			style: TextStyle(color: Colors.grey[600], fontSize: 14),
+		      ),
+		    ),
+		    Expanded(child: Divider(color: Colors.grey[300])),
+		  ],
+		),
+		const SizedBox(height: 24),
+		// Googleサインインボタン
+		SizedBox(
+		  width: double.infinity,
+		  height: 50,
+		  child: OutlinedButton.icon(
+		    onPressed: authState.maybeWhen(
+		      loading: () => null,
+		      orElse: () => () async {
+			await ref.read(authControllerProvider.notifier).signInWithGoogle();
+		      },
+		    ),
+		    icon: Image.asset(
+		      'assets/images/google_logo.png',
+		      height: 24,
+		      errorBuilder: (context, error, stackTrace) {
+			return const Icon(Icons.g_mobiledata, size: 24);
+		      },
+		    ),
+		    label: const Text('Googleでログイン'),
+		    style: OutlinedButton.styleFrom(
+		      side: BorderSide(color: Colors.grey[300]!),
+		      shape: RoundedRectangleBorder(
+			borderRadius: BorderRadius.circular(12),
+		      ),
+		    ),
+		  ),
+		),
+		const SizedBox(height: 16),
+		// Apple サインインボタン
+		SizedBox(
+		  width: double.infinity,
+		  height: 50,
+		  child: OutlinedButton.icon(
+		    onPressed: authState.maybeWhen(
+		      loading: () => null,
+		      orElse: () => () async {
+			await ref.read(authControllerProvider.notifier).signInWithApple();
+		      },
+		    ),
+		    icon: const Icon(Icons.apple, size: 24, color: Colors.black),
+		    label: const Text('Appleでログイン'),
+		    style: OutlinedButton.styleFrom(
+		      foregroundColor: Colors.black,
+		      side: BorderSide(color: Colors.grey[300]!),
+		      shape: RoundedRectangleBorder(
+			borderRadius: BorderRadius.circular(12),
+		      ),
+		    ),
+		  ),
+		),
+		const SizedBox(height: 24),
 		Row(
 		  mainAxisAlignment: MainAxisAlignment.center,
 		  children: [

@@ -37,6 +37,8 @@ dependencies:
   firebase_messaging:
   firebase_analytics:
   firebase_storage:
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
   image_picker:
   path_provider:
   flutter_local_notifications: ^18.0.1
