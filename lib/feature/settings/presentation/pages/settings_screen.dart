@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/setting_item.dart';
-import '../../../../core/providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -110,68 +109,6 @@ class SettingsScreen extends ConsumerWidget {
       Icons.person,
       size: 32,
       color: Theme.of(context).primaryColor,
-    );
-  }
-
-  void _showThemeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        // ダイアログ内で Provider を操作するために Consumer を使用
-        return Consumer(
-          builder: (context, ref, child) {
-            final currentThemeMode = ref.watch(themeModeProvider);
-
-            return AlertDialog(
-              title: const Text('表示テーマ'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RadioListTile<ThemeMode>(
-                    title: const Text('ライトモード'),
-                    value: ThemeMode.light,
-                    groupValue: currentThemeMode,
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
-                      }
-                    },
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: const Text('ダークモード'),
-                    value: ThemeMode.dark,
-                    groupValue: currentThemeMode,
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
-                      }
-                    },
-                  ),
-                  RadioListTile<ThemeMode>(
-                    title: const Text('システム設定に従う'),
-                    value: ThemeMode.system,
-                    groupValue: currentThemeMode,
-                    onChanged: (value) {
-                      if (value != null) {
-                        ref.read(themeModeProvider.notifier).setThemeMode(value);
-                        // TODO: SharedPreferencesなどに設定を保存
-                      }
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('閉じる'),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 
@@ -317,16 +254,6 @@ class SettingsScreen extends ConsumerWidget {
                 iconColor: Colors.orange,
                 onTap: () {
                   context.push('/notice');
-                },
-              ),
-              SettingItem(
-                icon: Icons.palette_outlined,
-                title: '表示',
-                subtitle: 'テーマやフォントサイズ',
-                iconColor: Colors.purple,
-                onTap: () {
-                  // ★ SnackBarの表示をダイアログ呼び出しに変更
-                  _showThemeDialog(context);
                 },
               ),
               SettingItem(
