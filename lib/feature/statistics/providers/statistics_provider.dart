@@ -82,9 +82,11 @@ class StatisticsNotifier extends Notifier<StatisticsState> {
       }
 
       final badges = <Badge>[];
+      final now = DateTime.now();
+
       // バッジの判定
+      // 投稿数系
       if (u.totalOpinions >= 1) {
-        final now = DateTime.now();
         badges.add(Badge(
           id: 'first_post',
           name: '初投稿',
@@ -94,12 +96,97 @@ class StatisticsNotifier extends Notifier<StatisticsState> {
           earnedAt: now,
         ));
       }
+      if (u.totalOpinions >= 10) {
+        badges.add(Badge(
+          id: 'ten_posts',
+          name: '10投稿達成',
+          description: '10回意見を投稿しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (u.totalOpinions >= 50) {
+        badges.add(Badge(
+          id: 'fifty_posts',
+          name: '50投稿達成',
+          description: '50回意見を投稿しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (u.totalOpinions >= 100) {
+        badges.add(Badge(
+          id: 'hundred_posts',
+          name: '100投稿達成',
+          description: '100回意見を投稿しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+
+      // 連続参加系
       if (u.consecutiveDays >= 7) {
-        final now = DateTime.now();
         badges.add(Badge(
           id: 'seven_days_streak',
           name: '7日連続参加',
           description: '7日連続で参加しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (u.consecutiveDays >= 30) {
+        badges.add(Badge(
+          id: 'thirty_days_streak',
+          name: '30日連続参加',
+          description: '30日連続で参加しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+
+      // 参加日数系
+      if (u.participationDays >= 30) {
+        badges.add(Badge(
+          id: 'thirty_days_total',
+          name: '30日間参加',
+          description: '累計30日間参加しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (u.participationDays >= 100) {
+        badges.add(Badge(
+          id: 'hundred_days_total',
+          name: '100日間参加',
+          description: '累計100日間参加しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+
+      // 多様性系
+      if (d != null && d.score >= 80) {
+        badges.add(Badge(
+          id: 'diverse_thinker',
+          name: '多様な思考',
+          description: '多様性スコアが80以上になりました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (s != null && s.counts['賛成']! > 0 && s.counts['中立']! > 0 && s.counts['反対']! > 0) {
+        badges.add(Badge(
+          id: 'balanced_opinions',
+          name: 'バランス型',
+          description: '賛成・中立・反対すべてに投稿しました',
           createdAt: now,
           updatedAt: now,
           earnedAt: now,
