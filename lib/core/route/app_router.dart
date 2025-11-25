@@ -11,6 +11,8 @@ import 'package:tyarekyara/widgets/bottom_navigation.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/login.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/signup_page.dart';
 import 'package:tyarekyara/feature/auth/presentaion/pages/profile_setup_page.dart';
+import 'package:tyarekyara/feature/auth/presentaion/pages/change_password_page.dart';
+import 'package:tyarekyara/feature/auth/presentaion/pages/forgot_password_page.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/first_page.dart';
 import 'package:tyarekyara/feature/statistics/presentation/pages/statistic.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
@@ -46,7 +48,7 @@ final GoRouter router = GoRouter(
     final isAuthenticated = FirebaseAuth.instance.currentUser != null;
 
     // 認証関連ページとディベート関連ページは常にアクセス可能
-    final authPages = ['/login', '/signup', '/profile-setup'];
+    final authPages = ['/login', '/signup', '/profile-setup', '/forgot-password'];
     final debatePages = currentPath.startsWith('/debate/');
     if (authPages.contains(currentPath) || debatePages) {
       return null;
@@ -127,6 +129,16 @@ final GoRouter router = GoRouter(
       path: '/profile-setup',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: ProfileSetupPage()),
+    ),
+    GoRoute(
+      path: '/change-password',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: ChangePasswordPage()),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: ForgotPasswordPage()),
     ),
     GoRoute(
       path: '/tutorial',

@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' hide NotificationSettings;
+import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -74,11 +75,23 @@ class NotificationService {
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('FCM authorization granted');
 
-      // FCMトークンを取得
-      _fcmToken = await _messaging.getToken();
-      print('FCM Token: $_fcmToken');
+      // FCMトークンを取得（iOSではAPNSトークンが準備できるまで待つ必要がある）
+      try {
+        _fcmToken = await _messaging.getToken();
+        print('FCM Token: $_fcmToken');
+      } on FirebaseException catch (e) {
+        // iOSでAPNSトークンがまだ準備できていない場合はエラーを無視
+        if (e.code == 'apns-token-not-set') {
+          print('APNSトークンがまだ準備できていません（後でonTokenRefreshで取得されます）');
+        } else {
+          print('FCM Token取得エラー: ${e.code} - ${e.message}');
+        }
+      } catch (e) {
+        // その他のエラー
+        print('FCM Token取得エラー（後でリトライされます）: $e');
+      }
 
-      // トークン更新を監視
+      // トークン更新を監視（APNSトークンが準備できた時に自動的に呼ばれる）
       _messaging.onTokenRefresh.listen((token) {
         _fcmToken = token;
         print('FCM Token refreshed: $token');
@@ -125,7 +138,21 @@ class NotificationService {
   /// FCMトークンをFirestoreに保存
   Future<void> saveFcmToken(String userId) async {
     if (_fcmToken == null) {
-      _fcmToken = await _messaging.getToken();
+      try {
+        _fcmToken = await _messaging.getToken();
+      } on FirebaseException catch (e) {
+        // iOSでAPNSトークンがまだ準備できていない場合はエラーを無視
+        if (e.code == 'apns-token-not-set') {
+          print('APNSトークンがまだ準備できていません。トークンは後で保存されます。');
+          return;
+        } else {
+          print('FCM Token取得エラー: ${e.code} - ${e.message}');
+          return;
+        }
+      } catch (e) {
+        print('FCM Token取得エラー: $e');
+        return;
+      }
     }
 
     if (_fcmToken != null) {
