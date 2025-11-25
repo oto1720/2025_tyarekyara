@@ -69,7 +69,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
 
     if (asyncValue.hasError) {
       return Scaffold(
-        appBar: AppBar(title: const Text('新機能')),
+        appBar: AppBar(title: const Text('チャレンジ')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -91,7 +91,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('新機能'),
+        title: const Text('チャレンジ'),
         actions: [
           // デバッグ用リフレッシュボタン
           IconButton(
