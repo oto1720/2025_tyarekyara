@@ -36,6 +36,21 @@ class OpinionListScreen extends ConsumerWidget {
         // ),
         title: const DateSelectorWidget(),
         actions: [
+          // 自分の投稿編集ボタン
+          topicAsync.maybeWhen(
+            data: (topic) {
+              if (topic == null) return const SizedBox.shrink();
+              final postState = ref.watch(opinionPostProvider(topic.id));
+              return postState.hasPosted
+                  ? IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.black87),
+                      onPressed: () => context.push('/my-opinion/${topic.id}'),
+                      tooltip: '自分の投稿を編集',
+                    )
+                  : const SizedBox.shrink();
+            },
+            orElse: () => const SizedBox.shrink(),
+          ),
           // リフレッシュボタン
           topicAsync.maybeWhen(
             data: (topic) => topic != null
