@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/timestamp_converter.dart';
 
 part 'earned_badge.freezed.dart';

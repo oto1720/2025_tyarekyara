@@ -39,7 +39,6 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final postState = ref.watch(opinionPostProvider(widget.topicId));
-    final postNotifier = ref.read(opinionPostProvider(widget.topicId).notifier);
     final topicState = ref.watch(dailyTopicProvider);
     final topic = topicState.currentTopic;
 

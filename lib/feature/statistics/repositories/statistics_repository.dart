@@ -7,5 +7,5 @@ abstract class StatisticsRepository {
   Future<UserStatistics> fetchUserStatistics(String userId);
   Future<DiversityScore?> fetchDiversityScore(String userId);
   Future<StanceDistribution?> fetchStanceDistribution(String userId);
-  Future<ParticipationTrend?> fetchParticipationTrend(String userId);
+  Future<ParticipationTrend?> fetchParticipationTrend(String userId, {required int year, required int month});
 }

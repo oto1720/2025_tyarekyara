@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import '../../models/opinion.dart';
 import '../../models/topic.dart';
 import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
-import '../../repositories/daily_topic_repository.dart';
 import '../widgets/topic_card.dart';
 import '../widgets/date_selector_widget.dart';
 

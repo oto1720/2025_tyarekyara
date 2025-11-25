@@ -17,5 +17,7 @@ class StatisticsState with _$StatisticsState {
     ParticipationTrend? participationTrend,
     @Default(<Badge>[]) List<Badge> earnedBadges,
     String? error,
+    int? selectedYear,
+    int? selectedMonth,
   }) = _StatisticsState;
 }
