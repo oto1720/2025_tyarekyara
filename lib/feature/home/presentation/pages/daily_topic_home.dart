@@ -217,18 +217,18 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '新しいトピックを生成してください',
+              '朝９時に新しいトピックが生成されます',
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => notifier.generateNewTopic(),
-              icon: const Icon(Icons.add),
-              label: const Text('トピックを生成'),
-            ),
+            // const SizedBox(height: 24),
+            // ElevatedButton.icon(
+            //   onPressed: () => notifier.generateNewTopic(),
+            //   icon: const Icon(Icons.add),
+            //   label: const Text('トピックを生成'),
+            // ),
           ],
         ),
       ),

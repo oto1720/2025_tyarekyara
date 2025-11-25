@@ -97,6 +97,36 @@ class BadgeDefinitions {
       icon: Icons.balance,
       color: Color(0xFF14B8A6),
     ),
+
+    // 視点交換チャレンジ系
+    BadgeDefinition(
+      id: 'first_challenge',
+      name: '視点交換入門',
+      description: '初めてチャレンジをクリアしました',
+      icon: Icons.swap_horiz,
+      color: Color(0xFF3B82F6),
+    ),
+    BadgeDefinition(
+      id: 'challenge_enthusiast',
+      name: 'チャレンジ好き',
+      description: '5回チャレンジをクリアしました',
+      icon: Icons.trending_up,
+      color: Color(0xFF8B5CF6),
+    ),
+    BadgeDefinition(
+      id: 'challenge_expert',
+      name: 'チャレンジ達人',
+      description: '10回チャレンジをクリアしました',
+      icon: Icons.emoji_events,
+      color: Color(0xFFF59E0B),
+    ),
+    BadgeDefinition(
+      id: 'challenge_master',
+      name: 'チャレンジマスター',
+      description: '累計獲得ポイント500P達成',
+      icon: Icons.military_tech,
+      color: Color(0xFFDC2626),
+    ),
   ];
 
   /// IDからバッジ定義を取得

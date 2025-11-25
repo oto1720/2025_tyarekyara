@@ -7,6 +7,7 @@ import '../models/participation_trend.dart';
 import '../models/badge.dart';
 import '../repositories/local_statistics_repository.dart';
 import '../repositories/firestore_statistics_repository.dart';
+import '../../challenge/repositories/challenge_repositories.dart';
 
 /// StatisticsNotifier は統計データの読み込みを担当する簡易の Notifier
 class StatisticsNotifier extends Notifier<StatisticsState> {
@@ -80,6 +81,13 @@ class StatisticsNotifier extends Notifier<StatisticsState> {
           participationTrend: t,
         );
       }
+
+      // チャレンジ完了数とポイントを取得
+      final challengeRepo = ChallengeRepository();
+      final completedChallengeCount = await challengeRepo.getCompletedChallengeCount(userId);
+      final totalChallengePoints = await challengeRepo.getTotalEarnedPoints(userId);
+      print('📊 完了チャレンジ数取得: $completedChallengeCount');
+      print('📊 累計チャレンジポイント取得: $totalChallengePoints');
 
       final badges = <Badge>[];
       final now = DateTime.now();
@@ -187,6 +195,48 @@ class StatisticsNotifier extends Notifier<StatisticsState> {
           id: 'balanced_opinions',
           name: 'バランス型',
           description: '賛成・中立・反対すべてに投稿しました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+
+      // 視点交換チャレンジ系
+      if (completedChallengeCount >= 1) {
+        badges.add(Badge(
+          id: 'first_challenge',
+          name: '視点交換入門',
+          description: '初めてチャレンジをクリアしました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (completedChallengeCount >= 5) {
+        badges.add(Badge(
+          id: 'challenge_enthusiast',
+          name: 'チャレンジ好き',
+          description: '5回チャレンジをクリアしました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (completedChallengeCount >= 10) {
+        badges.add(Badge(
+          id: 'challenge_expert',
+          name: 'チャレンジ達人',
+          description: '10回チャレンジをクリアしました',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ));
+      }
+      if (totalChallengePoints >= 500) {
+        badges.add(Badge(
+          id: 'challenge_master',
+          name: 'チャレンジマスター',
+          description: '累計獲得ポイント500P達成',
           createdAt: now,
           updatedAt: now,
           earnedAt: now,

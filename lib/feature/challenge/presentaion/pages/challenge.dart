@@ -209,8 +209,18 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                       const SizedBox(height: 8), // 少し間隔をあける
                       // ポイントの具体的な数値表示
                       Text(
-                        '次のバッジまであと${(maxPoints - currentPoints).toInt()}ポイント',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        currentPoints >= maxPoints
+                            ? '🎉 チャレンジマスター達成！'
+                            : '次のバッジまであと${(maxPoints - currentPoints).toInt()}ポイント',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: currentPoints >= maxPoints
+                              ? AppColors.primary
+                              : Colors.grey[600],
+                          fontWeight: currentPoints >= maxPoints
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
                       ),
                     ],
                   ),
