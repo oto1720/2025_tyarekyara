@@ -5,6 +5,7 @@ import '../../models/debate_message.dart';
 import '../../models/debate_room.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_room_provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 /// ディベートチャットWidget
 class DebateChatWidget extends ConsumerStatefulWidget {
@@ -300,6 +301,13 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
     });
 
     try {
+      // 現在のユーザー情報を取得
+      final authState = ref.read(authControllerProvider);
+      final userNickname = authState.maybeWhen(
+        authenticated: (user) => user.nickname,
+        orElse: () => null,
+      );
+
       final message = DebateMessage(
         id: const Uuid().v4(),
         roomId: widget.roomId,
@@ -308,6 +316,8 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
         type: widget.messageType,
         phase: widget.currentPhase,
         createdAt: DateTime.now(),
+        userNickname: userNickname,
+        senderStance: widget.stance,
       );
 
       final repository = ref.read(debateRoomRepositoryProvider);
