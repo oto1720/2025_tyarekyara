@@ -9,6 +9,7 @@ import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../../repositories/daily_topic_repository.dart';
 import '../widgets/topic_card.dart';
+import '../widgets/date_selector_widget.dart';
 
 /// 意見一覧画面
 class OpinionListScreen extends ConsumerWidget {
@@ -33,7 +34,7 @@ class OpinionListScreen extends ConsumerWidget {
         //   icon: const Icon(Icons.arrow_back, color: Colors.black87),
         //   onPressed: () => Navigator.pop(context),
         // ),
-        title: _buildDateSelector(context, ref),
+        title: const DateSelectorWidget(),
         actions: [
           // リフレッシュボタン
           topicAsync.maybeWhen(
@@ -65,7 +66,7 @@ class OpinionListScreen extends ConsumerWidget {
           return _buildBody(context, ref, opinionState, opinionNotifier, topic.id);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildTopicLoadErrorView(error.toString()),
+        error: (error, stack) => _buildTopicLoadErrorView(error.toString()), 
       ),
     );
   }
@@ -134,118 +135,6 @@ class OpinionListScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  /// 日付選択UI
-  Widget _buildDateSelector(BuildContext context, WidgetRef ref) {
-    final selectedDate = ref.watch(selectedDateProvider);
-    final today = DateTime.now();
-    final isToday = selectedDate.year == today.year &&
-        selectedDate.month == today.month &&
-        selectedDate.day == today.day;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 前の日へ
-        IconButton(
-          icon: const Icon(Icons.chevron_left, color: Colors.black87),
-          onPressed: () => _goToPreviousDay(ref),
-          tooltip: '前の日',
-        ),
-        // 日付表示（タップでDatePicker表示）
-        InkWell(
-          onTap: () => _showDatePicker(context, ref),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  DateFormat('M/d (E)', 'ja').format(selectedDate),
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.calendar_today, size: 16, color: Colors.black87),
-              ],
-            ),
-          ),
-        ),
-        // 次の日へ（今日より先には進めない）
-        IconButton(
-          icon: Icon(
-            Icons.chevron_right,
-            color: isToday ? Colors.grey.shade300 : Colors.black87,
-          ),
-          onPressed: isToday ? null : () => _goToNextDay(ref),
-          tooltip: '次の日',
-        ),
-      ],
-    );
-  }
-
-  /// 前の日へ移動
-  void _goToPreviousDay(WidgetRef ref) {
-    final currentDate = ref.read(selectedDateProvider);
-    final previousDay = DateTime(
-      currentDate.year,
-      currentDate.month,
-      currentDate.day - 1,
-    );
-    ref.read(selectedDateProvider.notifier).setDate(previousDay);
-  }
-
-  /// 次の日へ移動
-  void _goToNextDay(WidgetRef ref) {
-    final currentDate = ref.read(selectedDateProvider);
-    final today = DateTime.now();
-    final nextDay = DateTime(
-      currentDate.year,
-      currentDate.month,
-      currentDate.day + 1,
-    );
-
-    // 今日より先には進めない
-    if (nextDay.year <= today.year &&
-        nextDay.month <= today.month &&
-        nextDay.day <= today.day) {
-      ref.read(selectedDateProvider.notifier).setDate(nextDay);
-    }
-  }
-
-  /// DatePickerを表示
-  Future<void> _showDatePicker(BuildContext context, WidgetRef ref) async {
-    final currentDate = ref.read(selectedDateProvider);
-    final today = DateTime.now();
-
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: currentDate,
-      firstDate: DateTime(2020, 1, 1), // 適切な過去の日付を設定
-      lastDate: today, // 今日まで
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade600,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black87,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (selectedDate != null) {
-      ref.read(selectedDateProvider.notifier).setDate(selectedDate);
-    }
   }
 
   Widget _buildBody(
@@ -401,7 +290,7 @@ class OpinionListScreen extends ConsumerWidget {
                 ),
               ),
               Text(
-                'h$total',
+                '$total',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -431,6 +320,7 @@ class OpinionListScreen extends ConsumerWidget {
                   icon: Icons.horizontal_rule,
                 ),
               ),
+              const SizedBox(width: 12),
               Expanded(
                 child: _StatItem(
                   label: '反対',
@@ -452,9 +342,10 @@ class OpinionListScreen extends ConsumerWidget {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.comment_outlined, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
+          Icon(Icons.comment_outlined, size: 48, color: Colors.grey.shade300),
+          const SizedBox(height: 12),
           Text(
             '意見がありません',
             style: TextStyle(
@@ -462,7 +353,7 @@ class OpinionListScreen extends ConsumerWidget {
               color: Colors.grey.shade600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             '意見を投稿してください',
             style: TextStyle(
