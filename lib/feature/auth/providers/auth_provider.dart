@@ -112,6 +112,78 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    state = const AuthState.loading();
+    try {
+      final credential = await _authRepository.signInWithGoogle();
+
+      if (credential.user == null) {
+        state = const AuthState.error('Failed to sign in with Google');
+        return;
+      }
+
+      // ユーザーデータを取得または作成
+      var userModel = await _authRepository.getUserData(credential.user!.uid);
+
+      if (userModel == null) {
+        // 新規ユーザーの場合、ユーザーデータを作成
+        final now = DateTime.now();
+        userModel = UserModel(
+          id: credential.user!.uid,
+          nickname: credential.user!.displayName ?? 'Google User',
+          email: credential.user!.email ?? '',
+          iconUrl: credential.user!.photoURL ?? 'assets/images/default_avatar.png',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _authRepository.saveUserData(userModel);
+      }
+
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
+      state = AuthState.authenticated(userModel);
+    } catch (e) {
+      state = AuthState.error(e.toString());
+    }
+  }
+
+  Future<void> signInWithApple() async {
+    state = const AuthState.loading();
+    try {
+      final credential = await _authRepository.signInWithApple();
+
+      if (credential.user == null) {
+        state = const AuthState.error('Failed to sign in with Apple');
+        return;
+      }
+
+      // ユーザーデータを取得または作成
+      var userModel = await _authRepository.getUserData(credential.user!.uid);
+
+      if (userModel == null) {
+        // 新規ユーザーの場合、ユーザーデータを作成
+        final now = DateTime.now();
+        userModel = UserModel(
+          id: credential.user!.uid,
+          nickname: credential.user!.displayName ?? 'Apple User',
+          email: credential.user!.email ?? '',
+          iconUrl: credential.user!.photoURL ?? 'assets/images/default_avatar.png',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _authRepository.saveUserData(userModel);
+      }
+
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
+      state = AuthState.authenticated(userModel);
+    } catch (e) {
+      state = AuthState.error(e.toString());
+    }
+  }
+
   Future<void> signOut() async {
     state = const AuthState.loading();
     try {
