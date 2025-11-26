@@ -93,6 +93,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       next.when(
         initial: () {},
         loading: () {},
+        guest: () {},
         authenticated: (user) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('アカウント作成成功')),

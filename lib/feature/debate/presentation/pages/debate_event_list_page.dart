@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
@@ -36,24 +37,82 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ディベートイベント'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: '開催予定'),
-            Tab(text: '参加履歴'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildUpcomingEventsTab(),
-          _buildCompletedEventsTab(),
-        ],
-      ),
+    return FutureBuilder<bool>(
+      future: SharedPreferences.getInstance().then((prefs) => prefs.getBool('is_guest_mode') ?? false),
+      builder: (context, snapshot) {
+        final isGuest = snapshot.data ?? false;
+
+        // ゲストモードの場合、ログイン要求画面を表示
+        if (isGuest) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('ディベートイベント'),
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.lock_outline,
+                      size: 80,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'ディベート機能を利用するには\nログインが必要です',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'アカウントを作成してディベートに参加しましょう',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: () => context.push('/login'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(200, 50),
+                      ),
+                      child: const Text('ログイン / 新規登録'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        // 通常の画面表示
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('ディベートイベント'),
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(text: '開催予定'),
+                Tab(text: '参加履歴'),
+              ],
+            ),
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildUpcomingEventsTab(),
+              _buildCompletedEventsTab(),
+            ],
+          ),
+        );
+      },
     );
   }
 

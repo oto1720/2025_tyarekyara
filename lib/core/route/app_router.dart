@@ -43,9 +43,10 @@ final GoRouter router = GoRouter(
   redirect: (context, state) async {
     final currentPath = state.uri.path;
 
-    // 認証状態とチュートリアル完了状態を確認
+    // 認証状態、ゲストモード、チュートリアル完了状態を確認
     final prefs = await SharedPreferences.getInstance();
     final tutorialCompleted = prefs.getBool('tutorial_completed') ?? false;
+    final isGuest = prefs.getBool('is_guest_mode') ?? false;
     final isAuthenticated = FirebaseAuth.instance.currentUser != null;
 
     // 認証関連ページとディベート関連ページは常にアクセス可能
@@ -72,12 +73,20 @@ final GoRouter router = GoRouter(
       return null;
     }
 
-    // 3. 未ログイン & チュートリアル完了 → ログインへ
-    if (!isAuthenticated && tutorialCompleted) {
+    // 3. ゲストモード & チュートリアル完了 → ホームへ（ログイン不要）
+    if (isGuest && tutorialCompleted) {
+      if (currentPath == '/first' || currentPath == '/tutorial') {
+        return '/';
+      }
+      return null; // ゲストでもメインアプリにアクセス可能
+    }
+
+    // 4. 未ログイン & 非ゲスト & チュートリアル完了 → ログインへ
+    if (!isAuthenticated && !isGuest && tutorialCompleted) {
       if (currentPath == '/first' || currentPath == '/tutorial') {
         return '/login';
       }
-      // メインアプリへのアクセスもログインにリダイレクト
+      // メインアプリへのアクセスはログインにリダイレクト
       if (currentPath == '/' || currentPath == '/settings' ||
           currentPath == '/profile' || currentPath == '/statistics') {
         return '/login';
@@ -85,8 +94,8 @@ final GoRouter router = GoRouter(
       return null;
     }
 
-    // 4. 未ログイン & チュートリアル未完了 → 初回画面へ
-    if (!isAuthenticated && !tutorialCompleted) {
+    // 5. 未ログイン & 非ゲスト & チュートリアル未完了 → 初回画面へ
+    if (!isAuthenticated && !isGuest && !tutorialCompleted) {
       if (currentPath != '/first' && currentPath != '/tutorial') {
         return '/first';
       }
