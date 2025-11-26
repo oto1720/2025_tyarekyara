@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:go_router/go_router.dart';
@@ -316,8 +317,57 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                   ),
                                   onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      // バリデーションが通ったらフィードバック画面に遷移
-                                      final result = await context.push(
+                                      // ゲストモードをチェック
+                                      final prefs = await SharedPreferences.getInstance();
+                                      final isGuest = prefs.getBool('is_guest_mode') ?? false;
+
+                                      if (!mounted) return;
+
+                                      if (isGuest) {
+                                        // ゲストモードの場合、AI審査が利用できないことを通知
+                                        final router = GoRouter.of(context);
+                                        showDialog(
+                                          context: context,
+                                          builder: (dialogContext) => AlertDialog(
+                                            title: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.lock_outline,
+                                                  color: AppColors.warning,
+                                                  size: 24,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                const Text('AI審査について'),
+                                              ],
+                                            ),
+                                            content: const Text(
+                                              'AIによる審査機能は\nログインユーザーのみ利用可能です。\n\nアカウントを作成すると、\nAIからのフィードバックを受け取ることができます。',
+                                              style: TextStyle(fontSize: 14),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                                child: const Text('キャンセル'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.of(dialogContext).pop();
+                                                  router.push('/login');
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: AppColors.primary,
+                                                ),
+                                                child: const Text('ログイン / 新規登録'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      // 通常モード：フィードバック画面に遷移
+                                      final router = GoRouter.of(context);
+                                      final result = await router.push(
                                         '/challenge/${widget.challenge.id}/feedback',
                                         extra: {
                                           'challenge': widget.challenge,
@@ -326,9 +376,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                       );
                                       // フィードバック画面から戻ってきたら結果を返す
                                       if (result != null && mounted) {
-                                        if (context.mounted) {
-                                          GoRouter.of(context).pop(result);
-                                        }
+                                        router.pop(result);
                                       }
                                     }
                                   },

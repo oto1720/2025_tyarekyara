@@ -64,6 +64,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       next.when(
 	initial: () {},
 	loading: () {},
+	guest: () {},
 	authenticated: (user) {
 	  ScaffoldMessenger.of(context).showSnackBar(
 	    const SnackBar(content: Text('ログイン成功')),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/auth_repository.dart';
 import '../services/auth_service.dart';
 import '../models/user/user_model.dart';
@@ -117,6 +118,13 @@ class AuthController extends Notifier<AuthState> {
     } catch (e) {
       state = AuthState.error(e.toString());
     }
+  }
+
+  /// ゲストモードに移行
+  Future<void> continueAsGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_guest_mode', true);
+    state = const AuthState.guest();
   }
 
   Future<void> updateProfile({
