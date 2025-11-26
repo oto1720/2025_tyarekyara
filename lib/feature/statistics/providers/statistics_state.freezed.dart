@@ -26,6 +26,8 @@ mixin _$StatisticsState {
       throw _privateConstructorUsedError;
   List<Badge> get earnedBadges => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
+  int? get selectedYear => throw _privateConstructorUsedError;
+  int? get selectedMonth => throw _privateConstructorUsedError;
 
   /// Create a copy of StatisticsState
   /// with the given fields replaced by the non-null parameter values.
@@ -49,6 +51,8 @@ abstract class $StatisticsStateCopyWith<$Res> {
     ParticipationTrend? participationTrend,
     List<Badge> earnedBadges,
     String? error,
+    int? selectedYear,
+    int? selectedMonth,
   });
 
   $UserStatisticsCopyWith<$Res>? get userStatistics;
@@ -79,6 +83,8 @@ class _$StatisticsStateCopyWithImpl<$Res, $Val extends StatisticsState>
     Object? participationTrend = freezed,
     Object? earnedBadges = null,
     Object? error = freezed,
+    Object? selectedYear = freezed,
+    Object? selectedMonth = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -110,6 +116,14 @@ class _$StatisticsStateCopyWithImpl<$Res, $Val extends StatisticsState>
                 ? _value.error
                 : error // ignore: cast_nullable_to_non_nullable
                       as String?,
+            selectedYear: freezed == selectedYear
+                ? _value.selectedYear
+                : selectedYear // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            selectedMonth: freezed == selectedMonth
+                ? _value.selectedMonth
+                : selectedMonth // ignore: cast_nullable_to_non_nullable
+                      as int?,
           )
           as $Val,
     );
@@ -193,6 +207,8 @@ abstract class _$$StatisticsStateImplCopyWith<$Res>
     ParticipationTrend? participationTrend,
     List<Badge> earnedBadges,
     String? error,
+    int? selectedYear,
+    int? selectedMonth,
   });
 
   @override
@@ -226,6 +242,8 @@ class __$$StatisticsStateImplCopyWithImpl<$Res>
     Object? participationTrend = freezed,
     Object? earnedBadges = null,
     Object? error = freezed,
+    Object? selectedYear = freezed,
+    Object? selectedMonth = freezed,
   }) {
     return _then(
       _$StatisticsStateImpl(
@@ -257,6 +275,14 @@ class __$$StatisticsStateImplCopyWithImpl<$Res>
             ? _value.error
             : error // ignore: cast_nullable_to_non_nullable
                   as String?,
+        selectedYear: freezed == selectedYear
+            ? _value.selectedYear
+            : selectedYear // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        selectedMonth: freezed == selectedMonth
+            ? _value.selectedMonth
+            : selectedMonth // ignore: cast_nullable_to_non_nullable
+                  as int?,
       ),
     );
   }
@@ -273,6 +299,8 @@ class _$StatisticsStateImpl implements _StatisticsState {
     this.participationTrend,
     final List<Badge> earnedBadges = const <Badge>[],
     this.error,
+    this.selectedYear,
+    this.selectedMonth,
   }) : _earnedBadges = earnedBadges;
 
   @override
@@ -297,10 +325,14 @@ class _$StatisticsStateImpl implements _StatisticsState {
 
   @override
   final String? error;
+  @override
+  final int? selectedYear;
+  @override
+  final int? selectedMonth;
 
   @override
   String toString() {
-    return 'StatisticsState(isLoading: $isLoading, userStatistics: $userStatistics, diversityScore: $diversityScore, stanceDistribution: $stanceDistribution, participationTrend: $participationTrend, earnedBadges: $earnedBadges, error: $error)';
+    return 'StatisticsState(isLoading: $isLoading, userStatistics: $userStatistics, diversityScore: $diversityScore, stanceDistribution: $stanceDistribution, participationTrend: $participationTrend, earnedBadges: $earnedBadges, error: $error, selectedYear: $selectedYear, selectedMonth: $selectedMonth)';
   }
 
   @override
@@ -322,7 +354,11 @@ class _$StatisticsStateImpl implements _StatisticsState {
               other._earnedBadges,
               _earnedBadges,
             ) &&
-            (identical(other.error, error) || other.error == error));
+            (identical(other.error, error) || other.error == error) &&
+            (identical(other.selectedYear, selectedYear) ||
+                other.selectedYear == selectedYear) &&
+            (identical(other.selectedMonth, selectedMonth) ||
+                other.selectedMonth == selectedMonth));
   }
 
   @override
@@ -335,6 +371,8 @@ class _$StatisticsStateImpl implements _StatisticsState {
     participationTrend,
     const DeepCollectionEquality().hash(_earnedBadges),
     error,
+    selectedYear,
+    selectedMonth,
   );
 
   /// Create a copy of StatisticsState
@@ -358,6 +396,8 @@ abstract class _StatisticsState implements StatisticsState {
     final ParticipationTrend? participationTrend,
     final List<Badge> earnedBadges,
     final String? error,
+    final int? selectedYear,
+    final int? selectedMonth,
   }) = _$StatisticsStateImpl;
 
   @override
@@ -374,6 +414,10 @@ abstract class _StatisticsState implements StatisticsState {
   List<Badge> get earnedBadges;
   @override
   String? get error;
+  @override
+  int? get selectedYear;
+  @override
+  int? get selectedMonth;
 
   /// Create a copy of StatisticsState
   /// with the given fields replaced by the non-null parameter values.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/opinion.dart';
 import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
@@ -38,7 +39,6 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final postState = ref.watch(opinionPostProvider(widget.topicId));
-    final postNotifier = ref.read(opinionPostProvider(widget.topicId).notifier);
     final topicState = ref.watch(dailyTopicProvider);
     final topic = topicState.currentTopic;
 
@@ -46,24 +46,28 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
 
     if (userOpinion == null) {
       return Scaffold(
+        backgroundColor: AppColors.surface,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.background,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87),
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
             '自分の投稿',
             style: TextStyle(
-              color: Colors.black87,
-              fontSize: 16,
+              color: AppColors.textPrimary,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
         body: const Center(
-          child: Text('投稿が見つかりませんでした'),
+          child: Text(
+            '投稿が見つかりませんでした',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
       );
     }
@@ -75,19 +79,19 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           '自分の投稿',
           style: TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
+            color: AppColors.textPrimary,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -102,8 +106,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
               icon: const Icon(Icons.edit, size: 18),
               label: const Text('編集'),
               style: TextButton.styleFrom(
-                foregroundColor: Colors.blue,
-                textStyle: const TextStyle(inherit: false), // inheritを明示的にfalseに設定
+                foregroundColor: AppColors.primary,
               ),
             ),
         ],
@@ -118,12 +121,13 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 6,
+                      color: AppColors.shadow,
+                      blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -135,7 +139,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                       'トピック',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey,
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -145,7 +149,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -158,12 +162,13 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.background,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 6,
+                    color: AppColors.shadow,
+                    blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
                 ],
@@ -175,7 +180,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                     '投稿内容',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey,
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -186,7 +191,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                     '立場',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -203,7 +208,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                     '意見',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -215,12 +220,20 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                       maxLength: 500,
                       decoration: InputDecoration(
                         hintText: '意見を入力してください',
+                        hintStyle: const TextStyle(color: AppColors.textTertiary),
+                        filled: true,
+                        fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.primary, width: 2),
                         ),
                       ),
                     )
@@ -229,7 +242,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                       userOpinion.content,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.textPrimary,
                         height: 1.6,
                       ),
                     ),
@@ -239,13 +252,13 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                   // 投稿日時
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
+                      const Icon(Icons.access_time, size: 14, color: AppColors.textTertiary),
                       const SizedBox(width: 4),
                       Text(
                         '投稿: ${_formatDate(userOpinion.createdAt)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -269,7 +282,8 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                                   },
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: Colors.grey.shade300),
+                              side: const BorderSide(color: AppColors.border),
+                              foregroundColor: AppColors.textPrimary,
                             ),
                             child: const Text('キャンセル'),
                           ),
@@ -279,7 +293,8 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                           child: ElevatedButton(
                             onPressed: postState.isPosting ? null : _handleUpdate,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.textOnPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             child: postState.isPosting
@@ -288,13 +303,12 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppColors.textOnPrimary,
                                     ),
                                   )
                                 : const Text(
                                     '更新',
                                     style: TextStyle(
-                                      color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -321,21 +335,21 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
           OpinionStance.agree,
           '賛成',
           Icons.thumb_up,
-          Colors.blue,
+          AppColors.agree,
         ),
         const SizedBox(height: 8),
         _buildStanceOption(
           OpinionStance.disagree,
           '反対',
           Icons.thumb_down,
-          Colors.red,
+          AppColors.disagree,
         ),
         const SizedBox(height: 8),
         _buildStanceOption(
           OpinionStance.neutral,
           '中立',
           Icons.horizontal_rule,
-          Colors.grey,
+          AppColors.neutral,
         ),
       ],
     );
@@ -358,10 +372,10 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? color.withOpacity(0.1) : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? color : Colors.grey.shade300,
+            color: isSelected ? color : AppColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -374,14 +388,14 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? color : Colors.grey.shade700,
+                color: isSelected ? color : AppColors.textSecondary,
               ),
             ),
             const Spacer(),
             if (isSelected)
               Icon(Icons.check_circle, color: color, size: 20)
             else
-              Icon(Icons.circle_outlined, color: Colors.grey.shade400, size: 20),
+              const Icon(Icons.circle_outlined, color: AppColors.disabled, size: 20),
           ],
         ),
       ),
@@ -395,17 +409,17 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
 
     switch (stance) {
       case OpinionStance.agree:
-        color = Colors.blue;
+        color = AppColors.agree;
         icon = Icons.thumb_up;
         label = '賛成';
         break;
       case OpinionStance.disagree:
-        color = Colors.red;
+        color = AppColors.disagree;
         icon = Icons.thumb_down;
         label = '反対';
         break;
       case OpinionStance.neutral:
-        color = Colors.grey;
+        color = AppColors.neutral;
         icon = Icons.horizontal_rule;
         label = '中立';
         break;
@@ -415,7 +429,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
@@ -465,7 +479,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('投稿を更新しました'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
         // 意見一覧を更新
@@ -476,7 +490,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('更新に失敗しました: ${ref.read(opinionPostProvider(widget.topicId)).error}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }

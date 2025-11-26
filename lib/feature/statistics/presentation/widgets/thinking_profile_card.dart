@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../models/user_statistics.dart';
 import 'participation_stats_card.dart';
 
@@ -12,13 +13,16 @@ class ThinkingProfileCardImpl extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEEF2FF), Color(0xFFFAF5FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: const Color(0xFFC6D2FF), width: 0.8),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.background,
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -28,25 +32,25 @@ class ThinkingProfileCardImpl extends StatelessWidget {
             'あなたの思考プロフィール',
             style: TextStyle(
               fontSize: 16,
-              color: Color(0xFF0F172B),
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             '多様な視点に触れることで、思考の幅が広がります',
-            style: TextStyle(fontSize: 14, color: Color(0xFF717182)),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: ParticipationStatsCardImpl(
-                  title: '参加日数',
+                  title: '連続日数',
                   value: userStatistics != null
-                      ? '${userStatistics!.participationDays}日'
+                      ? '${userStatistics!.consecutiveDays}日'
                       : '--',
-                  accentColor: const Color(0xFF4F39F6),
+                  accentColor: AppColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -56,7 +60,7 @@ class ThinkingProfileCardImpl extends StatelessWidget {
                   value: userStatistics != null
                       ? '${userStatistics!.totalOpinions}件'
                       : '--',
-                  accentColor: const Color(0xFF9810FA),
+                  accentColor: AppColors.info,
                 ),
               ),
             ],
