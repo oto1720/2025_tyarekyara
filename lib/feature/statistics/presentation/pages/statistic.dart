@@ -33,12 +33,12 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
 
         // ゲストモードの場合、モックデータを表示
         if (isGuest) {
-          // ゲストモード用のダミーユーザーIDでデータ読み込み
-          if (_loadedUserId != 'guest_user') {
-            _loadedUserId = 'guest_user';
+          // ゲストモード用：プロバイダーが自動的にモックデータを使用
+          if (_loadedUserId != 'guest') {
+            _loadedUserId = 'guest';
             WidgetsBinding.instance.addPostFrameCallback((_) {
               print('👤 ゲストモード: モックデータを表示');
-              ref.read(statisticsNotifierProvider.notifier).loadUserStatistics('guest_user');
+              ref.read(statisticsNotifierProvider.notifier).loadUserStatistics('guest');
             });
           }
 

@@ -64,6 +64,10 @@ class AuthController extends Notifier<AuthState> {
 
       await _authRepository.saveUserData(userModel);
 
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
+
       // FCMトークンを保存
       await NotificationService().saveFcmToken(userModel.id);
 
@@ -95,6 +99,10 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
+
       // FCMトークンを保存
       await NotificationService().saveFcmToken(userModel.id);
 
@@ -112,6 +120,10 @@ class AuthController extends Notifier<AuthState> {
       if (currentUser != null) {
         await NotificationService().removeFcmToken(currentUser.uid);
       }
+
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
 
       await _authRepository.signOut();
       state = const AuthState.unauthenticated();
