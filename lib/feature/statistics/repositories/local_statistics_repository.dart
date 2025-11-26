@@ -69,7 +69,7 @@ class LocalStatisticsRepository {
     await p.setString(_stanceKey(stance.userId), jsonEncode(stance.toJson()));
   }
 
-  Future<ParticipationTrend?> fetchParticipationTrend(String userId) async {
+  Future<ParticipationTrend?> fetchParticipationTrend(String userId, {required int year, required int month}) async {
     final p = await _prefs;
     final s = p.getString(_trendKey(userId));
     if (s == null) return null;

@@ -15,6 +15,7 @@ import 'package:tyarekyara/feature/auth/presentaion/pages/change_password_page.d
 import 'package:tyarekyara/feature/auth/presentaion/pages/forgot_password_page.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/first_page.dart';
 import 'package:tyarekyara/feature/statistics/presentation/pages/statistic.dart';
+import 'package:tyarekyara/feature/statistics/presentation/pages/badge_list_screen.dart';
 import 'package:tyarekyara/feature/guide/presentaion/pages/tutorial_page.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/pages/challenge.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
@@ -337,6 +338,11 @@ final GoRouter router = GoRouter(
           path: '/statistics',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: StatisticPage()),
+        ),
+        // バッジ一覧画面
+        GoRoute(
+          path: '/statistics/badges',
+          builder: (context, state) => const BadgeListScreen(),
         ),
         // 設定画面
         GoRoute(
