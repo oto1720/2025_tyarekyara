@@ -5,6 +5,7 @@ import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/tutorial_item.dart';
 import '../../providers/tutorial_provider.dart';
 import '../widgets/tutorial_card.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 /// チュートリアル画面
 class TutorialPage extends ConsumerStatefulWidget {
@@ -42,7 +43,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      _completeTutorial();
+      _showCompletionChoice();
     }
   }
 
@@ -53,15 +54,71 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
     );
   }
 
-  Future<void> _completeTutorial() async {
+  /// チュートリアル完了後の選択画面を表示
+  Future<void> _showCompletionChoice() async {
     await ref.read(tutorialNotifierProvider.notifier).completeTutorial();
-    if (mounted) {
-      context.go('/signup');
-    }
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'アプリを始める',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'アカウントを作成して全ての機能を利用するか、\nゲストモードで一部機能を試すことができます。',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.go('/signup');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text(
+                  'ログイン / 新規登録',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () async {
+                  final navigator = Navigator.of(context);
+                  final router = GoRouter.of(context);
+                  navigator.pop();
+                  await ref.read(authControllerProvider.notifier).continueAsGuest();
+                  router.go('/');
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text(
+                  'ゲストで続ける',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   void _skipTutorial() {
-    _completeTutorial();
+    _showCompletionChoice();
   }
 
   @override

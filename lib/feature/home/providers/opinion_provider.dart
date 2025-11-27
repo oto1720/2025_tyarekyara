@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../models/opinion.dart';
 import '../models/topic.dart'; // TopicDifficultyをインポート
@@ -179,6 +180,11 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
 
   /// ユーザーが既に投稿しているか確認
   Future<void> checkUserOpinion() async {
+    // ゲストモードの場合はスキップ（ゲストは複数回投稿可能）
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest_mode') ?? false;
+    if (isGuest) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -200,17 +206,29 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
     required OpinionStance stance,
     required String content,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      state = state.copyWith(error: 'ログインしてください');
-      return false;
-    }
+    // ゲストモードをチェック
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest_mode') ?? false;
 
-    state = state.copyWith(isPosting: true, error: null);
+    String userId;
+    String userName;
 
-    try {
+    if (isGuest) {
+      // ゲストモードの場合
+      userId = 'guest_${const Uuid().v4().substring(0, 8)}'; // ユニークなゲストID
+      userName = 'ゲスト';
+    } else {
+      // 通常モード：Firebaseユーザーを使用
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        state = state.copyWith(error: 'ログインしてください');
+        return false;
+      }
+
+      userId = user.uid;
+
       // Firestoreからユーザー情報（nickname）を取得
-      String userName = '匿名ユーザー';
+      userName = '匿名ユーザー';
       try {
         final userDoc = await FirebaseFirestore.instance
             .collection('users')
@@ -224,13 +242,17 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
         print('Error fetching user nickname: $e');
         // エラーの場合はデフォルト値を使用
       }
+    }
 
+    state = state.copyWith(isPosting: true, error: null);
+
+    try {
       final opinion = Opinion(
         id: const Uuid().v4(),
         topicId: topicId,
         topicText: topicText,
         topicDifficulty: topicDifficulty, // トピックの難易度を保存
-        userId: user.uid,
+        userId: userId,
         userName: userName,
         stance: stance,
         content: content,
