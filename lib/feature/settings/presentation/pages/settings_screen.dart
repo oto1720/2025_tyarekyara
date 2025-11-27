@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/setting_item.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -256,43 +257,19 @@ class SettingsScreen extends ConsumerWidget {
                   context.push('/notice');
                 },
               ),
-              SettingItem(
-                icon: Icons.more_horiz,
-                title: 'その他',
-                subtitle: 'その他の設定',
-                iconColor: Colors.teal,
-                onTap: () {
-                  // TODO: その他設定画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('その他設定画面（未実装）')),
-                  );
-                },
-              ),
+              
 
-              // サポート
-              const SettingSection(title: 'サポート'),
-              SettingItem(
-                icon: Icons.help_outline,
-                title: 'ヘルプ',
-                subtitle: 'よくある質問',
-                iconColor: Colors.green,
-                onTap: () {
-                  // TODO: ヘルプ画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ヘルプ画面（未実装）')),
-                  );
-                },
-              ),
               SettingItem(
                 icon: Icons.info_outline,
                 title: '基本情報',
                 subtitle: 'バージョン、利用規約など',
                 iconColor: Colors.indigo,
-                onTap: () {
+                onTap: () async {
                   // TODO: 基本情報画面へ遷移
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('基本情報画面（未実装）')),
-                  );
+                  final uri = Uri.parse('https://critica-s.vercel.app/');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  }
                 },
               ),
 
