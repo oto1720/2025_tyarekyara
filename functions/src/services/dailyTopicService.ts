@@ -178,13 +178,18 @@ async function createDebateEvent(
 
   try {
     // 日付文字列から年月日を取得
-    const [year, month, day] = date.split('-').map(Number);
+    const [year, month, day] = date.split("-").map(Number);
 
-    // イベント開始時刻: 今日の20:00（JST）
-    const eventDate = new Date(year, month - 1, day, 20, 0, 0, 0);
+    // イベント開始時刻: 今日の20:00（JST） = UTC 11:00
+    // Cloud FunctionsはUTC環境で動作するため、UTC時刻で設定
+    const eventDate = new Date(
+      Date.UTC(year, month - 1, day, 11, 0, 0, 0)
+    );
 
-    // エントリー締切時刻: 今日の19:00（JST）
-    const entryDeadlineDate = new Date(year, month - 1, day, 19, 0, 0, 0);
+    // エントリー締切時刻: 今日の19:00（JST） = UTC 10:00
+    const entryDeadlineDate = new Date(
+      Date.UTC(year, month - 1, day, 10, 0, 0, 0)
+    );
 
     const eventData = {
       id: `event_${date}_${topic.id}`,
