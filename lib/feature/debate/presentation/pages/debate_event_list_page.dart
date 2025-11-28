@@ -99,6 +99,13 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
         return Scaffold(
           appBar: AppBar(
             title: const Text('ディベートイベント'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => context.push('/debate/rules'),
+                tooltip: 'ルールを確認',
+              ),
+            ],
             bottom: TabBar(
               controller: _tabController,
               tabs: const [

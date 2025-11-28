@@ -103,6 +103,13 @@ class DebateEventDetailPage extends ConsumerWidget {
         ),
         overflow: TextOverflow.ellipsis,
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          onPressed: () => context.push('/debate/rules'),
+          tooltip: 'ルールを確認',
+        ),
+      ],
     );
   }
 

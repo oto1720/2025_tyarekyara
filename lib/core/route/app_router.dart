@@ -30,6 +30,7 @@ import 'package:tyarekyara/feature/debate/presentation/pages/debate_judgment_wai
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_result_page.dart';
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_ranking_page.dart';
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_stats_page.dart';
+import 'package:tyarekyara/feature/debate/presentation/pages/debate_rules_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -306,6 +307,16 @@ final GoRouter router = GoRouter(
       pageBuilder: (context, state) {
         return const NoTransitionPage(
           child: DebateStatsPage(),
+        );
+      },
+    ),
+
+    // ディベートルール説明ページ (ShellRoute の「外」に置く)
+    GoRoute(
+      path: '/debate/rules',
+      pageBuilder: (context, state) {
+        return const NoTransitionPage(
+          child: DebateRulesPage(),
         );
       },
     ),
