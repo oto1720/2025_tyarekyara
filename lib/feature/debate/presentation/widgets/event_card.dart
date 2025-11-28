@@ -7,12 +7,14 @@ class EventCard extends StatelessWidget {
   final DebateEvent event;
   final VoidCallback onTap;
   final bool isCompleted;
+  final bool isLocked;
 
   const EventCard({
     super.key,
     required this.event,
     required this.onTap,
     this.isCompleted = false,
+    this.isLocked = false,
   });
 
   @override
@@ -23,30 +25,44 @@ class EventCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              const SizedBox(height: 12),
-              _buildTitle(context),
-              const SizedBox(height: 8),
-              _buildTopic(context),
-              const SizedBox(height: 12),
-              _buildDateTime(context),
-              const SizedBox(height: 12),
-              _buildInfo(context),
-              if (!isCompleted) ...[
-                const SizedBox(height: 12),
-                _buildParticipants(context),
-              ],
-            ],
+      child: Stack(
+        children: [
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context),
+                  const SizedBox(height: 12),
+                  _buildTitle(context),
+                  const SizedBox(height: 8),
+                  _buildTopic(context),
+                  const SizedBox(height: 12),
+                  _buildDateTime(context),
+                  const SizedBox(height: 12),
+                  _buildInfo(context),
+                  if (!isCompleted) ...[
+                    const SizedBox(height: 12),
+                    _buildParticipants(context),
+                  ],
+                ],
+              ),
+            ),
           ),
-        ),
+          // ロック時のオーバーレイ
+          if (isLocked)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -56,6 +72,14 @@ class EventCard extends StatelessWidget {
     return Row(
       children: [
         _buildStatusBadge(context),
+        if (isLocked) ...[
+          const SizedBox(width: 8),
+          Icon(
+            Icons.lock,
+            color: Colors.grey[600],
+            size: 20,
+          ),
+        ],
         const Spacer(),
         if (event.imageUrl != null)
           ClipRRect(

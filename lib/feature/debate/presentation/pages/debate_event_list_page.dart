@@ -8,6 +8,9 @@ import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
 import '../../providers/debate_match_provider.dart';
+import '../../providers/today_debate_event_provider.dart';
+import '../../../../core/providers/debate_event_unlock_provider.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../widgets/event_card.dart';
 
 /// ディベートイベント一覧画面
@@ -119,6 +122,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
   /// 開催予定イベントタブ
   Widget _buildUpcomingEventsTab() {
     final eventsAsync = ref.watch(upcomingEventsProvider);
+    final todayDebateUnlockedAsync = ref.watch(isTodayDebateUnlockedProvider);
 
     return eventsAsync.when(
       data: (events) {
@@ -132,14 +136,36 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
         return RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(upcomingEventsProvider);
+            ref.invalidate(isTodayDebateUnlockedProvider);
           },
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 95), // BottomNavigationBar分の余白
             itemCount: events.length,
             itemBuilder: (context, index) {
-              return EventCard(
-                event: events[index],
-                onTap: () => _navigateToEventDetail(events[index]),
+              final event = events[index];
+              final isToday = ref.watch(isTodayEventProvider(event.id));
+
+              return todayDebateUnlockedAsync.when(
+                data: (unlocked) => EventCard(
+                  event: event,
+                  isLocked: isToday && !unlocked,
+                  onTap: () => _handleEventTap(
+                    context,
+                    event,
+                    isToday,
+                    unlocked,
+                  ),
+                ),
+                loading: () => EventCard(
+                  event: event,
+                  isLocked: isToday,
+                  onTap: () {},
+                ),
+                error: (_, __) => EventCard(
+                  event: event,
+                  isLocked: false,
+                  onTap: () => _navigateToEventDetail(event),
+                ),
               );
             },
           ),
@@ -427,6 +453,93 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
             },
             icon: const Icon(Icons.refresh),
             label: const Text('再読み込み'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// イベントタップ時の処理
+  void _handleEventTap(
+    BuildContext context,
+    DebateEvent event,
+    bool isToday,
+    bool unlocked,
+  ) {
+    if (isToday && !unlocked) {
+      // ロック中のダイアログを表示
+      _showLockedDialog(context);
+      return;
+    }
+
+    // 通常の遷移
+    _navigateToEventDetail(event);
+  }
+
+  /// ロックダイアログを表示
+  void _showLockedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.lock_outline, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text('ディベートイベント'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '今日のディベートに参加するには、\n'
+              'まず今日のトピックに回答してください！',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'あなたの意見を投稿すると、\nディベートが解放されます',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/'); // ホームに移動
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('トピックに回答する'),
           ),
         ],
       ),

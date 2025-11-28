@@ -8,6 +8,7 @@ import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/entry_form.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/debate_event_unlock_provider.dart';
 
 /// ディベートエントリー画面
 class DebateEntryPage extends ConsumerStatefulWidget {
@@ -30,30 +31,73 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
     print('📄 DebateEntryPage build called for event: ${widget.eventId}');
     final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
     final authState = ref.watch(authControllerProvider);
+    final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(widget.eventId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('エントリー設定'),
-      ),
-      body: eventAsync.when(
-        data: (event) {
-          if (event == null) {
-            return _buildNotFound(context);
-          }
-
-          final userId = authState.maybeWhen(
-            authenticated: (user) => user.id,
-            orElse: () => null,
+    return unlockedAsync.when(
+      data: (unlocked) {
+        if (!unlocked) {
+          // アンロックされていない場合は詳細画面に戻す
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.go('/debate/event/${widget.eventId}');
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
+        }
 
-          if (userId == null) {
-            return _buildNotAuthenticated(context);
-          }
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('エントリー設定'),
+          ),
+          body: eventAsync.when(
+            data: (event) {
+              if (event == null) {
+                return _buildNotFound(context);
+              }
 
-          return _buildEntryForm(context, event, userId);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildError(context, error),
+              final userId = authState.maybeWhen(
+                authenticated: (user) => user.id,
+                orElse: () => null,
+              );
+
+              if (userId == null) {
+                return _buildNotAuthenticated(context);
+              }
+
+              return _buildEntryForm(context, event, userId);
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => _buildError(context, error),
+          ),
+        );
+      },
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => Scaffold(
+        appBar: AppBar(
+          title: const Text('エントリー設定'),
+        ),
+        body: eventAsync.when(
+          data: (event) {
+            if (event == null) {
+              return _buildNotFound(context);
+            }
+
+            final userId = authState.maybeWhen(
+              authenticated: (user) => user.id,
+              orElse: () => null,
+            );
+
+            if (userId == null) {
+              return _buildNotAuthenticated(context);
+            }
+
+            return _buildEntryForm(context, event, userId);
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => _buildError(context, error),
+        ),
       ),
     );
   }
