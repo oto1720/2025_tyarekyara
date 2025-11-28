@@ -35,6 +35,23 @@ class TopicGenerationService {
     buffer.writeln('- 多様な意見が出やすいテーマを選んでください');
     buffer.writeln('- 議論を促す形式（問いかけ形式など）にしてください');
     buffer.writeln('- 具体的すぎず、抽象的すぎないバランスを取ってください');
+    buffer.writeln('- 論争的すぎず、建設的な議論ができるテーマにしてください');
+    buffer.writeln();
+    buffer.writeln('## 重要：意見を表明しやすいトピックにする');
+    buffer.writeln('- ユーザーが「賛成」「反対」「中立」のいずれかの立場を明確に取れるテーマにしてください');
+    buffer.writeln('- 事実確認の問題（「○○は存在するか？」など）ではなく、意見や価値判断を求める問題にしてください');
+    buffer.writeln('- Yes/Noで単純に答えられる質問ではなく、理由や背景を含めて立場を表明できる形式にしてください');
+    buffer.writeln('- 「〜べきか？」「〜は良いことか？」「〜は必要か？」などの形式が適しています');
+    buffer.writeln();
+    buffer.writeln('## 良い例');
+    buffer.writeln('- 「リモートワークは今後の標準的な働き方になるべきか？」（賛成・反対・中立が取りやすい）');
+    buffer.writeln('- 「SNSは社会にとってプラスかマイナスか？」（立場を表明しやすい）');
+    buffer.writeln('- 「学校教育にAIを導入すべきか？」（意見が分かれるテーマ）');
+    buffer.writeln();
+    buffer.writeln('## 悪い例');
+    buffer.writeln('- 「東京の人口は何人か？」（事実確認で意見ではない）');
+    buffer.writeln('- 「朝食は食べるべきか？」（単純すぎて議論になりにくい）');
+    buffer.writeln('- 「宇宙人は存在するか？」（事実確認で立場が取りにくい）');
     buffer.writeln();
 
     if (category != null) {
