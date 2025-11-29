@@ -8,6 +8,33 @@ class FirstPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 画面サイズを取得
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
+    // タブレット判定（最小辺が600px以上）
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+
+    // 画面幅に応じたスケールファクター（375pxを基準）
+    // タブレット: 1.0〜1.2（文字を大きく表示）
+    // スマートフォン: 0.75〜0.95（画面に収める）
+    final widthScale = isTablet
+        ? (width / 375).clamp(1.0, 1.2)
+        : (width / 375).clamp(0.75, 0.95);
+
+    // 画面高さに応じたスケールファクター（812pxを基準）
+    final heightScale = isTablet
+        ? (height / 812).clamp(1.0, 1.2)
+        : (height / 812).clamp(0.7, 0.9);
+
+    // 幅と高さのスケールの小さい方を採用
+    final scale = widthScale < heightScale ? widthScale : heightScale;
+
+    // 小さい画面・低い画面の判定
+    final isSmallScreen = width < 360;
+    final isShortScreen = height < 700;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -15,52 +42,55 @@ class FirstPage extends StatelessWidget {
           children: [
             // メインコンテンツ
             Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 60),
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 24 : 40,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(height: isShortScreen ? 20 * scale : 40 * scale),
 
-                      // アプリアイコ
-                      const SizedBox(height: 40),
-
-                      // アプリ名
-                      const Text(
-                        'Critica',
-                        style: TextStyle(
-                          fontSize: 80,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                          letterSpacing: 1.0,
+                        // アプリ名
+                        Text(
+                          'Critica',
+                          style: TextStyle(
+                            fontSize: 80 * scale,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                            letterSpacing: 1.0,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
+                        SizedBox(height: 16 * scale),
 
-                      // 説明文
-                      const Text(
-                        'あなたの意見を共有し、\n新しい発見をしよう',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                          letterSpacing: 0.3,
+                        // 説明文
+                        Text(
+                          'あなたの意見を共有し、\n新しい発見をしよう',
+                          style: TextStyle(
+                            fontSize: 18 * scale,
+                            color: AppColors.textSecondary,
+                            height: 1.6,
+                            letterSpacing: 0.3,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 50),
+                        SizedBox(height: isShortScreen ? 30 * scale : 50 * scale),
 
-                      // 画像エリア（オプション）
-                      Container(
-                        width: double.infinity,
-                        constraints: const BoxConstraints(maxWidth: 400),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Image.asset(
-                            'assets/images/onboarding/icon.png',
-                            fit: BoxFit.cover,
-                            height: 250,
+                        // 画像エリア
+                        Container(
+                          width: double.infinity,
+                          constraints: BoxConstraints(
+                            maxWidth: (isSmallScreen || isShortScreen ? 280 : 400) * scale,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20 * scale),
+                            child: Image.asset(
+                              'assets/images/onboarding/icon.png',
+                              fit: BoxFit.cover,
+                              height: (isSmallScreen || isShortScreen ? 200 : 250) * scale,
                             /*errorBuilder: (context, error, stackTrace) {
                               // 画像がない場合はプレースホルダーを表示
                               return Container(
@@ -92,16 +122,17 @@ class FirstPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      SizedBox(height: isShortScreen ? 20 * scale : 40 * scale),
                     ],
                   ),
                 ),
               ),
             ),
+          ),
 
-            // ボトムエリア
-            Padding(
-              padding: const EdgeInsets.all(24),
+          // ボトムエリア
+          Padding(
+              padding: EdgeInsets.all(isShortScreen ? 16 : 24),
               child: Column(
                 children: [
                   // 始めるボタン
@@ -114,23 +145,25 @@ class FirstPage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.textOnPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isShortScreen ? 14 : 18,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 4,
                       ),
-                      child: const Text(
+                      child: Text(
                         '始める',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 18 * scale.clamp(0.85, 1.0),
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: isShortScreen ? 12 : 16),
 
                   // ログインリンク
                   TextButton(
@@ -138,28 +171,28 @@ class FirstPage extends StatelessWidget {
                       context.go('/login');
                     },
                     style: TextButton.styleFrom(
-                      // inheritをfalseに設定してテーマとの補間エラーを回避
-                      textStyle: const TextStyle(
-                        fontSize: 14,
+                      textStyle: TextStyle(
+                        fontSize: 14 * scale.clamp(0.85, 1.0),
                         fontWeight: FontWeight.w600,
                         inherit: false,
                       ),
                     ),
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 14 * scale.clamp(0.85, 1.0),
                           color: AppColors.textSecondary,
-                          inherit: false, // inheritを明示的にfalseに設定
+                          inherit: false,
                         ),
                         children: [
-                          TextSpan(text: 'アカウントをお持ちの方は '),
+                          const TextSpan(text: 'アカウントをお持ちの方は '),
                           TextSpan(
                             text: 'ログイン',
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
-                              inherit: false, // inheritを明示的にfalseに設定
+                              fontSize: 14 * scale.clamp(0.85, 1.0),
+                              inherit: false,
                             ),
                           ),
                         ],
