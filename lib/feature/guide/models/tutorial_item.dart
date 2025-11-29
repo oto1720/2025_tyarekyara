@@ -76,7 +76,14 @@ class TutorialData {
       secondaryColor: AppColors.primaryLight,
       showImage: false, // 画像を表示しない
     ),
-
+    TutorialItem(
+      title: '機能一覧',
+      description: '使用できる機能を見てみましょう',
+      icon: Icons.waving_hand,
+      primaryColor: AppColors.primary,
+      secondaryColor: AppColors.primaryLight,
+      showImage: false,
+    ),
     TutorialItem(
       title: '意見を投稿',
       description: 'トピックに対して\nあなたの意見を投稿できます。',
@@ -118,7 +125,7 @@ class TutorialData {
       secondaryColor: Color(0xFFF97316),
     ),
     TutorialItem(
-      title: 'さあ、始めましょう！',
+      title: '始めましょう！',
       description: 'それでは、アプリを\n楽しんでください！',
       icon: Icons.rocket_launch,
       imagePath: 'assets/images/onboarding/icon2.png',

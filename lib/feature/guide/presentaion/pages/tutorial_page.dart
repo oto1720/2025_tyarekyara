@@ -133,7 +133,7 @@ class _TutorialPageState extends ConsumerState<TutorialPage> {
           children: [
             // ヘッダー（スキップボタン）
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

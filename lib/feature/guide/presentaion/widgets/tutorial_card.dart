@@ -13,13 +13,31 @@ class TutorialCard extends StatelessWidget {
     // 画面サイズを取得
     final size = MediaQuery.of(context).size;
     final width = size.width;
+    final height = size.height;
+
+    // タブレット判定（最小辺が600px以上）
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
 
     // 画面幅に応じたスケールファクター（375pxを基準）
-    // 0.85〜1.15の範囲でクランプして、極端に小さい/大きいサイズを防ぐ
-    final scale = (width / 375).clamp(0.85, 1.15);
+    // タブレット: 1.0〜1.2（文字を大きく表示）
+    // スマートフォン: 0.75〜0.95（画面に収める）
+    final widthScale = isTablet
+        ? (width / 375).clamp(1.0, 1.2)
+        : (width / 375).clamp(0.75, 0.95);
+
+    // 画面高さに応じたスケールファクター（812pxを基準: iPhone 13/14）
+    final heightScale = isTablet
+        ? (height / 812).clamp(1.0, 1.2)
+        : (height / 812).clamp(0.7, 0.9);
+
+    // 幅と高さのスケールの小さい方を採用（コンテンツが確実に収まるように）
+    final scale = widthScale < heightScale ? widthScale : heightScale;
 
     // 小さい画面（360px未満）の判定
     final isSmallScreen = width < 360;
+
+    // 低い画面（700px未満）の判定
+    final isShortScreen = height < 700;
 
     return Container(
       width: double.infinity,
@@ -30,7 +48,7 @@ class TutorialCard extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: isSmallScreen ? 24 : 40,
-              vertical: isSmallScreen ? 40 : 60,
+              vertical: isShortScreen ? 20 : (isSmallScreen ? 40 : 60),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +105,7 @@ class TutorialCard extends StatelessWidget {
 
                 // 箇条書き
                 if (item.bulletPoints != null && item.bulletPoints!.isNotEmpty) ...[
-                  SizedBox(height: 32 * scale),
+                  SizedBox(height: isShortScreen ? 20 * scale : 32 * scale),
                   Container(
                     constraints: BoxConstraints(maxWidth: 400 * scale),
                     child: Column(
@@ -95,7 +113,9 @@ class TutorialCard extends StatelessWidget {
                       children: item.bulletPoints!
                           .map(
                             (point) => Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8 * scale),
+                              padding: EdgeInsets.symmetric(
+                                vertical: isShortScreen ? 4 * scale : 8 * scale,
+                              ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -128,11 +148,11 @@ class TutorialCard extends StatelessWidget {
 
                 // 画像エリア（showImageがtrueの場合のみ表示）
                 if (item.showImage) ...[
-                  SizedBox(height: 60 * scale),
+                  SizedBox(height: isShortScreen ? 30 * scale : 60 * scale),
                   // 丸い画像/アイコン
                   Container(
-                    width: (isSmallScreen ? 280 : 380) * scale,
-                    height: (isSmallScreen ? 280 : 380) * scale,
+                    width: (isSmallScreen || isShortScreen ? 240 : 380) * scale,
+                    height: (isSmallScreen || isShortScreen ? 240 : 380) * scale,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.background,
