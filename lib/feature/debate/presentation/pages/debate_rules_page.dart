@@ -191,21 +191,21 @@ class DebateRulesPage extends StatelessWidget {
               ],
             ),
 
-            // ポイントシステム
-            _buildSection(
-              context,
-              title: 'ポイントシステム',
-              icon: Icons.stars,
-              children: [
-                _buildPointItem('参加', '10pt', Icons.event_available),
-                _buildPointItem('勝利', '30pt', Icons.emoji_events),
-                _buildPointItem('引き分け', '15pt', Icons.handshake),
-                _buildPointItem('MVP獲得', '50pt', Icons.workspace_premium),
-                _buildPointItem('満点評価項目', '20pt', Icons.star),
-                _buildPointItem(
-                    '連勝ボーナス', '10pt × 連勝数', Icons.local_fire_department),
-              ],
-            ),
+            // // ポイントシステム
+            // _buildSection(
+            //   context,
+            //   title: 'ポイントシステム',
+            //   icon: Icons.stars,
+            //   children: [
+            //     _buildPointItem('参加', '10pt', Icons.event_available),
+            //     _buildPointItem('勝利', '30pt', Icons.emoji_events),
+            //     _buildPointItem('引き分け', '15pt', Icons.handshake),
+            //     _buildPointItem('MVP獲得', '50pt', Icons.workspace_premium),
+            //     _buildPointItem('満点評価項目', '20pt', Icons.star),
+            //     _buildPointItem(
+            //         '連勝ボーナス', '10pt × 連勝数', Icons.local_fire_department),
+            //   ],
+            // ),
 
             const SizedBox(height: 32),
           ],
