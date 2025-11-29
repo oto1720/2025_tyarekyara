@@ -33,7 +33,7 @@ class TutorialData {
   static const List<TutorialItem> items = [
     TutorialItem(
       title: '意見を投稿',
-      description: '気になるトピックについて\nあなたの意見を自由に投稿できます。',
+      description: 'トピックに対して\nあなたの意見を投稿できます。',
       icon: Icons.create,
       imagePath: 'assets/images/onboarding/topic.png',
       primaryColor: Color(0xFFEC4899),
@@ -41,19 +41,19 @@ class TutorialData {
     ),
     TutorialItem(
       title: '他の人の意見を見る',
-      description: '同じ地域や年代の人の意見を\n見て、新しい発見をしましょう。',
+      description: '他の人の意見を\n見て、新しい発見をしましょう。',
       icon: Icons.people,
       imagePath: 'assets/images/onboarding/iken.png',
       primaryColor: Color(0xFF14B8A6),
       secondaryColor: Color(0xFF10B981),
     ),
     TutorialItem(
-      title: '統計情報を見る',
-      description: '統計情報を見て、\nあなたの意見の影響力を確認できます。',
-      icon: Icons.person,
-      imagePath: 'assets/images/onboarding/profile.png',
-      primaryColor: Color(0xFFF59E0B),
-      secondaryColor: Color(0xFFF97316),
+      title: 'チャレンジ機能',
+      description: 'あなたが答えた立場の\n反対の立場で意見を投稿し\nAIが判定してくれます。',
+      icon: Icons.waving_hand,
+      imagePath: 'assets/images/onboarding/ibento.png',
+      primaryColor: Color(0xFF6366F1),
+      secondaryColor: Color(0xFF8B5CF6),
     ),
     TutorialItem(
       title: 'ディベートを始める',
@@ -62,6 +62,14 @@ class TutorialData {
       imagePath: 'assets/images/onboarding/ibento.png',
       primaryColor: Color(0xFF6366F1),
       secondaryColor: Color(0xFF8B5CF6),
+    ),
+    TutorialItem(
+      title: '統計情報を見る',
+      description: '統計情報を見て、\nあなたの意見の影響力を確認できます。',
+      icon: Icons.person,
+      imagePath: 'assets/images/onboarding/profile.png',
+      primaryColor: Color(0xFFF59E0B),
+      secondaryColor: Color(0xFFF97316),
     ),
     TutorialItem(
       title: 'さあ、始めましょう！',
