@@ -10,6 +10,17 @@ class TutorialCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 画面サイズを取得
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+
+    // 画面幅に応じたスケールファクター（375pxを基準）
+    // 0.85〜1.15の範囲でクランプして、極端に小さい/大きいサイズを防ぐ
+    final scale = (width / 375).clamp(0.85, 1.15);
+
+    // 小さい画面（360px未満）の判定
+    final isSmallScreen = width < 360;
+
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -17,7 +28,10 @@ class TutorialCard extends StatelessWidget {
       child: Center(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 24 : 40,
+              vertical: isSmallScreen ? 40 : 60,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -25,74 +39,82 @@ class TutorialCard extends StatelessWidget {
                 Text(
                   item.title,
                   style: TextStyle(
-                    fontSize: 36,
+                    fontSize: 36 * scale,
                     fontWeight: FontWeight.bold,
                     color: item.primaryColor,
                     height: 1.2,
                     letterSpacing: 0.5,
                   ),
                   textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24 * scale),
 
                 // サブタイトル
                 if (item.subtitle != null) ...[
                   Text(
                     item.subtitle!,
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 20 * scale,
                       fontWeight: FontWeight.w600,
                       color: item.primaryColor.withValues(alpha: 0.8),
                       height: 1.4,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16 * scale),
                 ],
 
                 // 説明文
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16 * scale),
                   child: Text(
                     item.description,
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: 18 * scale,
                       color: AppColors.textSecondary,
                       height: 1.8,
                       letterSpacing: 0.3,
                     ),
                     textAlign: TextAlign.center,
+                    maxLines: 6,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
 
                 // 箇条書き
                 if (item.bulletPoints != null && item.bulletPoints!.isNotEmpty) ...[
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32 * scale),
                   Container(
-                    constraints: const BoxConstraints(maxWidth: 400),
+                    constraints: BoxConstraints(maxWidth: 400 * scale),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: item.bulletPoints!
                           .map(
                             (point) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              padding: EdgeInsets.symmetric(vertical: 8 * scale),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Icon(
                                     Icons.check_circle,
                                     color: item.primaryColor,
-                                    size: 24,
+                                    size: 24 * scale,
                                   ),
-                                  const SizedBox(width: 12),
+                                  SizedBox(width: 12 * scale),
                                   Expanded(
                                     child: Text(
                                       point,
-                                      style: const TextStyle(
-                                        fontSize: 16,
+                                      style: TextStyle(
+                                        fontSize: 16 * scale,
                                         color: AppColors.textPrimary,
                                         height: 1.6,
                                       ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],
@@ -106,20 +128,20 @@ class TutorialCard extends StatelessWidget {
 
                 // 画像エリア（showImageがtrueの場合のみ表示）
                 if (item.showImage) ...[
-                  const SizedBox(height: 60),
+                  SizedBox(height: 60 * scale),
                   // 丸い画像/アイコン
                   Container(
-                    width: 380,
-                    height: 380,
+                    width: (isSmallScreen ? 280 : 380) * scale,
+                    height: (isSmallScreen ? 280 : 380) * scale,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.background,
                       boxShadow: [
                         BoxShadow(
                           color: item.primaryColor.withValues(alpha: 0.3),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
-                          spreadRadius: 5,
+                          blurRadius: 30 * scale,
+                          offset: Offset(0, 15 * scale),
+                          spreadRadius: 5 * scale,
                         ),
                       ],
                     ),
@@ -138,10 +160,11 @@ class TutorialCard extends StatelessWidget {
                                   ),
                           )
                         : Icon(item.icon,
-                            size: 100, color: AppColors.textOnPrimary),
+                            size: 100 * scale,
+                            color: AppColors.textOnPrimary),
                   ),
                 ] else ...[
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40 * scale),
                 ],
                 /*child: Padding(
                         

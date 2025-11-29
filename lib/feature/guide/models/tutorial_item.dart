@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tyarekyara/core/constants/app_colors.dart';
 
 /// チュートリアルアイテムモデル
 class TutorialItem {
@@ -45,10 +46,10 @@ class TutorialData {
   static const List<TutorialItem> items = [
     // エコチェンバー効果の説明
     TutorialItem(
-      title: 'エコチェンバー現象',
+      title: 'エコチェンバー\n現象',
       subtitle: '同じ意見ばかりに触れる危険性',
       description:
-          'SNSやインターネットでは、自分と似た意見ばかりに触れてしまう\n「エコチェンバー現象」が起きやすくなっています。',
+          'SNSやインターネットでは、\n自分と似た意見ばかりに触れてしまう\n「エコチェンバー効果」が\n起きやすくなっています。',
       bulletPoints: [
         '視野が狭くなり、偏った判断をしてしまう',
         '新しい発見や学びの機会が減る',
@@ -71,8 +72,8 @@ class TutorialData {
         'チャレンジ機能で反対の立場を考える',
       ],
       icon: Icons.lightbulb_outline,
-      primaryColor: Color(0xFF8B5CF6),
-      secondaryColor: Color(0xFF7C3AED),
+      primaryColor: AppColors.primary,
+      secondaryColor: AppColors.primaryLight,
       showImage: false, // 画像を表示しない
     ),
 
@@ -121,8 +122,8 @@ class TutorialData {
       description: 'それでは、アプリを\n楽しんでください！',
       icon: Icons.rocket_launch,
       imagePath: 'assets/images/onboarding/icon2.png',
-      primaryColor: Color(0xFF3B82F6),
-      secondaryColor: Color(0xFF2563EB),
+      primaryColor: AppColors.primary,
+      secondaryColor: AppColors.primaryLight,
     ),
   ];
 }
