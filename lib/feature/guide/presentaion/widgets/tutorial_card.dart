@@ -35,6 +35,21 @@ class TutorialCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
+                // サブタイトル
+                if (item.subtitle != null) ...[
+                  Text(
+                    item.subtitle!,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: item.primaryColor.withValues(alpha: 0.8),
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // 説明文
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -49,48 +64,85 @@ class TutorialCard extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                const SizedBox(height: 60),
 
-                // 丸い画像/アイコン
-                Container(
-                  width: 380,
-                  height: 380,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.background,
-                    boxShadow: [
-                      BoxShadow(
-                        color: item.primaryColor.withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
-                        spreadRadius: 5,
-                      ),
-                    ],
+                // 箇条書き
+                if (item.bulletPoints != null && item.bulletPoints!.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: item.bulletPoints!
+                          .map(
+                            (point) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: item.primaryColor,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      point,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: AppColors.textPrimary,
+                                        height: 1.6,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
-                  child: item.imagePath != null
-                      ? ClipOval(
-                          child:
-                              item.imagePath ==
-                                  'assets/images/onboarding/icon2.png'
-                              ? Image.asset(item.imagePath!, fit: BoxFit.cover)
-                              : Transform.scale(
-                                  scale: 1.5,
-                                  child: Image.asset(
-                                    item.imagePath!,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                ],
 
-                          /*: Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Image.asset(
-                                    item.imagePath!,
-                                    fit: BoxFit.contain,
+                // 画像エリア（showImageがtrueの場合のみ表示）
+                if (item.showImage) ...[
+                  const SizedBox(height: 60),
+                  // 丸い画像/アイコン
+                  Container(
+                    width: 380,
+                    height: 380,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.background,
+                      boxShadow: [
+                        BoxShadow(
+                          color: item.primaryColor.withValues(alpha: 0.3),
+                          blurRadius: 30,
+                          offset: const Offset(0, 15),
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: item.imagePath != null
+                        ? ClipOval(
+                            child: item.imagePath ==
+                                    'assets/images/onboarding/icon2.png'
+                                ? Image.asset(item.imagePath!,
+                                    fit: BoxFit.cover)
+                                : Transform.scale(
+                                    scale: 1.5,
+                                    child: Image.asset(
+                                      item.imagePath!,
+                                      fit: BoxFit.contain,
+                                    ),
                                   ),
-                                ),*/
-                        )
-                      : Icon(item.icon, size: 100, color: AppColors.textOnPrimary),
-                ),
+                          )
+                        : Icon(item.icon,
+                            size: 100, color: AppColors.textOnPrimary),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 40),
+                ],
                 /*child: Padding(
                         
                             padding: const EdgeInsets.all(20), // ← 画像周りに余白を追加
