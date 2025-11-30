@@ -221,4 +221,38 @@ class DebateMatchRepository {
       rethrow;
     }
   }
+
+  /// 特定イベントのユーザーマッチを取得
+  Future<DebateMatch?> getUserMatchByEvent(String eventId, String userId) async {
+    try {
+      // proTeamにいる場合を検索
+      var snapshot = await _firestore
+          .collection(_collectionName)
+          .where('eventId', isEqualTo: eventId)
+          .where('proTeam.memberIds', arrayContains: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return DebateMatch.fromJson(snapshot.docs.first.data());
+      }
+
+      // conTeamにいる場合を検索
+      snapshot = await _firestore
+          .collection(_collectionName)
+          .where('eventId', isEqualTo: eventId)
+          .where('conTeam.memberIds', arrayContains: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return DebateMatch.fromJson(snapshot.docs.first.data());
+      }
+
+      return null;
+    } catch (e) {
+      print('Error getting user match by event: $e');
+      return null;
+    }
+  }
 }
