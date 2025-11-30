@@ -30,7 +30,7 @@ class PageTutorialData {
       TutorialStep(
         title: '3. 他の意見を見る',
         description: '他のユーザーの多様な意見を確認しよう',
-        imagePath: 'assets/images/tutorial/home/step3.png',
+        imagePath: 'assets/images/tutorial/home/homestep3.png',
       ),
       TutorialStep(
         title: '4. チャレンジ機能を行おう',
@@ -101,12 +101,12 @@ class PageTutorialData {
       TutorialStep(
         title: '4. ディベート',
         description: '対戦相手とリアルタイムで議論を交わし、フェーズを進めていきます',
-        imagePath: 'assets/images/tutorial/debate/step3.png',
+        imagePath: 'assets/images/tutorial/debate/dhistep4.png',
       ),
       TutorialStep(
         title: '5. AI判定',
         description: 'ディベートを完了するとAIが判定してくれるよ',
-        imagePath: 'assets/images/tutorial/debate/step4.png',
+        imagePath: 'assets/images/tutorial/debate/dhistep5.png',
       ),
     ],
   };
