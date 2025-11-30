@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
+import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
 class ChallengePage extends ConsumerStatefulWidget {
   const ChallengePage({super.key});
@@ -45,6 +48,7 @@ class ChallengePage extends ConsumerStatefulWidget {
 }
 
 class _ChallengePageState extends ConsumerState<ChallengePage> {
+  final GlobalKey _helpButtonKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -89,15 +93,32 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
     }
 
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('チャレンジ'),
-        actions: [
-          // デバッグ用リフレッシュボタン
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'データを再読み込み',
-            onPressed: () async {
+    return ShowCaseWidget(
+      builder: (context) => TutorialShowcaseWrapper(
+        pageKey: 'challenge',
+        showcaseKey: _helpButtonKey,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('チャレンジ'),
+            actions: [
+              // ヘルプボタン
+              Showcase(
+                key: _helpButtonKey,
+                title: '操作ガイド',
+                description: '詳細はここにあります。確認しましょう',
+                child: IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  onPressed: () {
+                    TutorialBottomSheet.show(context, 'challenge');
+                  },
+                  tooltip: '操作ガイド',
+                ),
+              ),
+              // デバッグ用リフレッシュボタン
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'データを再読み込み',
+                onPressed: () async {
               print('🔄 [UI] リフレッシュボタンが押されました');
               await ref.read(challengeProvider.notifier).refresh();
               if (mounted) {
@@ -371,6 +392,8 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
               const SizedBox(height: 95), // BottomNavigationBar分の余白
             ],
           ),
+        ),
+      ),
         ),
       ),
     );

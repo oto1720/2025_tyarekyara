@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import {
   createRoomsForEvent,
-  activateRoomsForEvent,
+  createRoomForMatch,
 } from "./debateRoomService";
 
 /**
@@ -30,6 +30,10 @@ export async function updateEventStatuses(): Promise<void> {
     // 4. 終了時刻を過ぎたイベントを「completed」に変更
     // （開催時刻 + 2時間を終了時刻とする）
     updatedCount += await updateInProgressToCompleted(db, now);
+
+    // 5. 準備完了タイムアウト処理
+    // 開催時刻から5分経過してもまだ準備完了していないマッチを強制開始
+    updatedCount += await forceStartTimedOutMatches(db, now);
 
     logger.info(
       `Event status update completed. Updated ${updatedCount} events`
@@ -131,18 +135,11 @@ async function updateMatchingToInProgress(
       });
       logger.info(`Updated event ${eventId} to inProgress status`);
 
-      // イベントのルームをアクティブ化（ディベート開始）
-      try {
-        const roomsActivated = await activateRoomsForEvent(eventId);
-        logger.info(
-          `Activated ${roomsActivated} rooms for event ${eventId}`
-        );
-      } catch (error) {
-        logger.error(
-          `Error activating rooms for event ${eventId}:`,
-          error
-        );
-      }
+      // 自動開始は無効化 - 参加者の準備完了を待つ
+      // ルームは全員が準備完了になったときにアクティブ化される
+      logger.info(
+        `Waiting for all participants to be ready for event ${eventId}`
+      );
 
       count++;
     }
@@ -246,4 +243,144 @@ export async function updateScheduledToAccepting(
     logger.error("Error updating scheduled to accepting:", error);
     return 0;
   }
+}
+
+/**
+ * 準備完了タイムアウト処理
+ * イベント開始から5分経過してもまだ準備完了していないマッチを強制開始
+ * @param {admin.firestore.Firestore} db Firestoreインスタンス
+ * @param {admin.firestore.Timestamp} now 現在時刻
+ * @return {Promise<number>} 強制開始したマッチ数
+ */
+async function forceStartTimedOutMatches(
+  db: admin.firestore.Firestore,
+  now: admin.firestore.Timestamp
+): Promise<number> {
+  try {
+    // 5分前の時刻を計算
+    const fiveMinutesAgo = new Date(
+      now.toDate().getTime() - 5 * 60 * 1000
+    );
+    const fiveMinutesAgoTimestamp =
+      admin.firestore.Timestamp.fromDate(fiveMinutesAgo);
+
+    // inProgressステータスのイベントを取得
+    const eventsSnapshot = await db
+      .collection("debate_events")
+      .where("status", "==", "inProgress")
+      .where("scheduledAt", "<=", fiveMinutesAgoTimestamp)
+      .get();
+
+    logger.info(
+      `Checking timeout for ${eventsSnapshot.size} in-progress events`
+    );
+
+    let count = 0;
+
+    for (const eventDoc of eventsSnapshot.docs) {
+      const eventId = eventDoc.id;
+
+      // このイベントのマッチでまだmatchedステータスのものを取得
+      const matchesSnapshot = await db
+        .collection("debate_matches")
+        .where("eventId", "==", eventId)
+        .where("status", "==", "matched")
+        .get();
+
+      logger.info(
+        `Found ${matchesSnapshot.size} timed-out matches for event ${eventId}`
+      );
+
+      for (const matchDoc of matchesSnapshot.docs) {
+        const matchId = matchDoc.id;
+        const matchData = matchDoc.data();
+
+        try {
+          // ルームがない場合は作成
+          let roomId = matchData.roomId;
+          if (!roomId) {
+            roomId = await createRoomForMatch(matchId);
+          }
+
+          // ルームを強制的にアクティブ化
+          await db.collection("debate_rooms").doc(roomId).update({
+            status: "inProgress",
+            startedAt: now,
+            phaseStartedAt: now,
+            phaseTimeRemaining: getPhaseTimeRemaining(
+              matchData.duration,
+              "preparation"
+            ),
+            updatedAt: now,
+          });
+
+          // マッチステータスを更新
+          await matchDoc.ref.update({
+            status: "inProgress",
+            startedAt: now,
+            updatedAt: now,
+          });
+
+          logger.info(
+            `Force-started match ${matchId} due to timeout ` +
+            `(room: ${roomId})`
+          );
+
+          count++;
+        } catch (error) {
+          logger.error(
+            `Error force-starting match ${matchId}:`,
+            error
+          );
+        }
+      }
+    }
+
+    return count;
+  } catch (error) {
+    logger.error("Error in force-start timeout handler:", error);
+    return 0;
+  }
+}
+
+/**
+ * フェーズの残り時間を取得
+ * @param {string} duration ディベート時間
+ * @param {string} phase フェーズ
+ * @return {number} 残り時間（秒）
+ */
+function getPhaseTimeRemaining(
+  duration: string,
+  phase: string
+): number {
+  // 5分モード（short）の時間設定
+  const shortDuration: {[key: string]: number} = {
+    preparation: 30,
+    openingPro: 60,
+    openingCon: 60,
+    rebuttalPro: 45,
+    rebuttalCon: 45,
+    closingPro: 30,
+    closingCon: 30,
+    judgment: 15,
+  };
+
+  // 10分モード（medium）の時間設定
+  const mediumDuration: {[key: string]: number} = {
+    preparation: 60,
+    openingPro: 90,
+    openingCon: 90,
+    questionPro: 30,
+    questionCon: 30,
+    rebuttalPro: 60,
+    rebuttalCon: 60,
+    closingPro: 45,
+    closingCon: 45,
+    judgment: 20,
+  };
+
+  const durationMap =
+    duration === "short" ? shortDuration : mediumDuration;
+
+  return durationMap[phase] || 0;
 }
