@@ -34,4 +34,8 @@ abstract class AuthRepository {
   Future<void> reauthenticate(String password);
 
   Future<void> sendPasswordResetEmail(String email);
+
+  Future<UserCredential> signInWithGoogle();
+
+  Future<UserCredential> signInWithApple();
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../repositories/auth_repository.dart';
 import '../services/auth_service.dart';
 import '../models/user/user_model.dart';
@@ -63,6 +64,10 @@ class AuthController extends Notifier<AuthState> {
 
       await _authRepository.saveUserData(userModel);
 
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
+
       // FCMトークンを保存
       await NotificationService().saveFcmToken(userModel.id);
 
@@ -94,6 +99,82 @@ class AuthController extends Notifier<AuthState> {
         return;
       }
 
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
+
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
+      state = AuthState.authenticated(userModel);
+    } catch (e) {
+      state = AuthState.error(e.toString());
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    state = const AuthState.loading();
+    try {
+      final credential = await _authRepository.signInWithGoogle();
+
+      if (credential.user == null) {
+        state = const AuthState.error('Failed to sign in with Google');
+        return;
+      }
+
+      // ユーザーデータを取得または作成
+      var userModel = await _authRepository.getUserData(credential.user!.uid);
+
+      if (userModel == null) {
+        // 新規ユーザーの場合、ユーザーデータを作成
+        final now = DateTime.now();
+        userModel = UserModel(
+          id: credential.user!.uid,
+          nickname: credential.user!.displayName ?? 'Google User',
+          email: credential.user!.email ?? '',
+          iconUrl: credential.user!.photoURL ?? 'assets/images/default_avatar.png',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _authRepository.saveUserData(userModel);
+      }
+
+      // FCMトークンを保存
+      await NotificationService().saveFcmToken(userModel.id);
+
+      state = AuthState.authenticated(userModel);
+    } catch (e) {
+      state = AuthState.error(e.toString());
+    }
+  }
+
+  Future<void> signInWithApple() async {
+    state = const AuthState.loading();
+    try {
+      final credential = await _authRepository.signInWithApple();
+
+      if (credential.user == null) {
+        state = const AuthState.error('Failed to sign in with Apple');
+        return;
+      }
+
+      // ユーザーデータを取得または作成
+      var userModel = await _authRepository.getUserData(credential.user!.uid);
+
+      if (userModel == null) {
+        // 新規ユーザーの場合、ユーザーデータを作成
+        final now = DateTime.now();
+        userModel = UserModel(
+          id: credential.user!.uid,
+          nickname: credential.user!.displayName ?? 'Apple User',
+          email: credential.user!.email ?? '',
+          iconUrl: credential.user!.photoURL ?? 'assets/images/default_avatar.png',
+          createdAt: now,
+          updatedAt: now,
+        );
+        await _authRepository.saveUserData(userModel);
+      }
+
       // FCMトークンを保存
       await NotificationService().saveFcmToken(userModel.id);
 
@@ -112,11 +193,22 @@ class AuthController extends Notifier<AuthState> {
         await NotificationService().removeFcmToken(currentUser.uid);
       }
 
+      // ゲストモードフラグをクリア
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_guest_mode');
+
       await _authRepository.signOut();
       state = const AuthState.unauthenticated();
     } catch (e) {
       state = AuthState.error(e.toString());
     }
+  }
+
+  /// ゲストモードに移行
+  Future<void> continueAsGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_guest_mode', true);
+    state = const AuthState.guest();
   }
 
   Future<void> updateProfile({

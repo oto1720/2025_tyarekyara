@@ -12,7 +12,12 @@
           "package_name": "com.example.tyarekyara"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "662430133513-epedlcehljkba511slngalid1uvjd70m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBBfLfj3HiuEicN6eDD0ydoWgQPpavrwps"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "662430133513-epedlcehljkba511slngalid1uvjd70m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "662430133513-dt33hlb3prfv4mb5annl4f1pgi6babcl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tyarekyara"
+              }
+            }
+          ]
         }
       }
     }

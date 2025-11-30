@@ -153,7 +153,8 @@ class GeminiRepository implements AIRepository {
   }
 
   /// Google Search連携でテキストを生成
-  Future<String> generateTextWithSearch({
+  /// 戻り値: Map with 'text' (String) and 'groundingChunks' (List)
+  Future<Map<String, dynamic>> generateTextWithSearch({
     required String prompt,
     double temperature = 0.7,
     int maxTokens = 5000,  // Google Search Groundingは検索メタデータで大量のトークンを消費するため十分大きく設定
@@ -221,7 +222,30 @@ class GeminiRepository implements AIRepository {
       }
 
       final text = content['parts'][0]['text'] as String;
-      return text;
+
+      // groundingMetadataから実際の検索結果のURLを取得
+      List<Map<String, dynamic>> groundingChunks = [];
+      if (candidate['groundingMetadata'] != null) {
+        final groundingMetadata = candidate['groundingMetadata'];
+        if (groundingMetadata['groundingChunks'] != null) {
+          final chunks = groundingMetadata['groundingChunks'] as List<dynamic>;
+          groundingChunks = chunks.map((chunk) {
+            final web = chunk['web'];
+            if (web != null) {
+              return {
+                'uri': web['uri'] as String?,
+                'title': web['title'] as String?,
+              };
+            }
+            return <String, dynamic>{};
+          }).where((chunk) => chunk.isNotEmpty).toList();
+        }
+      }
+
+      return {
+        'text': text,
+        'groundingChunks': groundingChunks,
+      };
     } else {
       throw Exception('Gemini API error: ${response.statusCode} - ${response.body}');
     }

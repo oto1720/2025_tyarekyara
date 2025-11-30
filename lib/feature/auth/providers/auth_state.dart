@@ -12,6 +12,9 @@ class AuthState with _$AuthState {
   /// ローディング中
   const factory AuthState.loading() = _Loading;
 
+  /// ゲストモード
+  const factory AuthState.guest() = _Guest;
+
   /// 認証済み
   const factory AuthState.authenticated(UserModel user) = _Authenticated;
 

@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/debate_event.dart';
+import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/providers/debate_event_unlock_provider.dart';
 
 /// イベント詳細画面
 class DebateEventDetailPage extends ConsumerWidget {
@@ -21,6 +23,7 @@ class DebateEventDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventAsync = ref.watch(eventDetailProvider(eventId));
     final authState = ref.watch(authControllerProvider);
+    final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(eventId));
 
     return Scaffold(
       body: eventAsync.when(
@@ -34,7 +37,16 @@ class DebateEventDetailPage extends ConsumerWidget {
             orElse: () => null,
           );
 
-          return _buildEventDetail(context, ref, event, userId);
+          return unlockedAsync.when(
+            data: (unlocked) {
+              if (!unlocked) {
+                return _buildLockedView(context);
+              }
+              return _buildEventDetail(context, ref, event, userId);
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => _buildEventDetail(context, ref, event, userId),
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildError(context, error),
@@ -66,7 +78,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _buildParticipantsInfo(context, event),
                 const SizedBox(height: 24),
-                if (userId != null && _canEntry(event))
+                if (userId != null)
                   _buildEntrySection(context, ref, event, userId),
                 const SizedBox(height: 80), // ボタンの余白
               ],
@@ -92,6 +104,13 @@ class DebateEventDetailPage extends ConsumerWidget {
         ),
         overflow: TextOverflow.ellipsis,
       ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          onPressed: () => context.push('/debate/rules'),
+          tooltip: 'ルールを確認',
+        ),
+      ],
     );
   }
 
@@ -386,9 +405,46 @@ class DebateEventDetailPage extends ConsumerWidget {
     return entryAsync.when(
       data: (entry) {
         if (entry != null) {
+          // マッチング成立チェック - マッチ詳細画面へ自動遷移
+          if (entry.status == MatchStatus.matched && entry.matchId != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                print('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
+                context.pushReplacement('/debate/match/${entry.matchId}');
+              }
+            });
+            return Center(
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'マッチング成立！',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'マッチ詳細画面へ遷移中...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
           return _buildAlreadyEntered(context, event, entry);
         }
-        return _buildEntryButton(context, event);
+        // 未エントリーの場合は、エントリー可能かチェック
+        if (_canEntry(event)) {
+          return _buildEntryButton(context, event);
+        }
+        return const SizedBox.shrink();
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => const SizedBox.shrink(),
@@ -557,6 +613,69 @@ class DebateEventDetailPage extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// ロックビュー
+  Widget _buildLockedView(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: AppColors.surface,
+          foregroundColor: AppColors.textPrimary,
+          elevation: 1,
+          title: const Text(
+            'ディベートイベント',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        SliverFillRemaining(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    size: 80,
+                    color: AppColors.primary.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '今日のディベート',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '今日のトピックに回答すると\n'
+                    'このディベートに参加できます',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.edit),
+                    label: const Text('トピックに回答する'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'statistics_state.dart';
 import '../models/user_statistics.dart';
 import '../models/diversity_score.dart';
@@ -54,6 +55,95 @@ class StatisticsNotifier extends Notifier<StatisticsState> {
 
   Future<void> loadUserStatistics(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
+
+    // ゲストモードの場合は直接モックデータを使用
+    final prefs = await SharedPreferences.getInstance();
+    final isGuest = prefs.getBool('is_guest_mode') ?? false;
+
+    if (isGuest || userId.isEmpty) {
+      print('👤 ゲストモード: モックデータを使用');
+      // ダミーデータを直接設定
+      await Future.delayed(const Duration(milliseconds: 200));
+      final now = DateTime.now().toUtc();
+      final userStats = UserStatistics(
+        userId: 'guest',
+        participationDays: 10,
+        totalOpinions: 42,
+        consecutiveDays: 3,
+        lastParticipation: DateTime.now().toUtc(),
+        createdAt: now,
+        updatedAt: now,
+      );
+      final diversity = DiversityScore(
+        userId: 'guest',
+        score: 78.0,
+        breakdown: {'議論の幅': 40.0, '情報源の多様性': 38.0},
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final stance = StanceDistribution(
+        userId: 'guest',
+        counts: {'賛成': 16, '中立': 8, '反対': 12},
+        total: 36,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final trend = ParticipationTrend(
+        userId: 'guest',
+        points: [
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 6)),
+            count: 2,
+          ),
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 5)),
+            count: 3,
+          ),
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 4)),
+            count: 4,
+          ),
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 3)),
+            count: 2,
+          ),
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 2)),
+            count: 5,
+          ),
+          ParticipationPoint(
+            date: now.subtract(const Duration(days: 1)),
+            count: 3,
+          ),
+        ],
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final badges = [
+        Badge(
+          id: 'b1',
+          name: '初投稿',
+          createdAt: now,
+          updatedAt: now,
+          earnedAt: now,
+        ),
+        Badge(id: 'b2', name: '7日連続参加', createdAt: now, updatedAt: now),
+      ];
+
+      state = state.copyWith(
+        userStatistics: userStats,
+        diversityScore: diversity,
+        stanceDistribution: stance,
+        participationTrend: trend,
+        earnedBadges: badges,
+        isLoading: false,
+      );
+      return;
+    }
+
     try {
       print('📊 統計データ取得開始: userId=$userId');
       // Firestoreから実データを取得

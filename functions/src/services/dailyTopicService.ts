@@ -177,13 +177,19 @@ async function createDebateEvent(
   const db = admin.firestore();
 
   try {
-    // イベント開始時刻: 今日の12:00（正午）
-    const eventDate = new Date(date);
-    eventDate.setHours(20, 0, 0, 0);
+    // 日付文字列から年月日を取得
+    const [year, month, day] = date.split("-").map(Number);
 
-    // エントリー締切時刻: 今日の23:59
-    const entryDeadlineDate = new Date(date);
-    entryDeadlineDate.setHours(19, 0, 0, 0);
+    // イベント開始時刻: 今日の20:00（JST） = UTC 11:00
+    // Cloud FunctionsはUTC環境で動作するため、UTC時刻で設定
+    const eventDate = new Date(
+      Date.UTC(year, month - 1, day, 11, 0, 0, 0)
+    );
+
+    // エントリー締切時刻: 今日の19:00（JST） = UTC 10:00
+    const entryDeadlineDate = new Date(
+      Date.UTC(year, month - 1, day, 10, 0, 0, 0)
+    );
 
     const eventData = {
       id: `event_${date}_${topic.id}`,

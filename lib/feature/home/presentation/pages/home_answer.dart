@@ -192,7 +192,6 @@ class OpinionListScreen extends ConsumerWidget {
               const SizedBox(height: 16),
             ]),
           ),
-
           // 空の場合
           if (state.opinions.isEmpty)
             SliverFillRemaining(
@@ -217,7 +216,6 @@ class OpinionListScreen extends ConsumerWidget {
                 ),
               ),
             ),
-
           // 空の場合
           SliverList(
             delegate: SliverChildListDelegate([

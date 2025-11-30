@@ -19,9 +19,13 @@ class NewsService {
         maxTokens: 5000, // Google Search Groundingは検索メタデータで大量のトークンを消費するため十分大きく設定
       );
 
-      final news = _parseNewsFromResponse(response);
+      final news = _parseNewsFromResponse(
+        response['text'] as String,
+        response['groundingChunks'] as List<dynamic>,
+      );
       return news;
     } catch (e) {
+      print('Error getting related news: $e');
       // エラー時は空のリストを返す
       return [];
     }
@@ -59,51 +63,87 @@ class NewsService {
   }
 
   /// レスポンスからニュースをパース
-  List<NewsItem> _parseNewsFromResponse(String response) {
+  /// groundingChunksから実際の検索結果のURLを使用
+  List<NewsItem> _parseNewsFromResponse(
+    String response,
+    List<dynamic> groundingChunks,
+  ) {
     try {
-      // JSONの前後の不要なテキストを削除
-      String jsonString = response.trim();
+      // AIが生成したテキストからニュース情報を抽出（要約などの詳細情報用）
+      Map<String, dynamic>? aiGeneratedData;
+      try {
+        // JSONの前後の不要なテキストを削除
+        String jsonString = response.trim();
 
-      // マークダウンのコードブロックを削除
-      if (jsonString.startsWith('```json')) {
-        jsonString = jsonString.substring(7);
-      } else if (jsonString.startsWith('```')) {
-        jsonString = jsonString.substring(3);
+        // マークダウンのコードブロックを削除
+        if (jsonString.startsWith('```json')) {
+          jsonString = jsonString.substring(7);
+        } else if (jsonString.startsWith('```')) {
+          jsonString = jsonString.substring(3);
+        }
+
+        if (jsonString.endsWith('```')) {
+          jsonString = jsonString.substring(0, jsonString.length - 3);
+        }
+
+        jsonString = jsonString.trim();
+
+        final Map<String, dynamic> data = jsonDecode(jsonString);
+        aiGeneratedData = data;
+      } catch (e) {
+        print('Warning: Could not parse AI response as JSON: $e');
+        // JSONパースに失敗してもgroundingChunksから生成を試みる
       }
 
-      if (jsonString.endsWith('```')) {
-        jsonString = jsonString.substring(0, jsonString.length - 3);
-      }
+      // groundingChunksから実際の検索結果のURLを使用してNewsItemを作成
+      final List<NewsItem> newsItems = [];
 
-      jsonString = jsonString.trim();
+      for (int i = 0; i < groundingChunks.length; i++) {
+        final chunk = groundingChunks[i] as Map<String, dynamic>;
+        final uri = chunk['uri'] as String?;
+        final title = chunk['title'] as String?;
 
-      final Map<String, dynamic> data = jsonDecode(jsonString);
-      final List<dynamic> newsArray = data['news'] as List<dynamic>;
+        if (uri == null || uri.isEmpty) continue;
 
-      return newsArray.map((item) {
-        final newsMap = item as Map<String, dynamic>;
-
-        // publishedAtをパース
+        // AIが生成したJSONから対応する情報を取得（可能な場合）
+        String newsTitle = title ?? 'ニュース記事';
+        String summary = '';
+        String? source;
         DateTime? publishedAt;
-        if (newsMap['publishedAt'] != null) {
-          try {
-            publishedAt = DateTime.parse(newsMap['publishedAt'] as String);
-          } catch (e) {
-            print('Error parsing date: $e');
+
+        if (aiGeneratedData != null && aiGeneratedData['news'] != null) {
+          final newsArray = aiGeneratedData['news'] as List<dynamic>;
+          if (i < newsArray.length) {
+            final newsData = newsArray[i] as Map<String, dynamic>;
+            newsTitle = newsData['title'] as String? ?? title ?? 'ニュース記事';
+            summary = newsData['summary'] as String? ?? '';
+            source = newsData['source'] as String?;
+
+            // publishedAtをパース
+            if (newsData['publishedAt'] != null) {
+              try {
+                publishedAt = DateTime.parse(newsData['publishedAt'] as String);
+              } catch (e) {
+                print('Error parsing date: $e');
+              }
+            }
           }
         }
 
-        return NewsItem(
-          title: newsMap['title'] as String? ?? '',
-          summary: newsMap['summary'] as String? ?? '',
-          url: newsMap['url'] as String?,
-          source: newsMap['source'] as String?,
+        newsItems.add(NewsItem(
+          title: newsTitle,
+          summary: summary,
+          url: uri, // ★重要: groundingChunksから取得した実際のURLを使用
+          source: source,
           publishedAt: publishedAt,
-        );
-      }).toList();
+        ));
+      }
+
+      return newsItems;
     } catch (e) {
       print('Error parsing news response: $e');
       print('Response: $response');
+      print('GroundingChunks: $groundingChunks');
       return [];
     }
   }
