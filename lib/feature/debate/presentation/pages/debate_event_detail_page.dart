@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../models/debate_event.dart';
+import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -77,7 +78,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 _buildParticipantsInfo(context, event),
                 const SizedBox(height: 24),
-                if (userId != null && _canEntry(event))
+                if (userId != null)
                   _buildEntrySection(context, ref, event, userId),
                 const SizedBox(height: 80), // ボタンの余白
               ],
@@ -404,9 +405,46 @@ class DebateEventDetailPage extends ConsumerWidget {
     return entryAsync.when(
       data: (entry) {
         if (entry != null) {
+          // マッチング成立チェック - マッチ詳細画面へ自動遷移
+          if (entry.status == MatchStatus.matched && entry.matchId != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                print('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
+                context.pushReplacement('/debate/match/${entry.matchId}');
+              }
+            });
+            return Center(
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'マッチング成立！',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'マッチ詳細画面へ遷移中...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
           return _buildAlreadyEntered(context, event, entry);
         }
-        return _buildEntryButton(context, event);
+        // 未エントリーの場合は、エントリー可能かチェック
+        if (_canEntry(event)) {
+          return _buildEntryButton(context, event);
+        }
+        return const SizedBox.shrink();
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => const SizedBox.shrink(),
