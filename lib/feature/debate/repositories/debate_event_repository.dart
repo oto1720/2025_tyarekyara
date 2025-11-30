@@ -19,6 +19,7 @@ class DebateEventRepository {
             EventStatus.scheduled.name,
             EventStatus.accepting.name,
             EventStatus.matching.name,
+            EventStatus.inProgress.name,
           ])
           .orderBy('scheduledAt', descending: false)
           .limit(limit)
@@ -88,6 +89,7 @@ class DebateEventRepository {
           EventStatus.scheduled.name,
           EventStatus.accepting.name,
           EventStatus.matching.name,
+          EventStatus.inProgress.name,
         ])
         .orderBy('scheduledAt', descending: false)
         .limit(limit)

@@ -209,4 +209,50 @@ class DebateMatchRepository {
       rethrow;
     }
   }
+
+  /// ユーザーを準備完了としてマーク
+  Future<void> markUserAsReady(String matchId, String userId) async {
+    try {
+      await _firestore.collection(_collectionName).doc(matchId).update({
+        'readyUsers': FieldValue.arrayUnion([userId]),
+      });
+    } catch (e) {
+      print('Error marking user as ready: $e');
+      rethrow;
+    }
+  }
+
+  /// 特定イベントのユーザーマッチを取得
+  Future<DebateMatch?> getUserMatchByEvent(String eventId, String userId) async {
+    try {
+      // proTeamにいる場合を検索
+      var snapshot = await _firestore
+          .collection(_collectionName)
+          .where('eventId', isEqualTo: eventId)
+          .where('proTeam.memberIds', arrayContains: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return DebateMatch.fromJson(snapshot.docs.first.data());
+      }
+
+      // conTeamにいる場合を検索
+      snapshot = await _firestore
+          .collection(_collectionName)
+          .where('eventId', isEqualTo: eventId)
+          .where('conTeam.memberIds', arrayContains: userId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return DebateMatch.fromJson(snapshot.docs.first.data());
+      }
+
+      return null;
+    } catch (e) {
+      print('Error getting user match by event: $e');
+      return null;
+    }
+  }
 }

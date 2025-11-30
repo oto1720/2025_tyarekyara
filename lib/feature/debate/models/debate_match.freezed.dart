@@ -570,6 +570,7 @@ mixin _$DebateMatch {
   String? get roomId => throw _privateConstructorUsedError;
   String? get winningSide => throw _privateConstructorUsedError;
   Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
+  List<String> get readyUsers => throw _privateConstructorUsedError;
 
   /// Create a copy of DebateMatch
   /// with the given fields replaced by the non-null parameter values.
@@ -600,6 +601,7 @@ abstract class $DebateMatchCopyWith<$Res> {
     String? roomId,
     String? winningSide,
     Map<String, dynamic>? metadata,
+    List<String> readyUsers,
   });
 
   $DebateTeamCopyWith<$Res> get proTeam;
@@ -635,6 +637,7 @@ class _$DebateMatchCopyWithImpl<$Res, $Val extends DebateMatch>
     Object? roomId = freezed,
     Object? winningSide = freezed,
     Object? metadata = freezed,
+    Object? readyUsers = null,
   }) {
     return _then(
       _value.copyWith(
@@ -694,6 +697,10 @@ class _$DebateMatchCopyWithImpl<$Res, $Val extends DebateMatch>
                 ? _value.metadata
                 : metadata // ignore: cast_nullable_to_non_nullable
                       as Map<String, dynamic>?,
+            readyUsers: null == readyUsers
+                ? _value.readyUsers
+                : readyUsers // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
           )
           as $Val,
     );
@@ -744,6 +751,7 @@ abstract class _$$DebateMatchImplCopyWith<$Res>
     String? roomId,
     String? winningSide,
     Map<String, dynamic>? metadata,
+    List<String> readyUsers,
   });
 
   @override
@@ -780,6 +788,7 @@ class __$$DebateMatchImplCopyWithImpl<$Res>
     Object? roomId = freezed,
     Object? winningSide = freezed,
     Object? metadata = freezed,
+    Object? readyUsers = null,
   }) {
     return _then(
       _$DebateMatchImpl(
@@ -839,6 +848,10 @@ class __$$DebateMatchImplCopyWithImpl<$Res>
             ? _value._metadata
             : metadata // ignore: cast_nullable_to_non_nullable
                   as Map<String, dynamic>?,
+        readyUsers: null == readyUsers
+            ? _value._readyUsers
+            : readyUsers // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
       ),
     );
   }
@@ -862,7 +875,9 @@ class _$DebateMatchImpl implements _DebateMatch {
     this.roomId,
     this.winningSide,
     final Map<String, dynamic>? metadata,
-  }) : _metadata = metadata;
+    final List<String> readyUsers = const [],
+  }) : _metadata = metadata,
+       _readyUsers = readyUsers;
 
   @override
   final String id;
@@ -900,9 +915,18 @@ class _$DebateMatchImpl implements _DebateMatch {
     return EqualUnmodifiableMapView(value);
   }
 
+  final List<String> _readyUsers;
+  @override
+  @JsonKey()
+  List<String> get readyUsers {
+    if (_readyUsers is EqualUnmodifiableListView) return _readyUsers;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_readyUsers);
+  }
+
   @override
   String toString() {
-    return 'DebateMatch(id: $id, eventId: $eventId, format: $format, duration: $duration, proTeam: $proTeam, conTeam: $conTeam, status: $status, matchedAt: $matchedAt, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, roomId: $roomId, winningSide: $winningSide, metadata: $metadata)';
+    return 'DebateMatch(id: $id, eventId: $eventId, format: $format, duration: $duration, proTeam: $proTeam, conTeam: $conTeam, status: $status, matchedAt: $matchedAt, createdAt: $createdAt, startedAt: $startedAt, completedAt: $completedAt, roomId: $roomId, winningSide: $winningSide, metadata: $metadata, readyUsers: $readyUsers)';
   }
 
   @override
@@ -929,7 +953,11 @@ class _$DebateMatchImpl implements _DebateMatch {
             (identical(other.roomId, roomId) || other.roomId == roomId) &&
             (identical(other.winningSide, winningSide) ||
                 other.winningSide == winningSide) &&
-            const DeepCollectionEquality().equals(other._metadata, _metadata));
+            const DeepCollectionEquality().equals(other._metadata, _metadata) &&
+            const DeepCollectionEquality().equals(
+              other._readyUsers,
+              _readyUsers,
+            ));
   }
 
   @override
@@ -949,6 +977,7 @@ class _$DebateMatchImpl implements _DebateMatch {
     roomId,
     winningSide,
     const DeepCollectionEquality().hash(_metadata),
+    const DeepCollectionEquality().hash(_readyUsers),
   );
 
   /// Create a copy of DebateMatch
@@ -976,6 +1005,7 @@ abstract class _DebateMatch implements DebateMatch {
     final String? roomId,
     final String? winningSide,
     final Map<String, dynamic>? metadata,
+    final List<String> readyUsers,
   }) = _$DebateMatchImpl;
 
   @override
@@ -1006,6 +1036,8 @@ abstract class _DebateMatch implements DebateMatch {
   String? get winningSide;
   @override
   Map<String, dynamic>? get metadata;
+  @override
+  List<String> get readyUsers;
 
   /// Create a copy of DebateMatch
   /// with the given fields replaced by the non-null parameter values.

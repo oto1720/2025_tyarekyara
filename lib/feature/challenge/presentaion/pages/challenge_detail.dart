@@ -133,7 +133,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'あなたの元の意見 (${widget.challenge.stance == Stance.pro ? "賛成" : "反対"})',
+                          'あなたの元の意見 (${(widget.challenge.originalStance ?? widget.challenge.stance) == Stance.pro ? "賛成" : "反対"})',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -179,10 +179,10 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
-                              const Flexible(
+                              Flexible(
                                 child: Text(
-                                  'チャレンジ:反対の立場で考えてみよう',
-                                  style: TextStyle(
+                                  'チャレンジ:${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場で考えてみよう',
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.textPrimary,
@@ -194,7 +194,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            '反対の立場から、説得力のある意見を書いてみてください',
+                            '${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場から、説得力のある意見を書いてみてください',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -219,13 +219,13 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               ),
                               const SizedBox(width: 8),
                               buildStanceTag(
-                                widget.challenge.stance == Stance.pro ? '反対' : '賛成',
+                                widget.challenge.stance == Stance.pro ? '賛成' : '反対',
                                 widget.challenge.stance == Stance.pro
-                                    ? AppColors.disagree.withOpacity(0.2)
-                                    : AppColors.agree.withOpacity(0.2),
+                                    ? AppColors.agree.withOpacity(0.2)
+                                    : AppColors.disagree.withOpacity(0.2),
                                 widget.challenge.stance == Stance.pro
-                                    ? AppColors.disagree
-                                    : AppColors.agree,
+                                    ? AppColors.agree
+                                    : AppColors.disagree,
                               ),
                             ],
                           ),
@@ -254,7 +254,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: AppColors.surface,
-                              hintText: '${widget.challenge.stance == Stance.pro ? "反対" : "賛成"}の立場での意見を書いてみよう！',
+                              hintText: '${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場での意見を書いてみよう！',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: const BorderSide(color: AppColors.border),

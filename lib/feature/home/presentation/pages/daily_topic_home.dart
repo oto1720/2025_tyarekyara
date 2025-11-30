@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../../providers/opinion_provider.dart';
 import '../widgets/topic_card.dart';
 import '../widgets/news_list.dart';
+import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
 /// 日別トピックのホーム画面
 class DailyTopicHomeScreen extends ConsumerStatefulWidget {
@@ -20,6 +23,7 @@ class DailyTopicHomeScreen extends ConsumerStatefulWidget {
 class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
   final TextEditingController _opinionController = TextEditingController();
   String? _selectedStance;
+  final GlobalKey _helpButtonKey = GlobalKey();
 
   final int _minLength = 100;
   final int _maxLength = 3000;
@@ -41,8 +45,12 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
     final state = ref.watch(dailyTopicProvider);
     final notifier = ref.read(dailyTopicProvider.notifier);
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
+    return ShowCaseWidget(
+      builder: (context) => TutorialShowcaseWrapper(
+        pageKey: 'home',
+        showcaseKey: _helpButtonKey,
+        child: Scaffold(
+          backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -90,6 +98,19 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
           //           }
           //         },
           // ),
+          // ヘルプボタンをShowCaseでラップ
+          Showcase(
+            key: _helpButtonKey,
+            title: '操作ガイド',
+            description: '詳細はここにあります。確認しましょう',
+            child: IconButton(
+              icon: const Icon(Icons.help_outline, color: AppColors.textPrimary),
+              onPressed: () {
+                TutorialBottomSheet.show(context, 'home');
+              },
+              tooltip: '操作ガイド',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
@@ -105,6 +126,8 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
         ],
       ),
       body: _buildBody(state, notifier),
+        ),
+      ),
     );
   }
 

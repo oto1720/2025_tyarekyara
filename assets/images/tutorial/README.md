@@ -1,8 +1,10 @@
 # Tutorial Images
 
-このディレクトリには、TutorialPage（チュートリアル画面）で使用する画像を配置します。
+このディレクトリには、チュートリアル画面で使用する画像を配置します。
 
-## 使用される画像（各ページ用）
+## 初回チュートリアル用画像
+
+TutorialPage（初回起動時のチュートリアル画面）で使用する画像：
 
 - `welcome.png` - ページ1「ようこそ！」
 - `post.png` - ページ2「意見を投稿」
@@ -10,24 +12,38 @@
 - `profile.png` - ページ4「プロフィール設定」
 - `start.png` - ページ5「さあ、始めましょう！」
 
-## 推奨サイズ
+**推奨サイズ**: 正方形 800px × 800px（丸くトリミングされます）
 
-- 正方形: 800px × 800px（丸くトリミングされます）
-- 形式: PNG, JPG
+## 各画面のチュートリアル用画像
 
-## 画像の追加方法
+各画面のヘルプボタンから表示される操作ガイドで使用する画像：
 
-1. このディレクトリに画像ファイルを配置
-2. `lib/feature/guide/models/tutorial_item.dart`の各TutorialItemに`imagePath`を追加
+### ホーム画面 (home/)
+- `step1.png` - トピックを選択する画面
+- `step2.png` - 意見を投稿する画面
+- `step3.png` - 他の意見を見る画面
 
-例：
-```dart
-TutorialItem(
-  title: 'ようこそ！',
-  description: '...',
-  icon: Icons.waving_hand,
-  imagePath: 'assets/images/tutorial/welcome.png', // この行を追加
-  primaryColor: Color(0xFF6366F1),
-  secondaryColor: Color(0xFF8B5CF6),
-),
-```
+### 統計画面 (statistics/)
+- `step1.png` - 参加統計を確認する画面
+- `step2.png` - 多様性スコアの画面
+- `step3.png` - バッジを集める画面
+
+### チャレンジ画面 (challenge/)
+- `step1.png` - チャレンジを選択する画面
+- `step2.png` - 意見を考える画面
+- `step3.png` - フィードバックを確認する画面
+
+### ディベート画面 (debate/)
+- `step1.png` - イベントを選択する画面
+- `step2.png` - エントリー画面
+- `step3.png` - ディベート画面
+
+**推奨仕様**:
+- 形式: PNG
+- サイズ: 横幅 750px 程度（縦横比 16:9 または 3:2）
+- 容量: 1ファイルあたり 500KB 以下
+- 内容: 実際の画面のスクリーンショットに、重要な操作箇所を矢印や丸でマーキング
+
+## 画像がない場合
+
+画像ファイルが見つからない場合は、プレースホルダー（グレーの画像アイコン）が自動的に表示されます。画像は後から追加・差し替えが可能です。
