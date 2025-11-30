@@ -22,6 +22,7 @@ import {processMatching} from "./services/debateMatchingService";
 import {updateEventStatuses} from "./services/eventStatusService";
 import {progressDebatePhases} from "./services/debatePhaseService";
 import {createTodayTopic} from "./services/dailyTopicService";
+import {activateRoomWhenAllReady} from "./services/debateRoomService";
 
 // Firebase Admin初期化
 admin.initializeApp();
@@ -475,6 +476,189 @@ export const onMatchCreated = onDocumentCreated(
       }
     } catch (error) {
       logger.error("Error sending match notification:", error);
+    }
+
+    return null;
+  }
+);
+
+/**
+ * マッチのreadyUsersが更新されたときにルームをアクティブ化
+ */
+export const onMatchReadyUsersUpdate = onDocumentUpdated(
+  {
+    document: "debate_matches/{matchId}",
+    region: "asia-northeast1",
+  },
+  async (event) => {
+    const matchId = event.params.matchId;
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) {
+      logger.warn("No data in event");
+      return;
+    }
+
+    // readyUsersの配列が更新された場合のみ実行
+    const beforeReadyCount = (before.readyUsers as string[] || []).length;
+    const afterReadyCount = (after.readyUsers as string[] || []).length;
+
+    if (beforeReadyCount === afterReadyCount) {
+      return;
+    }
+
+    logger.info(
+      `Ready users updated for match ${matchId}: ` +
+      `${beforeReadyCount} -> ${afterReadyCount}`
+    );
+
+    try {
+      // 新しく準備完了したユーザーを特定
+      const beforeReadyUsers = (before.readyUsers as string[]) || [];
+      const afterReadyUsers = (after.readyUsers as string[]) || [];
+      const newReadyUsers = afterReadyUsers.filter(
+        (userId: string) => !beforeReadyUsers.includes(userId)
+      );
+
+      // 新しく準備完了したユーザーがいる場合、他の参加者に通知
+      if (newReadyUsers.length > 0) {
+        logger.info(
+          `New ready users for match ${matchId}: ${newReadyUsers.join(", ")}`
+        );
+
+        // 全参加者のIDを取得
+        const proTeamIds: string[] = after.proTeam?.memberIds || [];
+        const conTeamIds: string[] = after.conTeam?.memberIds || [];
+        const allUserIds = [...proTeamIds, ...conTeamIds];
+
+        // 準備完了していない他の参加者に通知
+        const notReadyUsers = allUserIds.filter(
+          (userId: string) => !afterReadyUsers.includes(userId)
+        );
+
+        if (notReadyUsers.length > 0) {
+          // 通知先のFCMトークンを取得
+          const tokens: string[] = [];
+          for (const userId of notReadyUsers) {
+            const userDoc = await admin
+              .firestore()
+              .collection("users")
+              .doc(userId)
+              .get();
+
+            const userData = userDoc.data();
+            if (userData?.fcmToken) {
+              tokens.push(userData.fcmToken);
+            }
+          }
+
+          if (tokens.length > 0) {
+            // 通知を送信
+            const message: admin.messaging.MulticastMessage = {
+              tokens,
+              notification: {
+                title: "対戦相手が準備完了",
+                body: "対戦相手が準備完了しました。あなたも準備完了してください。",
+              },
+              data: {
+                matchId: matchId,
+                type: "opponent_ready",
+              },
+              android: {
+                notification: {
+                  channelId: "debate_notification",
+                  priority: "default",
+                  sound: "default",
+                },
+              },
+              apns: {
+                payload: {
+                  aps: {
+                    sound: "default",
+                    badge: 1,
+                  },
+                },
+              },
+            };
+
+            const response = await getMessaging().sendEachForMulticast(message);
+
+            logger.info(
+              "Opponent ready notifications sent: " +
+              `${response.successCount} successful, ` +
+              `${response.failureCount} failed`
+            );
+          }
+        }
+      }
+
+      // 全員が準備完了したかチェックし、準備完了ならルームをアクティブ化
+      const activated = await activateRoomWhenAllReady(matchId);
+
+      if (activated) {
+        logger.info(`Room activated for match ${matchId}`);
+
+        // 全参加者に通知を送信
+        const proTeamIds: string[] = after.proTeam?.memberIds || [];
+        const conTeamIds: string[] = after.conTeam?.memberIds || [];
+        const allUserIds = [...proTeamIds, ...conTeamIds];
+
+        // ユーザーのFCMトークンを取得
+        const tokens: string[] = [];
+        for (const userId of allUserIds) {
+          const userDoc = await admin
+            .firestore()
+            .collection("users")
+            .doc(userId)
+            .get();
+
+          const userData = userDoc.data();
+          if (userData?.fcmToken) {
+            tokens.push(userData.fcmToken);
+          }
+        }
+
+        if (tokens.length > 0) {
+          // 通知を送信
+          const message: admin.messaging.MulticastMessage = {
+            tokens,
+            notification: {
+              title: "ディベート開始！",
+              body: "全員が準備完了しました。ディベートが開始されます。",
+            },
+            data: {
+              matchId: matchId,
+              type: "debate_started",
+            },
+            android: {
+              notification: {
+                channelId: "debate_notification",
+                priority: "high",
+                sound: "default",
+              },
+            },
+            apns: {
+              payload: {
+                aps: {
+                  sound: "default",
+                  badge: 1,
+                },
+              },
+            },
+          };
+
+          const response = await getMessaging().sendEachForMulticast(message);
+
+          logger.info(
+            "Debate start notifications sent: " +
+            `${response.successCount} successful, ` +
+            `${response.failureCount} failed`
+          );
+        }
+      }
+    } catch (error) {
+      logger.error("Error in ready users update handler:", error);
     }
 
     return null;

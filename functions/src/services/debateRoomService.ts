@@ -274,3 +274,97 @@ export async function createRoomsForEvent(
     throw error;
   }
 }
+
+/**
+ * 全参加者が準備完了したときにルームをアクティブ化
+ * @param {string} matchId マッチID
+ * @return {Promise<boolean>} アクティブ化したかどうか
+ */
+export async function activateRoomWhenAllReady(
+  matchId: string
+): Promise<boolean> {
+  const db = admin.firestore();
+
+  try {
+    logger.info(`Checking if all participants are ready for match ${matchId}`);
+
+    // マッチ情報を取得
+    const matchDoc = await db
+      .collection("debate_matches")
+      .doc(matchId)
+      .get();
+
+    if (!matchDoc.exists) {
+      throw new Error(`Match ${matchId} not found`);
+    }
+
+    const match = matchDoc.data() as DebateMatch & {
+      readyUsers?: string[];
+    };
+
+    // 全参加者のIDを取得
+    const allParticipants = [
+      ...match.proTeam.memberIds,
+      ...match.conTeam.memberIds,
+    ];
+
+    // 準備完了したユーザーのリスト
+    const readyUsers = match.readyUsers || [];
+
+    logger.info(
+      `Match ${matchId}: ${readyUsers.length}/` +
+      `${allParticipants.length} participants ready`
+    );
+
+    // 全員が準備完了しているかチェック
+    const allReady = allParticipants.every((userId) =>
+      readyUsers.includes(userId)
+    );
+
+    if (!allReady) {
+      logger.info(`Not all participants ready for match ${matchId}`);
+      return false;
+    }
+
+    logger.info(`All participants ready for match ${matchId}, activating room`);
+
+    // ルームがない場合は作成
+    let roomId = match.roomId;
+    if (!roomId) {
+      roomId = await createRoomForMatch(matchId);
+    }
+
+    const now = admin.firestore.Timestamp.now();
+
+    // ルームをアクティブ化（開始状態にする）
+    await db.collection("debate_rooms").doc(roomId).update({
+      status: "inProgress",
+      startedAt: now,
+      phaseStartedAt: now,
+      phaseTimeRemaining: getPhaseTimeRemaining(
+        match.duration,
+        "preparation"
+      ),
+      updatedAt: now,
+    });
+
+    // マッチステータスを更新
+    await db.collection("debate_matches").doc(matchId).update({
+      status: "inProgress",
+      startedAt: now,
+      updatedAt: now,
+    });
+
+    logger.info(
+      `Successfully activated room ${roomId} for match ${matchId}`
+    );
+
+    return true;
+  } catch (error) {
+    logger.error(
+      `Error activating room for match ${matchId}:`,
+      error
+    );
+    throw error;
+  }
+}

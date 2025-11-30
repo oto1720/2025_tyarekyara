@@ -209,4 +209,16 @@ class DebateMatchRepository {
       rethrow;
     }
   }
+
+  /// ユーザーを準備完了としてマーク
+  Future<void> markUserAsReady(String matchId, String userId) async {
+    try {
+      await _firestore.collection(_collectionName).doc(matchId).update({
+        'readyUsers': FieldValue.arrayUnion([userId]),
+      });
+    } catch (e) {
+      print('Error marking user as ready: $e');
+      rethrow;
+    }
+  }
 }

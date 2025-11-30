@@ -119,6 +119,7 @@ class DebateMatch with _$DebateMatch {
     String? roomId,
     String? winningSide,
     Map<String, dynamic>? metadata,
+    @Default([]) List<String> readyUsers,
   }) = _DebateMatch;
 
   factory DebateMatch.fromJson(Map<String, dynamic> json) {
@@ -150,6 +151,9 @@ class DebateMatch with _$DebateMatch {
       roomId: json['roomId'] as String?,
       winningSide: json['winningSide'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
+      readyUsers: json['readyUsers'] != null
+          ? List<String>.from(json['readyUsers'] as List)
+          : [],
     );
   }
 
@@ -182,6 +186,7 @@ class DebateMatch with _$DebateMatch {
       'roomId': match.roomId,
       'winningSide': match.winningSide,
       'metadata': match.metadata,
+      'readyUsers': match.readyUsers,
     };
   }
 }
