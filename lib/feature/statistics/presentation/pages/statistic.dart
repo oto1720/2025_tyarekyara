@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../widgets/thinking_profile_card.dart';
 import '../widgets/diversity_score_card.dart';
@@ -11,6 +12,8 @@ import '../widgets/earned_badges_card.dart';
 import '../../providers/statistics_provider.dart';
 import '../../providers/badge_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
 class StatisticPage extends ConsumerStatefulWidget {
   const StatisticPage({super.key});
@@ -21,12 +24,17 @@ class StatisticPage extends ConsumerStatefulWidget {
 
 class _StatisticPageState extends ConsumerState<StatisticPage> {
   String? _loadedUserId;
+  final GlobalKey _helpButtonKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(statisticsNotifierProvider);
 
-    return FutureBuilder<bool>(
+    return ShowCaseWidget(
+      builder: (context) => TutorialShowcaseWrapper(
+        pageKey: 'statistics',
+        showcaseKey: _helpButtonKey,
+        child: FutureBuilder<bool>(
       future: SharedPreferences.getInstance().then((prefs) => prefs.getBool('is_guest_mode') ?? false),
       builder: (context, snapshot) {
         final isGuest = snapshot.data ?? false;
@@ -44,6 +52,32 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
 
           return Scaffold(
             backgroundColor: AppColors.surface,
+            appBar: AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              title: const Text(
+                '統計',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              actions: [
+                Showcase(
+                  key: _helpButtonKey,
+                  title: '操作ガイド',
+                  description: '詳細はここにあります。確認しましょう',
+                  child: IconButton(
+                    icon: const Icon(Icons.help_outline, color: AppColors.textPrimary),
+                    onPressed: () {
+                      TutorialBottomSheet.show(context, 'statistics');
+                    },
+                    tooltip: '操作ガイド',
+                  ),
+                ),
+              ],
+            ),
             body: Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -180,6 +214,32 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
 
         return Scaffold(
           backgroundColor: AppColors.surface,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            title: const Text(
+              '統計',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            actions: [
+              Showcase(
+                key: _helpButtonKey,
+                title: '操作ガイド',
+                description: '詳細はここにあります。確認しましょう',
+                child: IconButton(
+                  icon: const Icon(Icons.help_outline, color: AppColors.textPrimary),
+                  onPressed: () {
+                    TutorialBottomSheet.show(context, 'statistics');
+                  },
+                  tooltip: '操作ガイド',
+                ),
+              ),
+            ],
+          ),
           body: Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -237,6 +297,8 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
           ),
         );
       },
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
@@ -12,6 +13,8 @@ import '../../providers/today_debate_event_provider.dart';
 import '../../../../core/providers/debate_event_unlock_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../widgets/event_card.dart';
+import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
 /// ディベートイベント一覧画面
 class DebateEventListPage extends ConsumerStatefulWidget {
@@ -25,6 +28,7 @@ class DebateEventListPage extends ConsumerStatefulWidget {
 class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final GlobalKey _helpButtonKey = GlobalKey();
 
   @override
   void initState() {
@@ -40,9 +44,13 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: SharedPreferences.getInstance().then((prefs) => prefs.getBool('is_guest_mode') ?? false),
-      builder: (context, snapshot) {
+    return ShowCaseWidget(
+      builder: (context) => TutorialShowcaseWrapper(
+        pageKey: 'debate',
+        showcaseKey: _helpButtonKey,
+        child: FutureBuilder<bool>(
+          future: SharedPreferences.getInstance().then((prefs) => prefs.getBool('is_guest_mode') ?? false),
+          builder: (context, snapshot) {
         final isGuest = snapshot.data ?? false;
 
         // ゲストモードの場合、ログイン要求画面を表示
@@ -50,6 +58,20 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           return Scaffold(
             appBar: AppBar(
               title: const Text('ディベートイベント'),
+              actions: [
+                Showcase(
+                  key: _helpButtonKey,
+                  title: '操作ガイド',
+                  description: '詳細はここにあります。確認しましょう',
+                  child: IconButton(
+                    icon: const Icon(Icons.help_outline),
+                    onPressed: () {
+                      TutorialBottomSheet.show(context, 'debate');
+                    },
+                    tooltip: '操作ガイド',
+                  ),
+                ),
+              ],
             ),
             body: Center(
               child: Padding(
@@ -100,6 +122,18 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           appBar: AppBar(
             title: const Text('ディベートイベント'),
             actions: [
+              Showcase(
+                key: _helpButtonKey,
+                title: '操作ガイド',
+                description: '詳細はここにあります。確認しましょう',
+                child: IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  onPressed: () {
+                    TutorialBottomSheet.show(context, 'debate');
+                  },
+                  tooltip: '操作ガイド',
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.info_outline),
                 onPressed: () => context.push('/debate/rules'),
@@ -123,6 +157,8 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           ),
         );
       },
+        ),
+      ),
     );
   }
 
