@@ -97,13 +97,13 @@ class TutorialBottomSheet extends StatelessWidget {
                         child: Image.asset(
                           step.imagePath!,
                           width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
+                          height: 350,
+                          fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             // 画像が見つからない場合のプレースホルダー
                             return Container(
                               width: double.infinity,
-                              height: 200,
+                              height: 350,
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12),
