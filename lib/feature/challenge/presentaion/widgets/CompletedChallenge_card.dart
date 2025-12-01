@@ -77,13 +77,13 @@ class CompletedCard extends StatelessWidget {
               children: [
                 const Text('あなた: ', style: TextStyle(fontSize: 14)),
 
-                // stance が pro (賛成) なら緑の「賛成」タグ、con (反対) なら赤の「反対」タグ
+                // originalStance が存在する場合はそれを使用、なければstanceの逆を表示
                 buildStanceTag(
-                  challenge.stance == Stance.pro ? '賛成' : '反対',
-                  challenge.stance == Stance.pro
+                  (challenge.originalStance ?? (challenge.stance == Stance.pro ? Stance.con : Stance.pro)) == Stance.pro ? '賛成' : '反対',
+                  (challenge.originalStance ?? (challenge.stance == Stance.pro ? Stance.con : Stance.pro)) == Stance.pro
                       ? const Color.fromARGB(255, 214, 241, 215)
                       : const Color.fromARGB(255, 249, 209, 213),
-                  challenge.stance == Stance.pro
+                  (challenge.originalStance ?? (challenge.stance == Stance.pro ? Stance.con : Stance.pro)) == Stance.pro
                       ? Colors.green[900]!
                       : Colors.red[900]!,
                 ),
@@ -96,15 +96,15 @@ class CompletedCard extends StatelessWidget {
 
                 const Text('挑戦: ', style: TextStyle(fontSize: 14)),
 
-                // stance が pro (賛成) なら赤の「反対」タグ、con (反対) なら緑の「賛成」タグ
+                // stance（チャレンジで取るべき立場）を表示
                 buildStanceTag(
-                  challenge.stance == Stance.pro ? '反対' : '賛成',
+                  challenge.stance == Stance.pro ? '賛成' : '反対',
                   challenge.stance == Stance.pro
-                      ? const Color.fromARGB(255, 249, 209, 213)
-                      : const Color.fromARGB(255, 214, 241, 215),
+                      ? const Color.fromARGB(255, 214, 241, 215)
+                      : const Color.fromARGB(255, 249, 209, 213),
                   challenge.stance == Stance.pro
-                      ? Colors.red[900]!
-                      : Colors.green[900]!,
+                      ? Colors.green[900]!
+                      : Colors.red[900]!,
                 ),
               ],
             ),
