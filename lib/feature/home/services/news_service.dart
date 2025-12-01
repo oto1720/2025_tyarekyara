@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/news_item.dart';
 import '../repositories/ai_repository.dart';
 
@@ -6,28 +7,63 @@ import '../repositories/ai_repository.dart';
 class NewsService {
   final GeminiRepository _geminiRepository;
 
+  // URL検証の設定
+  static const int _urlValidationTimeout = 3; // 秒
+  static const int _maxRetries = 3; // 最大試行回数
+  static const int _fetchCountPerRequest = 5; // 1回のリクエストで取得する数
+
   NewsService(this._geminiRepository);
 
-  /// トピックに関連するニュースを取得
+  /// トピックに関連するニュースを取得（URL検証付き）
   Future<List<NewsItem>> getRelatedNews(String topic, {int count = 3}) async {
+    final List<NewsItem> validNews = [];
+    int retryCount = 0;
+
     try {
-      final prompt = _buildNewsPrompt(topic, count);
+      // 必要な数が集まるまで、または最大試行回数に達するまで繰り返す
+      while (validNews.length < count && retryCount < _maxRetries) {
+        retryCount++;
+        print('ニュース取得試行 $retryCount/$_maxRetries (現在: ${validNews.length}/$count件)');
 
-      final response = await _geminiRepository.generateTextWithSearch(
-        prompt: prompt,
-        temperature: 0.3, // 事実に基づく情報なので低めに設定
-        maxTokens: 5000, // Google Search Groundingは検索メタデータで大量のトークンを消費するため十分大きく設定
-      );
+        final prompt = _buildNewsPrompt(topic, _fetchCountPerRequest);
 
-      final news = _parseNewsFromResponse(
-        response['text'] as String,
-        response['groundingChunks'] as List<dynamic>,
-      );
-      return news;
+        final response = await _geminiRepository.generateTextWithSearch(
+          prompt: prompt,
+          temperature: 0.3,
+          maxTokens: 5000,
+        );
+
+        final candidateNews = _parseNewsFromResponse(
+          response['text'] as String,
+          response['groundingChunks'] as List<dynamic>,
+        );
+
+        print('取得したニュース候補: ${candidateNews.length}件');
+
+        // URL検証を実行
+        final validatedNews = await _validateUrls(candidateNews);
+        print('有効なURL: ${validatedNews.length}件');
+
+        // 重複を避けて追加
+        for (final news in validatedNews) {
+          if (validNews.length >= count) break;
+
+          // 既に同じURLが存在しないかチェック
+          final isDuplicate = validNews.any((existing) => existing.url == news.url);
+          if (!isDuplicate) {
+            validNews.add(news);
+          }
+        }
+
+        print('累計有効ニュース: ${validNews.length}件');
+      }
+
+      // 必要な数だけ返す
+      return validNews.take(count).toList();
     } catch (e) {
       print('Error getting related news: $e');
-      // エラー時は空のリストを返す
-      return [];
+      // エラー時は取得できた分だけ返す
+      return validNews;
     }
   }
 
@@ -160,5 +196,44 @@ class NewsService {
     final enhancedTopic = '$topic $additionalKeywords';
 
     return getRelatedNews(enhancedTopic, count: count);
+  }
+
+  /// URLの有効性を検証（複数のニュースアイテムを並列処理）
+  Future<List<NewsItem>> _validateUrls(List<NewsItem> newsItems) async {
+    final results = await Future.wait(
+      newsItems.map((news) => _validateUrl(news)),
+    );
+
+    // 有効なニュースアイテムのみを返す
+    return results.where((news) => news != null).cast<NewsItem>().toList();
+  }
+
+  /// 単一のURLの有効性を検証
+  Future<NewsItem?> _validateUrl(NewsItem newsItem) async {
+    if (newsItem.url == null || newsItem.url!.isEmpty) {
+      print('URLなし: ${newsItem.title}');
+      return null;
+    }
+
+    try {
+      final uri = Uri.parse(newsItem.url!);
+
+      // HEADリクエストで軽量にチェック
+      final response = await http.head(uri).timeout(
+        Duration(seconds: _urlValidationTimeout),
+      );
+
+      // ステータスコード200番台または300番台（リダイレクト）なら有効
+      if (response.statusCode >= 200 && response.statusCode < 400) {
+        print('✓ 有効なURL: ${newsItem.url}');
+        return newsItem;
+      } else {
+        print('✗ 無効なステータス ${response.statusCode}: ${newsItem.url}');
+        return null;
+      }
+    } catch (e) {
+      print('✗ URL検証エラー: ${newsItem.url} - $e');
+      return null;
+    }
   }
 }

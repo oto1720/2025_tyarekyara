@@ -139,6 +139,24 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
                 onPressed: () => context.push('/debate/rules'),
                 tooltip: 'ルールを確認',
               ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  // 現在のタブに応じてリロード
+                  if (_tabController.index == 0) {
+                    // 開催予定タブ
+                    ref.invalidate(upcomingEventsProvider);
+                    ref.invalidate(isTodayDebateUnlockedProvider);
+                  } else {
+                    // 参加履歴タブ
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user != null) {
+                      ref.invalidate(matchHistoryProvider(user.uid));
+                    }
+                  }
+                },
+                tooltip: 'リロード',
+              ),
             ],
             bottom: TabBar(
               controller: _tabController,

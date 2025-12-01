@@ -184,41 +184,44 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
 
   /// 成功カード
   Widget _buildSuccessCard() {
-    return Card(
-      color: AppColors.success.withValues(alpha: 0.1),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.success, width: 2),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 64,
-              color: AppColors.success,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'マッチングが成立しました！',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        color: AppColors.background,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle,
+                size: 64,
                 color: AppColors.success,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '対戦相手が見つかりました\n準備ができたらディベートを開始しましょう',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
+              const SizedBox(height: 16),
+              Text(
+                'マッチングが成立しました！',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.success,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                '対戦相手が見つかりました\n準備ができたらディベートを開始しましょう',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
