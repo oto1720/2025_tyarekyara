@@ -8,6 +8,7 @@ import '../../models/debate_event.dart';
 import '../../models/debate_message.dart';
 import '../../providers/debate_room_provider.dart';
 import '../../providers/debate_match_provider.dart';
+import '../../providers/debate_event_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
@@ -131,6 +132,9 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
 
     final myStance = room.participantStances[userId];
 
+    // イベント情報を取得
+    final eventAsync = ref.watch(eventDetailProvider(match.eventId));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
@@ -189,7 +193,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       ),
       body: Column(
         children: [
-          _buildRoomHeader(room, match, userId),
+          _buildRoomHeader(room, match, userId, eventAsync.value),
           const Divider(height: 1),
           _buildTabBar(),
           Expanded(
@@ -214,12 +218,58 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     DebateRoom room,
     DebateMatch match,
     String userId,
+    DebateEvent? event,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.surface,
       child: Column(
         children: [
+          // トピック表示
+          if (event != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.topic,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '今日のトピック',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    event.topic,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Row(
             children: [
               Expanded(
