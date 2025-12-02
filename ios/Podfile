@@ -4,6 +4,9 @@ platform :ios, '15.0'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+# Suppress warning about unused master specs repo (CDN is now default)
+# This warning can be safely ignored in Flutter projects
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
