@@ -53,74 +53,23 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           builder: (context, snapshot) {
         final isGuest = snapshot.data ?? false;
 
-        // ゲストモードの場合、ログイン要求画面を表示
-        if (isGuest) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('ディベートイベント'),
-              actions: [
-                Showcase(
-                  key: _helpButtonKey,
-                  title: '操作ガイド',
-                  description: '詳細はここにあります。確認しましょう',
-                  child: IconButton(
-                    icon: const Icon(Icons.help_outline),
-                    onPressed: () {
-                      TutorialBottomSheet.show(context, 'debate');
-                    },
-                    tooltip: '操作ガイド',
-                  ),
-                ),
-              ],
-            ),
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.lock_outline,
-                      size: 80,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'ディベート機能を利用するには\nログインが必要です',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'アカウントを作成してディベートに参加しましょう',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () => context.push('/login'),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(200, 50),
-                      ),
-                      child: const Text('ログイン / 新規登録'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        // 通常の画面表示
+        // 通常の画面表示（ゲストモードでも表示）
         return Scaffold(
           appBar: AppBar(
-            title: const Text('ディベートイベント'),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('ディベートイベント'),
+                if (isGuest)
+                  const Text(
+                    'ユーザーとのディベートはログインが必要です',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+              ],
+            ),
             actions: [
               Showcase(
                 key: _helpButtonKey,
@@ -169,8 +118,8 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildUpcomingEventsTab(),
-              _buildCompletedEventsTab(),
+              _buildUpcomingEventsTab(isGuest),
+              _buildCompletedEventsTab(isGuest),
             ],
           ),
         );
@@ -181,7 +130,12 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
   }
 
   /// 開催予定イベントタブ
-  Widget _buildUpcomingEventsTab() {
+  Widget _buildUpcomingEventsTab(bool isGuest) {
+    // ゲストモードの場合はモックイベントを表示
+    if (isGuest) {
+      return _buildGuestMockEvents();
+    }
+
     final eventsAsync = ref.watch(upcomingEventsProvider);
     final todayDebateUnlockedAsync = ref.watch(isTodayDebateUnlockedProvider);
 
@@ -237,8 +191,104 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
     );
   }
 
+  /// ゲスト用のモックイベントを表示
+  Widget _buildGuestMockEvents() {
+    final now = DateTime.now();
+    final mockEvent = DebateEvent(
+      id: 'guest_mock_event',
+      title: 'お試しディベート',
+      topic: '環境保護のために個人の利便性を犠牲にすべきか',
+      description: 'ディベート機能を体験してみましょう！\nこれはゲスト用のお試しディベートです。',
+      status: EventStatus.accepting,
+      scheduledAt: now,
+      entryDeadline: now.add(const Duration(days: 7)),
+      createdAt: now,
+      updatedAt: now,
+      availableDurations: [DebateDuration.short],
+      availableFormats: [DebateFormat.oneVsOne],
+      currentParticipants: 0,
+      maxParticipants: 100,
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 95),
+      children: [
+        // ゲストモード説明バナー
+        Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.blue[300]!,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue[700],
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'お試しモード',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[900],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'ディベート機能を体験できます。\n本格的なユーザー対戦を楽しむにはログインしてください。',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.blue[800],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => context.push('/login'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('ログイン / 新規登録'),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // モックイベントカード
+        EventCard(
+          event: mockEvent,
+          isLocked: false,
+          onTap: () => context.push('/debate/event/guest_mock_event'),
+        ),
+      ],
+    );
+  }
+
   /// 参加履歴タブ
-  Widget _buildCompletedEventsTab() {
+  Widget _buildCompletedEventsTab(bool isGuest) {
+    // ゲストモードの場合は空の状態を表示
+    if (isGuest) {
+      return _buildEmptyState(
+        icon: Icons.history,
+        message: '参加履歴はログインユーザーのみ利用可能です',
+      );
+    }
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return _buildEmptyState(
