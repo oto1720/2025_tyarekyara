@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/debate_event.dart';
 import '../../models/debate_match.dart';
 import '../../providers/debate_event_provider.dart';
@@ -21,6 +22,21 @@ class DebateEventDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ゲストモックイベントの場合
+    if (eventId == 'guest_mock_event') {
+      return FutureBuilder<bool>(
+        future: SharedPreferences.getInstance()
+            .then((prefs) => prefs.getBool('is_guest_mode') ?? false),
+        builder: (context, snapshot) {
+          final isGuest = snapshot.data ?? false;
+          if (!isGuest) {
+            return _buildNotFound(context);
+          }
+          return _buildGuestMockEventDetail(context, ref);
+        },
+      );
+    }
+
     final eventAsync = ref.watch(eventDetailProvider(eventId));
     final authState = ref.watch(authControllerProvider);
     final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(eventId));
@@ -51,6 +67,33 @@ class DebateEventDetailPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildError(context, error),
       ),
+    );
+  }
+
+  /// ゲスト用のモックイベント詳細を表示
+  Widget _buildGuestMockEventDetail(BuildContext context, WidgetRef ref) {
+    final now = DateTime.now();
+    final mockEvent = DebateEvent(
+      id: 'guest_mock_event',
+      title: 'お試しディベート',
+      topic: '環境保護のために個人の利便性を犠牲にすべきか',
+      description: 'ディベート機能を体験してみましょう！\n'
+          'これはゲスト用のお試しディベートです。\n\n'
+          '実際のディベートでは、他のユーザーとリアルタイムで議論を交わすことができます。\n'
+          'AIによる審査で、あなたの議論スキルも評価されます。',
+      status: EventStatus.accepting,
+      scheduledAt: now,
+      entryDeadline: now.add(const Duration(days: 7)),
+      createdAt: now,
+      updatedAt: now,
+      availableDurations: [DebateDuration.short],
+      availableFormats: [DebateFormat.oneVsOne],
+      currentParticipants: 0,
+      maxParticipants: 100,
+    );
+
+    return Scaffold(
+      body: _buildEventDetail(context, ref, mockEvent, 'guest'),
     );
   }
 
@@ -400,6 +443,11 @@ class DebateEventDetailPage extends ConsumerWidget {
     DebateEvent event,
     String userId,
   ) {
+    // ゲストモードの場合は特別な処理
+    if (userId == 'guest') {
+      return _buildGuestTryButton(context, event);
+    }
+
     final entryAsync = ref.watch(userEntryProvider((event.id, userId)));
 
     return entryAsync.when(
@@ -448,6 +496,35 @@ class DebateEventDetailPage extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => const SizedBox.shrink(),
+    );
+  }
+
+  /// ゲスト用の「試してみる」ボタン
+  Widget _buildGuestTryButton(BuildContext context, DebateEvent event) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          // 直接ディベートルームへ遷移
+          context.push('/debate/room/guest_mock_match');
+        },
+        icon: const Icon(Icons.play_arrow, size: 28),
+        label: const Text(
+          '試してみる',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
     );
   }
 

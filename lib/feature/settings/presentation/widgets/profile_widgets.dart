@@ -469,14 +469,6 @@ class ImagePickerDialog extends StatelessWidget {
               onGallery();
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: const Text('カメラで撮影'),
-            onTap: () {
-              Navigator.pop(context);
-              onCamera();
-            },
-          ),
         ],
       ),
     );

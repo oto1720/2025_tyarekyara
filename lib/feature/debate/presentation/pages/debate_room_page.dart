@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/debate_room.dart';
 import '../../models/debate_match.dart';
 import '../../models/debate_event.dart';
@@ -45,6 +46,21 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
 
   @override
   Widget build(BuildContext context) {
+    // ゲストモックマッチの場合
+    if (widget.matchId == 'guest_mock_match') {
+      return FutureBuilder<bool>(
+        future: SharedPreferences.getInstance()
+            .then((prefs) => prefs.getBool('is_guest_mode') ?? false),
+        builder: (context, snapshot) {
+          final isGuest = snapshot.data ?? false;
+          if (!isGuest) {
+            return _buildNotFound(context);
+          }
+          return _buildGuestMockRoom(context);
+        },
+      );
+    }
+
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
     final authState = ref.watch(authControllerProvider);
 
@@ -530,6 +546,52 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       ),
     );
   }
+
+  /// ゲスト用のモックディベートルームを表示
+  Widget _buildGuestMockRoom(BuildContext context) {
+    final now = DateTime.now();
+    final mockMatch = DebateMatch(
+      id: 'guest_mock_match',
+      eventId: 'guest_mock_event',
+      proTeam: DebateTeam(
+        memberIds: ['guest'],
+        stance: DebateStance.pro,
+      ),
+      conTeam: DebateTeam(
+        memberIds: ['mock_opponent'],
+        stance: DebateStance.con,
+      ),
+      status: MatchStatus.inProgress,
+      format: DebateFormat.oneVsOne,
+      duration: DebateDuration.short,
+      matchedAt: now,
+      startedAt: now,
+      createdAt: now,
+    );
+
+    final mockRoom = DebateRoom(
+      id: 'guest_mock_room',
+      eventId: 'guest_mock_event',
+      matchId: 'guest_mock_match',
+      participantIds: ['guest', 'mock_opponent'],
+      participantStances: {
+        'guest': DebateStance.pro,
+        'mock_opponent': DebateStance.con,
+      },
+      status: RoomStatus.inProgress,
+      currentPhase: DebatePhase.preparation,
+      phaseStartedAt: now,
+      phaseTimeRemaining: 300,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    return _GuestMockDebateRoom(
+      room: mockRoom,
+      match: mockMatch,
+      tabController: _tabController,
+    );
+  }
 }
 
 /// フェーズタイマーWidget（ルームの変更を監視）
@@ -667,4 +729,323 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
       ),
     );
   }
+}
+
+/// ゲスト用のモックディベートルームWidget
+class _GuestMockDebateRoom extends StatefulWidget {
+  final DebateRoom room;
+  final DebateMatch match;
+  final TabController tabController;
+
+  const _GuestMockDebateRoom({
+    required this.room,
+    required this.match,
+    required this.tabController,
+  });
+
+  @override
+  State<_GuestMockDebateRoom> createState() => _GuestMockDebateRoomState();
+}
+
+class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
+  late int _remainingSeconds;
+  Timer? _timer;
+  final List<DebateMessage> _messages = [];
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = widget.room.phaseTimeRemaining > 0
+        ? widget.room.phaseTimeRemaining
+        : 300; // 5分
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          timer.cancel();
+          // 時間切れ：結果画面へ遷移
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              context.pushReplacement('/debate/result/guest_mock_match');
+            }
+          });
+        }
+      });
+    });
+  }
+
+  void _sendMessage(String content) {
+    final newMessage = DebateMessage(
+      id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
+      roomId: widget.room.id,
+      userId: 'guest',
+      userNickname: 'ゲスト',
+      content: content,
+      type: MessageType.public,
+      phase: widget.room.currentPhase,
+      createdAt: DateTime.now(),
+      senderStance: DebateStance.pro,
+    );
+
+    setState(() {
+      _messages.add(newMessage);
+    });
+
+    // 5秒後にAI相手からの返信を追加
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      final aiResponse = DebateMessage(
+        id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
+        roomId: widget.room.id,
+        userId: 'mock_opponent',
+        userNickname: 'AI相手',
+        content: 'なるほど、興味深い視点ですね。しかし、別の観点から考えると...',
+        type: MessageType.public,
+        phase: widget.room.currentPhase,
+        createdAt: DateTime.now(),
+        senderStance: DebateStance.con,
+      );
+      setState(() {
+        _messages.add(aiResponse);
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = _remainingSeconds ~/ 60;
+    final seconds = _remainingSeconds % 60;
+    final isWarning = _remainingSeconds <= 10;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('お試しディベート'),
+        automaticallyImplyLeading: false,
+      ),
+      body: Column(
+        children: [
+          // ヘッダー部分
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // タイマー
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'ディベート中',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isWarning ? Colors.red : AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.timer, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // トピック
+                const Text(
+                  '環境保護のために個人の利便性を犠牲にすべきか',
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                // チーム情報
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildTeamInfo('賛成', 'ゲスト', Colors.blue),
+                    const Text('vs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    _buildTeamInfo('反対', 'AI相手', Colors.red),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // メッセージリスト
+          Expanded(
+            child: _messages.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'メッセージを送信してディベートを始めましょう',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      final isMyMessage = message.userId == 'guest';
+                      return _buildMessageBubble(message, isMyMessage);
+                    },
+                  ),
+          ),
+          // 入力エリア
+          SafeArea(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 120,
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: const InputDecoration(
+                          hintText: 'メッセージを入力...',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        maxLines: null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () {
+                      if (_messageController.text.trim().isNotEmpty) {
+                        _sendMessage(_messageController.text.trim());
+                        _messageController.clear();
+                      }
+                    },
+                    icon: const Icon(Icons.send),
+                    color: AppColors.primary,
+                    iconSize: 28,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamInfo(String stance, String name, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color),
+          ),
+          child: Text(
+            stance,
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          name,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessageBubble(DebateMessage message, bool isMyMessage) {
+    return Align(
+      alignment: isMyMessage ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        decoration: BoxDecoration(
+          color: isMyMessage ? AppColors.primary : Colors.grey[200],
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.userNickname ?? message.userId,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: isMyMessage ? Colors.white : Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message.content,
+              style: TextStyle(
+                fontSize: 14,
+                color: isMyMessage ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }

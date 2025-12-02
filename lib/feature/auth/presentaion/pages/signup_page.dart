@@ -304,6 +304,22 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 24),
+                OutlinedButton(
+                    onPressed: () async {
+                      await ref.read(authControllerProvider.notifier).continueAsGuest();
+                      if (context.mounted) {
+                        context.go('/');
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'ゲストで続ける',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
               ],
             ),
           ),
