@@ -254,4 +254,20 @@ class AuthController extends Notifier<AuthState> {
       state = AuthState.error(e.toString());
     }
   }
+
+  Future<void> deleteAccount() async {
+    state = const AuthState.loading();
+    try {
+      final currentUser = _authRepository.getCurrentUser();
+      if (currentUser == null) {
+        state = const AuthState.error('ユーザーがログインしていません');
+        return;
+      }
+
+      await _authRepository.deleteAccount(currentUser.uid);
+      state = const AuthState.unauthenticated();
+    } catch (e) {
+      state = AuthState.error(e.toString());
+    }
+  }
 }
