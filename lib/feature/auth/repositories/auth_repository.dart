@@ -38,4 +38,6 @@ abstract class AuthRepository {
   Future<UserCredential> signInWithGoogle();
 
   Future<UserCredential> signInWithApple();
+
+  Future<void> deleteAccount(String userId);
 }

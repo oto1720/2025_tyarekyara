@@ -87,7 +87,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-	title: const Text('Login'),
+	title: const Text('ログイン'),
 	backgroundColor: Colors.transparent,
 	elevation: 0,
       ),
