@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../../../auth/presentaion/pages/login.dart';
 import '../widgets/setting_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -37,6 +38,159 @@ class SettingsScreen extends ConsumerWidget {
             child: const Text(
               'ログアウト',
               style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('アカウント削除'),
+        content: const Text(
+          'アカウントを削除すると、以下のデータが完全に削除されます：\n\n'
+          '• ユーザープロフィール\n'
+          '• 投稿した意見\n'
+          '• チャレンジデータ\n'
+          '• ディベート履歴\n'
+          '• その他すべての関連データ\n\n'
+          'この操作は取り消すことができません。\n本当に削除しますか？',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'キャンセル',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showFinalDeleteConfirmation(context, ref);
+            },
+            child: const Text(
+              '削除する',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFinalDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          '最終確認',
+          style: TextStyle(color: AppColors.error),
+        ),
+        content: const Text(
+          '本当にアカウントを削除しますか？\n'
+          'この操作は取り消せません。',
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'キャンセル',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final rootNavigator = Navigator.of(context, rootNavigator: true);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+              // 確認ダイアログを閉じる
+              navigator.pop();
+
+              // ローディングインジケータを表示（rootNavigatorを使用）
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                useRootNavigator: true,
+                builder: (context) => PopScope(
+                  canPop: false,
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+
+              try {
+                await ref.read(authControllerProvider.notifier).deleteAccount();
+
+                // FirebaseAuthの状態変更を待つ
+                await Future.delayed(const Duration(milliseconds: 500));
+
+                // ローディングを閉じる
+                rootNavigator.pop();
+
+                // ログイン画面に強制遷移（すべてのスタックをクリア）
+                if (context.mounted) {
+                  rootNavigator.pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+
+                  // 成功メッセージを表示（遷移後に表示）
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    scaffoldMessenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('アカウントを削除しました'),
+                        backgroundColor: AppColors.success,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  });
+                }
+              } catch (e) {
+                // ローディングを閉じる
+                rootNavigator.pop();
+
+                // エラーメッセージを表示
+                if (context.mounted) {
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('エラー'),
+                      content: Text(e.toString()),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('閉じる'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text(
+              'アカウントを削除',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -279,6 +433,11 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.logout,
                 title: 'ログアウト',
                 onTap: () => _showLogoutDialog(context, ref),
+              ),
+              DangerSettingItem(
+                icon: Icons.delete_forever,
+                title: 'アカウント削除',
+                onTap: () => _showDeleteAccountDialog(context, ref),
               ),
 
               const SizedBox(height: 32),
