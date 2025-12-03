@@ -31,8 +31,10 @@ import 'package:tyarekyara/feature/debate/presentation/pages/debate_result_page.
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_ranking_page.dart';
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_stats_page.dart';
 import 'package:tyarekyara/feature/debate/presentation/pages/debate_rules_page.dart';
+import 'package:tyarekyara/feature/terms/presentation/pages/terms_of_service_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // ルーティング設定
 // 新しい画面を追加する場合：
@@ -57,13 +59,45 @@ final GoRouter router = GoRouter(
       return null;
     }
 
+    // 利用規約ページは常にアクセス可能
+    if (currentPath == '/terms') {
+      return null;
+    }
+
     // リダイレクトロジック
-    // 1. ログイン済み & チュートリアル完了 → ホームへ
-    if (isAuthenticated && tutorialCompleted) {
+    // 1. ログイン済み & チュートリアル完了 → 利用規約チェック → ホームへ
+    if (isAuthenticated && tutorialCompleted && !isGuest) {
+      // 利用規約への同意をチェック
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        try {
+          final termsDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('termsAcceptance')
+              .doc('1.0.0')
+              .get();
+
+          if (!termsDoc.exists && currentPath != '/terms') {
+            return '/terms';
+          }
+        } catch (e) {
+          // エラーの場合はスキップ
+        }
+      }
+
       if (currentPath == '/first' || currentPath == '/tutorial') {
         return '/';
       }
       return null; // ホームや他のページは正常にアクセス
+    }
+
+    // 1.5. ゲストモードの場合は利用規約チェックをスキップ
+    if (isAuthenticated && tutorialCompleted && isGuest) {
+      if (currentPath == '/first' || currentPath == '/tutorial') {
+        return '/';
+      }
+      return null;
     }
 
     // 2. ログイン済み & チュートリアル未完了 → チュートリアルへ
@@ -155,6 +189,12 @@ final GoRouter router = GoRouter(
       path: '/tutorial',
       pageBuilder: (context, state) =>
           const NoTransitionPage(child: TutorialPage()),
+    ),
+    // 利用規約画面
+    GoRoute(
+      path: '/terms',
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: TermsOfServicePage(isRequired: true)),
     ),
     GoRoute(
       path: '/notice',

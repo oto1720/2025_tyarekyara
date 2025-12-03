@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../models/opinion.dart';
 import '../models/topic.dart'; // TopicDifficultyをインポート
 import '../repositories/opinion_repository.dart';
+import '../../block/repositories/block_repository.dart';
 
 part 'opinion_provider.freezed.dart';
 
@@ -59,21 +60,30 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
       final opinions = await repository.getOpinionsByTopic(topicId);
       final counts = await repository.getOpinionCountsByStance(topicId);
 
+      // ブロックしたユーザーのIDリストを取得
+      final blockRepository = BlockRepository();
+      final blockedUserIds = await blockRepository.getBlockedUserIds();
+
+      // ブロックしたユーザーの投稿を除外
+      final filteredOpinions = opinions
+          .where((o) => !blockedUserIds.contains(o.userId))
+          .toList();
+
       // 自分の投稿を一番上に表示するようにソート
       final currentUser = FirebaseAuth.instance.currentUser;
       final sortedOpinions = <Opinion>[];
 
       if (currentUser != null) {
         // 自分の投稿を先に追加
-        final myOpinions = opinions.where((o) => o.userId == currentUser.uid).toList();
+        final myOpinions = filteredOpinions.where((o) => o.userId == currentUser.uid).toList();
         sortedOpinions.addAll(myOpinions);
 
         // 他の人の投稿を後に追加
-        final otherOpinions = opinions.where((o) => o.userId != currentUser.uid).toList();
+        final otherOpinions = filteredOpinions.where((o) => o.userId != currentUser.uid).toList();
         sortedOpinions.addAll(otherOpinions);
       } else {
         // ログインしていない場合はそのまま
-        sortedOpinions.addAll(opinions);
+        sortedOpinions.addAll(filteredOpinions);
       }
 
       state = state.copyWith(

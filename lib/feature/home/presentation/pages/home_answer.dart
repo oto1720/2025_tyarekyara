@@ -8,6 +8,9 @@ import '../../providers/opinion_provider.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../widgets/topic_card.dart';
 import '../widgets/date_selector_widget.dart';
+import '../../../report/models/report.dart';
+import '../../../report/presentation/widgets/report_dialog.dart';
+import '../../../block/providers/block_providers.dart';
 
 /// 意見一覧画面
 class OpinionListScreen extends ConsumerWidget {
@@ -600,6 +603,18 @@ class _OpinionCard extends ConsumerWidget {
                       : FontWeight.w500,
                 ),
               ),
+              // ブロックボタン（自分の投稿以外）
+              if (!isMyOpinion && currentUser != null) ...[
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _showBlockDialog(context, ref),
+                  child: Icon(
+                    Icons.block,
+                    size: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -643,7 +658,7 @@ class _OpinionCard extends ConsumerWidget {
               ),
             ),
 
-          // 投稿日時といいね数
+          // 投稿日時といいね数と報告ボタン
           Row(
             children: [
               Icon(Icons.access_time, size: 12, color: Colors.grey.shade500),
@@ -666,7 +681,30 @@ class _OpinionCard extends ConsumerWidget {
                     color: Colors.grey.shade600,
                   ),
                 ),
+                const SizedBox(width: 8),
               ],
+              // 報告ボタン（自分の投稿以外）
+              if (!isMyOpinion && currentUser != null)
+                InkWell(
+                  onTap: () => _showReportDialog(context, ref),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.flag_outlined, size: 14, color: Colors.grey.shade500),
+                        const SizedBox(width: 2),
+                        Text(
+                          '報告',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ],
@@ -689,6 +727,52 @@ class _OpinionCard extends ConsumerWidget {
     } else {
       return '${date.month}/${date.day}';
     }
+  }
+
+  void _showReportDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => ReportDialog(
+        reportedUserId: opinion.userId,
+        type: ReportType.opinion,
+        contentId: opinion.id,
+      ),
+    );
+  }
+
+  void _showBlockDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ユーザーをブロック'),
+        content: Text(
+          '${opinion.userName}さんをブロックしますか？\n'
+          'ブロックすると、このユーザーの投稿が表示されなくなります。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await ref.read(blockNotifierProvider.notifier).blockUser(opinion.userId);
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${opinion.userName}さんをブロックしました')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('ブロック'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
