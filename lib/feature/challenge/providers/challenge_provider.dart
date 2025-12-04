@@ -145,7 +145,7 @@ class ChallengeNotifier extends AsyncNotifier<ChallengeState> {
 
       // 4. データマージ処理（最適化版）
       final mergedChallenges = _mergeChallenges(
-        opinionBasedChallenges.isEmpty ? _createDummyData() : opinionBasedChallenges,
+        opinionBasedChallenges,
         completedChallenges,
       );
 
@@ -171,7 +171,7 @@ class ChallengeNotifier extends AsyncNotifier<ChallengeState> {
       }
 
       return ChallengeState(
-        challenges: _createDummyData(),
+        challenges: [],
         errorMessage: e.toString(),
       );
     }
@@ -376,27 +376,7 @@ List<Challenge> _createDummyData() {
     ),
     Challenge(
       id: '2',
-      difficulty: ChallengeDifficulty.normal,
-      title: '今日のご飯なに？',
-      originalStance: Stance.pro,
-      stance: Stance.con,
-      originalOpinionText: 'カレーライスが食べたいです。',
-      status: ChallengeStatus.available,
-      userId: dummyUserId,
-    ),
-    Challenge(
-      id: '3',
-      difficulty: ChallengeDifficulty.hard,
-      title: 'は？',
-      originalStance: Stance.con,
-      stance: Stance.pro,
-      originalOpinionText: 'は？',
-      status: ChallengeStatus.available,
-      userId: dummyUserId,
-    ),
-    Challenge(
-      id: '4',
-      title: 'お題C：SNSは社会に有益か？',
+      title: 'SNSは社会に有益か？',
       originalStance: Stance.pro,
       stance: Stance.con,
       difficulty: ChallengeDifficulty.normal,
