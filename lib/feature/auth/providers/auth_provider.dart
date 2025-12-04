@@ -235,6 +235,10 @@ class AuthController extends Notifier<AuthState> {
       );
 
       await _authRepository.updateUserData(updatedUser);
+
+      // currentUserProviderを再読み込みして最新データを取得
+      ref.invalidate(currentUserProvider);
+
       state = AuthState.authenticated(updatedUser);
     } catch (e) {
       state = AuthState.error(e.toString());
