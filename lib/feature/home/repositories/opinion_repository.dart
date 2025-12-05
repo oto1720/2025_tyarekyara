@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/opinion.dart';
+import 'package:flutter/foundation.dart';
 
 /// 意見をFirestoreで管理するリポジトリ
 class OpinionRepository {
@@ -17,7 +18,7 @@ class OpinionRepository {
           .doc(opinion.id)
           .set(opinion.toJson());
     } catch (e) {
-      print('Error posting opinion: $e');
+      debugPrint('Error posting opinion: $e');
       rethrow;
     }
   }
@@ -42,7 +43,7 @@ class OpinionRepository {
 
       return opinions;
     } catch (e) {
-      print('Error getting opinions by topic: $e');
+      debugPrint('Error getting opinions by topic: $e');
       return [];
     }
   }
@@ -70,7 +71,7 @@ class OpinionRepository {
 
       return counts;
     } catch (e) {
-      print('Error getting opinion counts: $e');
+      debugPrint('Error getting opinion counts: $e');
       return {
         OpinionStance.agree: 0,
         OpinionStance.disagree: 0,
@@ -99,7 +100,7 @@ class OpinionRepository {
 
       return opinions;
     } catch (e) {
-      print('Error getting opinions by user: $e');
+      debugPrint('Error getting opinions by user: $e');
       return [];
     }
   }
@@ -117,7 +118,7 @@ class OpinionRepository {
 
       return snapshot.docs.isNotEmpty;
     } catch (e) {
-      print('Error checking user opinion: $e');
+      debugPrint('Error checking user opinion: $e');
       return false;
     }
   }
@@ -138,7 +139,7 @@ class OpinionRepository {
       }
       return null;
     } catch (e) {
-      print('Error getting user opinion: $e');
+      debugPrint('Error getting user opinion: $e');
       return null;
     }
   }
@@ -151,7 +152,7 @@ class OpinionRepository {
           .doc(opinionId)
           .update({'isDeleted': true});
     } catch (e) {
-      print('Error deleting opinion: $e');
+      debugPrint('Error deleting opinion: $e');
       rethrow;
     }
   }
@@ -171,7 +172,7 @@ class OpinionRepository {
         'content': content,
       });
     } catch (e) {
-      print('Error updating opinion: $e');
+      debugPrint('Error updating opinion: $e');
       rethrow;
     }
   }
@@ -184,7 +185,7 @@ class OpinionRepository {
           .doc(opinionId)
           .update({'likeCount': FieldValue.increment(1)});
     } catch (e) {
-      print('Error liking opinion: $e');
+      debugPrint('Error liking opinion: $e');
       rethrow;
     }
   }
@@ -220,7 +221,7 @@ class OpinionRepository {
         'reactedUsers.$key': FieldValue.arrayUnion([userId]),
       });
     } catch (e) {
-      print('Error adding reaction: $e');
+      debugPrint('Error adding reaction: $e');
       rethrow;
     }
   }
@@ -239,7 +240,7 @@ class OpinionRepository {
         'reactedUsers.$key': FieldValue.arrayRemove([userId]),
       });
     } catch (e) {
-      print('Error removing reaction: $e');
+      debugPrint('Error removing reaction: $e');
       rethrow;
     }
   }
@@ -269,7 +270,7 @@ class OpinionRepository {
         await addReaction(opinionId: opinionId, userId: userId, type: type);
       }
     } catch (e) {
-      print('Error toggling reaction: $e');
+      debugPrint('Error toggling reaction: $e');
       rethrow;
     }
   }

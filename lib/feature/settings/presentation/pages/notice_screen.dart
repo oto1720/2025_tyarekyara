@@ -170,7 +170,7 @@ class NoticeScreen extends ConsumerWidget {
           horizontal: 16,
           vertical: 8,
         ),
-        activeColor: Theme.of(context).primaryColor,
+        activeThumbColor: Theme.of(context).primaryColor,
       ),
     );
   }

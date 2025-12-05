@@ -90,13 +90,13 @@ class ProfileImageDisplay extends StatelessWidget {
   }
 
   Widget _buildImage(BuildContext context) {
-    print('=== ProfileImageDisplay._buildImage ===');
-    print('selectedImage: ${selectedImage?.path}');
-    print('iconUrl (raw): $iconUrl');
+    debugPrint('=== ProfileImageDisplay._buildImage ===');
+    debugPrint('selectedImage: ${selectedImage?.path}');
+    debugPrint('iconUrl (raw): $iconUrl');
 
     // 選択した一時画像を優先表示
     if (selectedImage != null) {
-      print('一時画像を表示');
+      debugPrint('一時画像を表示');
       return Image.file(
         selectedImage!,
         width: 120,
@@ -109,12 +109,12 @@ class ProfileImageDisplay extends StatelessWidget {
     if (iconUrl != null && iconUrl!.isNotEmpty) {
       // URLをトリム（あらゆる種類の空白文字を除去）
       final cleanUrl = iconUrl!.replaceAll(RegExp(r'\s+'), '');
-      print('iconUrlが存在 (cleaned): $cleanUrl');
-      print('iconUrl length: ${iconUrl!.length}, cleanUrl length: ${cleanUrl.length}');
+      debugPrint('iconUrlが存在 (cleaned): $cleanUrl');
+      debugPrint('iconUrl length: ${iconUrl!.length}, cleanUrl length: ${cleanUrl.length}');
 
       // アセット画像かネットワーク画像かを判定
       if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
-        print('ネットワーク画像として読み込み開始');
+        debugPrint('ネットワーク画像として読み込み開始');
         return Image.network(
           cleanUrl,
           width: 120,
@@ -122,8 +122,8 @@ class ProfileImageDisplay extends StatelessWidget {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             // ネットワークエラー時はデフォルトアイコンを表示
-            print('❌ 画像読み込みエラー: $error');
-            print('スタックトレース: $stackTrace');
+            debugPrint('❌ 画像読み込みエラー: $error');
+            debugPrint('スタックトレース: $stackTrace');
             return Container(
               color: Colors.red[50],
               child: Column(
@@ -148,14 +148,14 @@ class ProfileImageDisplay extends StatelessWidget {
           },
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {
-              print('✅ 画像読み込み完了');
+              debugPrint('✅ 画像読み込み完了');
               return child;
             }
             final progress = loadingProgress.expectedTotalBytes != null
                 ? loadingProgress.cumulativeBytesLoaded /
                     loadingProgress.expectedTotalBytes!
                 : null;
-            print('画像読み込み中: ${progress != null ? "${(progress * 100).toStringAsFixed(0)}%" : "不明"}');
+            debugPrint('画像読み込み中: ${progress != null ? "${(progress * 100).toStringAsFixed(0)}%" : "不明"}');
             return Center(
               child: CircularProgressIndicator(
                 value: progress,
@@ -164,14 +164,14 @@ class ProfileImageDisplay extends StatelessWidget {
           },
         );
       } else {
-        print('⚠️ iconUrlがhttp/httpsで始まっていません: $cleanUrl');
+        debugPrint('⚠️ iconUrlがhttp/httpsで始まっていません: $cleanUrl');
       }
     } else {
-      print('iconUrlが空またはnull');
+      debugPrint('iconUrlが空またはnull');
     }
 
     // デフォルトアイコン
-    print('デフォルトアイコンを表示');
+    debugPrint('デフォルトアイコンを表示');
     return Icon(
       Icons.person,
       size: 60,
@@ -339,7 +339,8 @@ class DropdownField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      key: ValueKey(value),
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

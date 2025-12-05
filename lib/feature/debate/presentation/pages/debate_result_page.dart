@@ -491,7 +491,7 @@ class DebateResultPage extends ConsumerWidget {
         const SizedBox(height: 16),
         MVPDisplayWidget(
           userId: judgment.mvpUserId!,
-          userName: judgment.mvpUserId, // TODO: 実際のユーザー名を取得
+          userName: judgment.mvpUserId, //
           teamColor: mvpTeamColor,
         ),
       ],
@@ -568,34 +568,7 @@ class DebateResultPage extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: シェア機能
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('シェア機能は準備中です')),
-              );
-            },
-            icon: const Icon(Icons.share),
-            label: const Text(
-              '結果をシェア',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary, width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
+        const SizedBox(height: 25),
       ],
     );
   }

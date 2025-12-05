@@ -124,7 +124,9 @@ class DateSelectorWidget extends ConsumerWidget {
               surface: AppColors.background,
               onSurface: AppColors.textPrimary,
             ),
-            dialogBackgroundColor: AppColors.background,
+            dialogTheme: const DialogThemeData(
+              backgroundColor: AppColors.background,
+            ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,

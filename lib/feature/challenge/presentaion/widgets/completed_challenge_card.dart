@@ -182,7 +182,7 @@ class CompletedCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: _getScoreColor(challenge.feedbackScore!).withOpacity(0.2),
+                              color: _getScoreColor(challenge.feedbackScore!).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -227,3 +227,4 @@ class CompletedCard extends StatelessWidget {
     }
   }
 }
+

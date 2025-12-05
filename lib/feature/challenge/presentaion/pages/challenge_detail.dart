@@ -83,7 +83,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       ),
                       const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
                       Text(
-                        '${widget.challenge.title}',
+                        '$widget.challenge.title',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -221,8 +221,8 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               buildStanceTag(
                                 widget.challenge.stance == Stance.pro ? '賛成' : '反対',
                                 widget.challenge.stance == Stance.pro
-                                    ? AppColors.agree.withOpacity(0.2)
-                                    : AppColors.disagree.withOpacity(0.2),
+                                    ? AppColors.agree.withValues(alpha: 0.2)
+                                    : AppColors.disagree.withValues(alpha: 0.2),
                                 widget.challenge.stance == Stance.pro
                                     ? AppColors.agree
                                     : AppColors.disagree,
@@ -291,7 +291,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                     side: const BorderSide(color: AppColors.border),
                                   ),
                                   onPressed: () {
-                                    print('キャンセルボタンが押されました');
+                                    debugPrint('キャンセルボタンが押されました');
                                     GoRouter.of(context).pop(null);
                                   },
                                   child: const Text(

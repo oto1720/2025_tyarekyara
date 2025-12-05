@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
 
 /// Firebase Storageを使用した画像アップロードサービス
@@ -17,13 +18,13 @@ class StorageService {
     required File imageFile,
   }) async {
     try {
-      print('=== プロフィール画像アップロード開始 ===');
-      print('ユーザーID: $userId');
-      print('画像パス: ${imageFile.path}');
+      debugPrint('=== プロフィール画像アップロード開始 ===');
+      debugPrint('ユーザーID: $userId');
+      debugPrint('画像パス: ${imageFile.path}');
 
       // ファイルの存在確認
       final fileExists = await imageFile.exists();
-      print('ファイル存在確認: $fileExists');
+      debugPrint('ファイル存在確認: $fileExists');
 
       if (!fileExists) {
         throw 'ファイルが見つかりません: ${imageFile.path}';
@@ -31,7 +32,7 @@ class StorageService {
 
       // ファイル拡張子を取得
       final ext = path.extension(imageFile.path);
-      print('ファイル拡張子: $ext');
+      debugPrint('ファイル拡張子: $ext');
 
       if (ext.isEmpty) {
         throw 'ファイル拡張子が取得できません';
@@ -39,7 +40,7 @@ class StorageService {
 
       // ストレージパスを設定（profile_images/userId.拡張子）
       final storageRef = _storage.ref().child('profile_images/$userId$ext');
-      print('ストレージパス: profile_images/$userId$ext');
+      debugPrint('ストレージパス: profile_images/$userId$ext');
 
       // メタデータを設定
       final metadata = SettableMetadata(
@@ -48,30 +49,30 @@ class StorageService {
       );
 
       // 画像をアップロード
-      print('アップロード開始...');
+      debugPrint('アップロード開始...');
       final uploadTask = storageRef.putFile(imageFile, metadata);
 
       // アップロードの完了を待つ
       final snapshot = await uploadTask.whenComplete(() {});
-      print('アップロード完了: ${snapshot.state}');
+      debugPrint('アップロード完了: ${snapshot.state}');
 
       // ダウンロードURLを取得
-      print('ダウンロードURL取得中...');
+      debugPrint('ダウンロードURL取得中...');
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      print('ダウンロードURL取得 (raw): $downloadUrl');
+      debugPrint('ダウンロードURL取得 (raw): $downloadUrl');
 
       // URLをクリーンアップ（改行や余分な空白を除去）
       final cleanUrl = downloadUrl.trim().replaceAll(RegExp(r'\s+'), '');
-      print('ダウンロードURL取得 (cleaned): $cleanUrl');
-      print('=== プロフィール画像アップロード成功 ===');
+      debugPrint('ダウンロードURL取得 (cleaned): $cleanUrl');
+      debugPrint('=== プロフィール画像アップロード成功 ===');
 
       return cleanUrl;
     } on FirebaseException catch (e) {
-      print('FirebaseException: ${e.code} - ${e.message}');
+      debugPrint('FirebaseException: ${e.code} - ${e.message}');
       throw _handleStorageError(e);
     } catch (e, stackTrace) {
-      print('アップロードエラー: $e');
-      print('スタックトレース: $stackTrace');
+      debugPrint('アップロードエラー: $e');
+      debugPrint('スタックトレース: $stackTrace');
       throw 'プロフィール画像のアップロードに失敗しました: $e';
     }
   }

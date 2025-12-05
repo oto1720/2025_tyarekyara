@@ -173,29 +173,39 @@ class _EntryFormState extends State<EntryForm> {
           color: Colors.blue[50],
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                _buildStanceOption(
-                  stance: DebateStance.pro,
-                  icon: Icons.thumb_up,
-                  title: '賛成',
-                  description: '「${widget.event.topic}」に賛成の立場で議論',
-                ),
-                const Divider(height: 16),
-                _buildStanceOption(
-                  stance: DebateStance.con,
-                  icon: Icons.thumb_down,
-                  title: '反対',
-                  description: '「${widget.event.topic}」に反対の立場で議論',
-                ),
-                const Divider(height: 16),
-                _buildStanceOption(
-                  stance: DebateStance.any,
-                  icon: Icons.shuffle,
-                  title: 'どちらでも可',
-                  description: 'マッチング時に自動で振り分け（推奨）',
-                ),
-              ],
+            child: RadioGroup<DebateStance>(
+              groupValue: _selectedStance,
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedStance = value;
+                  });
+                }
+              },
+              child: Column(
+                children: [
+                  _buildStanceOption(
+                    stance: DebateStance.pro,
+                    icon: Icons.thumb_up,
+                    title: '賛成',
+                    description: '「${widget.event.topic}」に賛成の立場で議論',
+                  ),
+                  const Divider(height: 16),
+                  _buildStanceOption(
+                    stance: DebateStance.con,
+                    icon: Icons.thumb_down,
+                    title: '反対',
+                    description: '「${widget.event.topic}」に反対の立場で議論',
+                  ),
+                  const Divider(height: 16),
+                  _buildStanceOption(
+                    stance: DebateStance.any,
+                    icon: Icons.shuffle,
+                    title: 'どちらでも可',
+                    description: 'マッチング時に自動で振り分け（推奨）',
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -257,14 +267,6 @@ class _EntryFormState extends State<EntryForm> {
           children: [
             Radio<DebateStance>(
               value: stance,
-              groupValue: _selectedStance,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedStance = value;
-                  });
-                }
-              },
             ),
             Icon(icon, color: Colors.blue),
             const SizedBox(width: 12),
@@ -309,7 +311,7 @@ class _EntryFormState extends State<EntryForm> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color : color.withOpacity(0.1),
+          color: isSelected ? color : color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: color,

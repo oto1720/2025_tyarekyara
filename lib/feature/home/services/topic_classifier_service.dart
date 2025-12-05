@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../models/topic.dart';
 import '../repositories/ai_repository.dart';
+import 'package:flutter/foundation.dart';
 
 /// トピック分類の結果
 class ClassificationResult {
@@ -94,7 +95,7 @@ $topicText
       return ClassificationResult.fromJson(json);
     } catch (e) {
       // パースに失敗した場合はデフォルト値を返す
-      print('Failed to parse classification response: $e');
+      debugPrint('Failed to parse classification response: $e');
       return ClassificationResult(
         category: TopicCategory.daily,
         difficulty: TopicDifficulty.medium,

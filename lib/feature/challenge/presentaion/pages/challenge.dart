@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
-import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/widgets/completed_challenge_card.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
 import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
@@ -119,7 +119,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                 icon: const Icon(Icons.refresh),
                 tooltip: 'データを再読み込み',
                 onPressed: () async {
-              print('🔄 [UI] リフレッシュボタンが押されました');
+              debugPrint('🔄 [UI] リフレッシュボタンが押されました');
               await ref.read(challengeProvider.notifier).refresh();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -334,61 +334,116 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                   ),
                 ),
               ),
-              
 
-              //仮のチャレンジカードの表示
-              ...challenges.map((challenge) {
-                //フィルタ状態を取得
-                final bool isAvailable = currentFilter == ChallengeFilter.available;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 6.0),
-                  child: isAvailable
-                      ? ChallengeCard(
-                          challenge: challenge,
-                          onChallengePressed: () async {
-                            final result = await context.push<Map<String, dynamic>>(
-                                    '/challenge/${challenge.id}',
-                                    extra: challenge,
-                                );
 
-                                if (result != null && mounted) {
-                                  final int earnedPoints = result['points'];
-                                  final String opinionText = result['opinion'];
-                                  final String? feedbackText = result['feedbackText'];
-                                  final int? feedbackScore = result['feedbackScore'];
-
-                                  // Providerのメソッドを呼び出して状態を更新（フィードバック含む）
-                                  ref.read(challengeProvider.notifier).completeChallenge(
-                                      challenge.id,
-                                      opinionText, // 提出された意見
-                                      earnedPoints, // 獲得ポイント
-                                      feedbackText: feedbackText,
-                                      feedbackScore: feedbackScore,
+              // チャレンジの表示またはエンプティステート
+              if (challenges.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          currentFilter == ChallengeFilter.available
+                              ? 'チャレンジがありません'
+                              : '完了したチャレンジがありません',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          currentFilter == ChallengeFilter.available
+                              ? 'ホーム画面で意見を投稿すると、\nあなたの意見から自動的にチャレンジが生成されます'
+                              : 'チャレンジを完了すると、ここに表示されます',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        if (currentFilter == ChallengeFilter.available) ...[
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () => context.go('/'),
+                            icon: const Icon(Icons.home),
+                            label: const Text('ホーム画面へ'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                )
+              else
+                //仮のチャレンジカードの表示
+                ...challenges.map((challenge) {
+                  //フィルタ状態を取得
+                  final bool isAvailable = currentFilter == ChallengeFilter.available;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: isAvailable
+                        ? ChallengeCard(
+                            challenge: challenge,
+                            onChallengePressed: () async {
+                              final result = await context.push<Map<String, dynamic>>(
+                                      '/challenge/${challenge.id}',
+                                      extra: challenge,
                                   );
 
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
-                                        backgroundColor: Colors.green,
-                                        duration: const Duration(seconds: 2),
-                                      ),
+                                  if (result != null && mounted) {
+                                    final int earnedPoints = result['points'];
+                                    final String opinionText = result['opinion'];
+                                    final String? feedbackText = result['feedbackText'];
+                                    final int? feedbackScore = result['feedbackScore'];
+
+                                    // Providerのメソッドを呼び出して状態を更新（フィードバック含む）
+                                    ref.read(challengeProvider.notifier).completeChallenge(
+                                        challenge.id,
+                                        opinionText, // 提出された意見
+                                        earnedPoints, // 獲得ポイント
+                                        feedbackText: feedbackText,
+                                        feedbackScore: feedbackScore,
                                     );
+
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
+                                          backgroundColor: Colors.green,
+                                          duration: const Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
                                   }
-                                }
-                          }
-                        )
-                  : CompletedCard( // 完了済みの場合
-                      challenge: challenge,
-                      // TODO: 完了済みカードをタップした時の動作（詳細確認など）
-                      // onTap: () { ... }
-                      onChallengePressed: () async{
-                        // 完了済みカードをタップした時の動作（詳細確認など）
-                        print('完了済みカードがタップされました: ${challenge.title}');
-                      },
-                    ),
-                );
-              }).toList(),
+                            }
+                          )
+                    : CompletedCard( // 完了済みの場合
+                        challenge: challenge,
+                        // onTap: () { ... }
+                        onChallengePressed: () async{
+                          // 完了済みカードをタップした時の動作（詳細確認など）
+                          debugPrint('完了済みカードがタップされました: ${challenge.title}');
+                        },
+                      ),
+                  );
+                }),
               const SizedBox(height: 95), // BottomNavigationBar分の余白
             ],
           ),

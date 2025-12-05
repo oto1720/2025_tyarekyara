@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_debate_stats.dart';
-
+import 'package:flutter/foundation.dart';
 /// ユーザーディベート統計リポジトリ
 class UserDebateStatsRepository {
   final FirebaseFirestore _firestore;
@@ -25,7 +25,7 @@ class UserDebateStatsRepository {
       }
       return UserDebateStats.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting user stats: $e');
+      debugPrint('Error getting user stats: $e');
       return null;
     }
   }
@@ -60,7 +60,7 @@ class UserDebateStatsRepository {
           .doc(stats.userId)
           .set(UserDebateStats.toFirestore(stats));
     } catch (e) {
-      print('Error saving stats: $e');
+      debugPrint('Error saving stats: $e');
       rethrow;
     }
   }
@@ -73,7 +73,7 @@ class UserDebateStatsRepository {
           .doc(stats.userId)
           .update(UserDebateStats.toFirestore(stats));
     } catch (e) {
-      print('Error updating stats: $e');
+      debugPrint('Error updating stats: $e');
       rethrow;
     }
   }
@@ -96,7 +96,7 @@ class UserDebateStatsRepository {
           .map((doc) => RankingEntry.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting ranking: $e');
+      debugPrint('Error getting ranking: $e');
       return [];
     }
   }
@@ -145,7 +145,7 @@ class UserDebateStatsRepository {
       final data = RankingEntry.fromJson(snapshot.data()!);
       return data.rank;
     } catch (e) {
-      print('Error getting user rank: $e');
+      debugPrint('Error getting user rank: $e');
       return null;
     }
   }
@@ -161,7 +161,7 @@ class UserDebateStatsRepository {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error adding badge: $e');
+      debugPrint('Error adding badge: $e');
       rethrow;
     }
   }
@@ -178,7 +178,7 @@ class UserDebateStatsRepository {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error resetting monthly points: $e');
+      debugPrint('Error resetting monthly points: $e');
       rethrow;
     }
   }

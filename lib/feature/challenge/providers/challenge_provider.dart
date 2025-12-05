@@ -357,32 +357,3 @@ final challengeProvider =
 });
 
 // -----------------------------------------------------------------
-// ダミーデータ生成
-// -----------------------------------------------------------------
-
-List<Challenge> _createDummyData() {
-  const dummyUserId = 'dummy';
-
-  return [
-    Challenge(
-      id: '1',
-      title: '週休3日制は導入すべきか？',
-      difficulty: ChallengeDifficulty.easy,
-      originalStance: Stance.con,
-      stance: Stance.pro,
-      originalOpinionText: '週休3日制は、労働者のワークライフバランスを向上させ、生産性を高める可能性があります。',
-      status: ChallengeStatus.available,
-      userId: dummyUserId,
-    ),
-    Challenge(
-      id: '2',
-      title: 'SNSは社会に有益か？',
-      originalStance: Stance.pro,
-      stance: Stance.con,
-      difficulty: ChallengeDifficulty.normal,
-      originalOpinionText: '遠くの人と繋がれる点で、非常に有益だ。',
-      status: ChallengeStatus.available,
-      userId: dummyUserId,
-    ),
-  ];
-}

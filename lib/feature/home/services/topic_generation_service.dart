@@ -1,5 +1,6 @@
 import '../models/topic.dart';
 import '../repositories/ai_repository.dart';
+import 'package:flutter/foundation.dart';
 
 /// トピック生成サービス
 class TopicGenerationService {
@@ -56,13 +57,13 @@ class TopicGenerationService {
 
     if (category != null) {
       buffer.writeln('## カテゴリ: ${category.displayName}');
-      buffer.writeln('${category.description}');
+      buffer.writeln('$category.description');
       buffer.writeln();
     }
 
     if (difficulty != null) {
       buffer.writeln('## 難易度: ${difficulty.displayName}');
-      buffer.writeln('${difficulty.description}');
+      buffer.writeln('$difficulty.description');
       buffer.writeln();
     }
 
@@ -89,7 +90,7 @@ class TopicGenerationService {
         topics.add(topic.trim());
       } catch (e) {
         // エラーが発生しても続行
-        print('Error generating topic $i: $e');
+        debugPrint('Error generating topic $i: $e');
       }
     }
 

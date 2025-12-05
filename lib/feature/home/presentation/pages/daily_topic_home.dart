@@ -286,9 +286,9 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 16),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.success.withOpacity(0.3), width: 1.5),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.3), width: 1.5),
             ),
             child: Column(
               children: [
@@ -664,7 +664,7 @@ class _StanceButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : AppColors.surfaceVariant,
+          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surfaceVariant,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : AppColors.border,

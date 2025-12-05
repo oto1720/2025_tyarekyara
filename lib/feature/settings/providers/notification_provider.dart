@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/notification_settings.dart';
@@ -48,7 +48,7 @@ class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
         await _saveSettings();
       }
     } catch (e) {
-      print('設定の読み込みに失敗しました: $e');
+      debugPrint('設定の読み込みに失敗しました: $e');
     }
   }
 
@@ -59,7 +59,7 @@ class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
       final jsonString = jsonEncode(state.toJson());
       await prefs.setString(_storageKey, jsonString);
     } catch (e) {
-      print('設定の保存に失敗しました: $e');
+      debugPrint('設定の保存に失敗しました: $e');
       rethrow;
     }
   }

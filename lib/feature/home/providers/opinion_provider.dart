@@ -8,7 +8,7 @@ import '../models/opinion.dart';
 import '../models/topic.dart'; // TopicDifficultyをインポート
 import '../repositories/opinion_repository.dart';
 import '../../block/repositories/block_repository.dart';
-
+import 'package:flutter/foundation.dart';
 part 'opinion_provider.freezed.dart';
 
 /// 意見一覧の状態
@@ -161,7 +161,7 @@ class OpinionListNotifier extends Notifier<OpinionListState> {
         type: type,
       );
     } catch (e) {
-      print('Error toggling reaction: $e');
+      debugPrint('Error toggling reaction: $e');
       // エラー時は元に戻す
       await loadOpinions();
     }
@@ -205,7 +205,7 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
         userOpinion: userOpinion,
       );
     } catch (e) {
-      print('Error checking user opinion: $e');
+      debugPrint('Error checking user opinion: $e');
     }
   }
 
@@ -249,7 +249,7 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
           userName = userDoc.data()?['nickname'] ?? '匿名ユーザー';
         }
       } catch (e) {
-        print('Error fetching user nickname: $e');
+        debugPrint('Error fetching user nickname: $e');
         // エラーの場合はデフォルト値を使用
       }
     }

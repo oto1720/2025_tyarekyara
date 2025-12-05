@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/news_item.dart';
 import '../repositories/ai_repository.dart';
+import 'package:flutter/foundation.dart';
 
 /// ニュース取得サービス
 class NewsService {
@@ -23,7 +24,7 @@ class NewsService {
       // 必要な数が集まるまで、または最大試行回数に達するまで繰り返す
       while (validNews.length < count && retryCount < _maxRetries) {
         retryCount++;
-        print('ニュース取得試行 $retryCount/$_maxRetries (現在: ${validNews.length}/$count件)');
+        debugPrint('ニュース取得試行 $retryCount/$_maxRetries (現在: ${validNews.length}/$count件)');
 
         final prompt = _buildNewsPrompt(topic, _fetchCountPerRequest);
 
@@ -38,11 +39,11 @@ class NewsService {
           response['groundingChunks'] as List<dynamic>,
         );
 
-        print('取得したニュース候補: ${candidateNews.length}件');
+        debugPrint('取得したニュース候補: ${candidateNews.length}件');
 
         // URL検証を実行
         final validatedNews = await _validateUrls(candidateNews);
-        print('有効なURL: ${validatedNews.length}件');
+        debugPrint('有効なURL: ${validatedNews.length}件');
 
         // 重複を避けて追加
         for (final news in validatedNews) {
@@ -55,13 +56,13 @@ class NewsService {
           }
         }
 
-        print('累計有効ニュース: ${validNews.length}件');
+        debugPrint('累計有効ニュース: ${validNews.length}件');
       }
 
       // 必要な数だけ返す
       return validNews.take(count).toList();
     } catch (e) {
-      print('Error getting related news: $e');
+      debugPrint('Error getting related news: $e');
       // エラー時は取得できた分だけ返す
       return validNews;
     }
@@ -72,7 +73,7 @@ class NewsService {
     return '''
 トピック: "$topic"
 
-このトピックに関連する最新のニュース記事を${count}つ検索し、以下のJSON形式で返してください。
+このトピックに関連する最新のニュース記事を$countつ検索し、以下のJSON形式で返してください。
 必ず最新の情報を検索してください。
 
 以下の条件を満たすニュースを選んでください：
@@ -127,7 +128,7 @@ class NewsService {
         final Map<String, dynamic> data = jsonDecode(jsonString);
         aiGeneratedData = data;
       } catch (e) {
-        print('Warning: Could not parse AI response as JSON: $e');
+        debugPrint('Warning: Could not parse AI response as JSON: $e');
         // JSONパースに失敗してもgroundingChunksから生成を試みる
       }
 
@@ -160,7 +161,7 @@ class NewsService {
               try {
                 publishedAt = DateTime.parse(newsData['publishedAt'] as String);
               } catch (e) {
-                print('Error parsing date: $e');
+                debugPrint('Error parsing date: $e');
               }
             }
           }
@@ -177,9 +178,9 @@ class NewsService {
 
       return newsItems;
     } catch (e) {
-      print('Error parsing news response: $e');
-      print('Response: $response');
-      print('GroundingChunks: $groundingChunks');
+      debugPrint('Error parsing news response: $e');
+      debugPrint('Response: $response');
+      debugPrint('GroundingChunks: $groundingChunks');
       return [];
     }
   }
@@ -211,7 +212,7 @@ class NewsService {
   /// 単一のURLの有効性を検証
   Future<NewsItem?> _validateUrl(NewsItem newsItem) async {
     if (newsItem.url == null || newsItem.url!.isEmpty) {
-      print('URLなし: ${newsItem.title}');
+      debugPrint('URLなし: ${newsItem.title}');
       return null;
     }
 
@@ -225,14 +226,14 @@ class NewsService {
 
       // ステータスコード200番台または300番台（リダイレクト）なら有効
       if (response.statusCode >= 200 && response.statusCode < 400) {
-        print('✓ 有効なURL: ${newsItem.url}');
+        debugPrint('✓ 有効なURL: ${newsItem.url}');
         return newsItem;
       } else {
-        print('✗ 無効なステータス ${response.statusCode}: ${newsItem.url}');
+        debugPrint('✗ 無効なステータス ${response.statusCode}: ${newsItem.url}');
         return null;
       }
     } catch (e) {
-      print('✗ URL検証エラー: ${newsItem.url} - $e');
+      debugPrint('✗ URL検証エラー: ${newsItem.url} - $e');
       return null;
     }
   }

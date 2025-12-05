@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debate_match.dart';
-
+import 'package:flutter/foundation.dart';
 /// ディベートマッチリポジトリ
 class DebateMatchRepository {
   final FirebaseFirestore _firestore;
@@ -20,7 +20,7 @@ class DebateMatchRepository {
           .doc(docId)
           .set(DebateEntry.toFirestore(entry));
     } catch (e) {
-      print('Error creating entry: $e');
+      debugPrint('Error creating entry: $e');
       rethrow;
     }
   }
@@ -35,7 +35,7 @@ class DebateMatchRepository {
           .get();
       return snapshot.docs.length;
     } catch (e) {
-      print('Error getting entry count: $e');
+      debugPrint('Error getting entry count: $e');
       return 0;
     }
   }
@@ -52,7 +52,7 @@ class DebateMatchRepository {
       if (!doc.exists) return null;
       return DebateEntry.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting user entry: $e');
+      debugPrint('Error getting user entry: $e');
       return null;
     }
   }
@@ -81,7 +81,7 @@ class DebateMatchRepository {
         'status': MatchStatus.cancelled.name,
       });
     } catch (e) {
-      print('Error cancelling entry: $e');
+      debugPrint('Error cancelling entry: $e');
       rethrow;
     }
   }
@@ -121,7 +121,7 @@ class DebateMatchRepository {
 
       return null;
     } catch (e) {
-      print('Error getting current match: $e');
+      debugPrint('Error getting current match: $e');
       return null;
     }
   }
@@ -152,14 +152,14 @@ class DebateMatchRepository {
           .where('proTeam.memberIds', arrayContains: userId)
           .get();
 
-      print('Pro matches found: ${proMatches.docs.length}');
+      debugPrint('Pro matches found: ${proMatches.docs.length}');
 
       final conMatches = await _firestore
           .collection(_collectionName)
           .where('conTeam.memberIds', arrayContains: userId)
           .get();
 
-      print('Con matches found: ${conMatches.docs.length}');
+      debugPrint('Con matches found: ${conMatches.docs.length}');
 
       final allMatches = <DebateMatch>[];
 
@@ -167,7 +167,7 @@ class DebateMatchRepository {
         try {
           allMatches.add(DebateMatch.fromJson(doc.data()));
         } catch (e) {
-          print('Error parsing pro match ${doc.id}: $e');
+          debugPrint('Error parsing pro match ${doc.id}: $e');
         }
       }
 
@@ -175,7 +175,7 @@ class DebateMatchRepository {
         try {
           allMatches.add(DebateMatch.fromJson(doc.data()));
         } catch (e) {
-          print('Error parsing con match ${doc.id}: $e');
+          debugPrint('Error parsing con match ${doc.id}: $e');
         }
       }
 
@@ -188,11 +188,11 @@ class DebateMatchRepository {
       final result = uniqueMatches.values.toList()
         ..sort((a, b) => b.matchedAt.compareTo(a.matchedAt));
 
-      print('Total unique matches: ${result.length}');
+      debugPrint('Total unique matches: ${result.length}');
 
       return result.take(limit).toList();
     } catch (e) {
-      print('Error getting user match history: $e');
+      debugPrint('Error getting user match history: $e');
       return [];
     }
   }
@@ -205,7 +205,7 @@ class DebateMatchRepository {
           .doc(match.id)
           .update(DebateMatch.toFirestore(match));
     } catch (e) {
-      print('Error updating match: $e');
+      debugPrint('Error updating match: $e');
       rethrow;
     }
   }
@@ -217,7 +217,7 @@ class DebateMatchRepository {
         'readyUsers': FieldValue.arrayUnion([userId]),
       });
     } catch (e) {
-      print('Error marking user as ready: $e');
+      debugPrint('Error marking user as ready: $e');
       rethrow;
     }
   }
@@ -251,7 +251,7 @@ class DebateMatchRepository {
 
       return null;
     } catch (e) {
-      print('Error getting user match by event: $e');
+      debugPrint('Error getting user match by event: $e');
       return null;
     }
   }

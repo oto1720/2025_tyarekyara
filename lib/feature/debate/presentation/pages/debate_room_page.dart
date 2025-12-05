@@ -108,7 +108,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     if (room.currentPhase == DebatePhase.judgment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          print('🎯 判定フェーズ開始！判定待機画面へ遷移');
+          debugPrint('🎯 判定フェーズ開始！判定待機画面へ遷移');
           context.pushReplacement('/debate/judgment/${widget.matchId}');
         }
       });
@@ -130,7 +130,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
         room.status == RoomStatus.completed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          print('🎯 結果フェーズ開始！結果画面へ遷移');
+          debugPrint('🎯 結果フェーズ開始！結果画面へ遷移');
           context.pushReplacement('/debate/result/${widget.matchId}');
         }
       });
@@ -626,7 +626,7 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     if (oldWidget.room.currentPhase != widget.room.currentPhase ||
         oldWidget.room.phaseStartedAt != widget.room.phaseStartedAt ||
         oldWidget.room.phaseTimeRemaining != widget.room.phaseTimeRemaining) {
-      print('🔄 タイマーリセット: phase=${widget.room.currentPhase.name}, phaseStartedAt=${widget.room.phaseStartedAt?.toString() ?? "null"}');
+      debugPrint('🔄 タイマーリセット: phase=${widget.room.currentPhase.name}, phaseStartedAt=${widget.room.phaseStartedAt?.toString() ?? "null"}');
       _updateRemainingTime();
       // タイマーを再起動
       _startTimer();
@@ -655,7 +655,7 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
       final remaining = maxDuration - elapsed;
       _remainingSeconds = remaining > 0 ? remaining : 0;
       
-      print('⏱️ タイマー更新: phaseStartedAt=${phaseStart.toString()}, elapsed=${elapsed}秒, maxDuration=${maxDuration}秒, remaining=${_remainingSeconds}秒');
+      debugPrint('⏱️ タイマー更新: phaseStartedAt=${phaseStart.toString()}, elapsed=$elapsed秒, maxDuration=$maxDuration秒, remaining=$_remainingSeconds秒');
     } else {
       // phaseStartedAtがない場合は、phaseTimeRemainingを使用（0の場合は最大時間を使用）
       if (widget.room.phaseTimeRemaining > 0) {
@@ -665,7 +665,7 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
         _remainingSeconds = maxDuration;
       }
       
-      print('⏱️ タイマー更新: phaseStartedAt=null, phaseTimeRemaining=${widget.room.phaseTimeRemaining}, maxDuration=${maxDuration}, using=${_remainingSeconds}秒');
+      debugPrint('⏱️ タイマー更新: phaseStartedAt=null, phaseTimeRemaining=${widget.room.phaseTimeRemaining}, maxDuration=$maxDuration, using=$_remainingSeconds秒');
     }
   }
 
@@ -673,11 +673,11 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     _timer?.cancel();
     
     if (_remainingSeconds <= 0) {
-      print('⚠️ タイマー開始スキップ: 残り時間が0以下です (${_remainingSeconds}秒)');
+      debugPrint('⚠️ タイマー開始スキップ: 残り時間が0以下です ($_remainingSeconds秒)');
       return;
     }
     
-    print('▶️ タイマー開始: ${_remainingSeconds}秒');
+    debugPrint('▶️ タイマー開始: $_remainingSeconds秒');
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -688,11 +688,11 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
         if (_remainingSeconds > 0) {
           _remainingSeconds--;
           if (_remainingSeconds % 10 == 0 || _remainingSeconds <= 5) {
-            print('⏱️ タイマー: ${_remainingSeconds}秒');
+            debugPrint('⏱️ タイマー: $_remainingSeconds秒');
           }
         } else {
           timer.cancel();
-          print('⏰ タイマー終了');
+          debugPrint('⏰ タイマー終了');
           // タイマー終了時はFirestoreの更新を待つ（Cloud Functionsが処理）
         }
       });

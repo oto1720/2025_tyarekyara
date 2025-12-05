@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/topic.dart';
+import 'package:flutter/foundation.dart';
 
 /// 日別トピックをFirestoreで管理するリポジトリ
 class DailyTopicRepository {
@@ -67,7 +68,7 @@ class DailyTopicRepository {
       }
       return null;
     } catch (e) {
-      print('Error getting today topic: $e');
+      debugPrint('Error getting today topic: $e');
       return null;
     }
   }
@@ -108,7 +109,7 @@ class DailyTopicRepository {
       }
       return null;
     } catch (e) {
-      print('Error getting topic by date: $e');
+      debugPrint('Error getting topic by date: $e');
       return null;
     }
   }
@@ -126,7 +127,7 @@ class DailyTopicRepository {
           .map((doc) => Topic.fromJson(_convertFirestoreData(doc.data())))
           .toList();
     } catch (e) {
-      print('Error getting recent topics: $e');
+      debugPrint('Error getting recent topics: $e');
       return [];
     }
   }
@@ -145,7 +146,7 @@ class DailyTopicRepository {
           .doc(dateKey)
           .delete();
     } catch (e) {
-      print('Error deleting topic: $e');
+      debugPrint('Error deleting topic: $e');
       rethrow;
     }
   }
@@ -191,7 +192,7 @@ class DailyTopicRepository {
         });
       });
     } catch (e) {
-      print('Error submitting feedback: $e');
+      debugPrint('Error submitting feedback: $e');
       rethrow;
     }
   }
@@ -217,7 +218,7 @@ class DailyTopicRepository {
       final feedbackUsers = Map<String, String>.from(data['feedbackUsers'] ?? {});
       return feedbackUsers[userId];
     } catch (e) {
-      print('Error getting user feedback: $e');
+      debugPrint('Error getting user feedback: $e');
       return null;
     }
   }

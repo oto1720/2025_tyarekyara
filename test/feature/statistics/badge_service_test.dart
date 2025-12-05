@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:tyarekyara/feature/statistics/models/badge.dart';
-import 'package:tyarekyara/feature/statistics/models/earned_badge.dart';
 import 'package:tyarekyara/feature/statistics/repositories/badge_repository.dart';
 import 'package:tyarekyara/feature/statistics/services/badge_service.dart';
 

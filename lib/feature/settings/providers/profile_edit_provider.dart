@@ -5,25 +5,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import 'profile_edit_state.dart';
 import 'profile_update_provider.dart';
+import 'package:flutter/foundation.dart';
 
 /// プロフィール編集フォームのNotifier
 class ProfileEditNotifier extends Notifier<ProfileEditState> {
   @override
   ProfileEditState build() {
-    print('=== ProfileEditNotifier.build ===');
+    debugPrint('=== ProfileEditNotifier.build ===');
     // 現在のユーザー情報から初期状態を作成
     final userAsync = ref.watch(currentUserProvider);
     return userAsync.when(
       data: (user) {
         if (user == null) {
-          print('⚠️ ユーザー情報がnull');
+          debugPrint('⚠️ ユーザー情報がnull');
           return const ProfileEditState(nickname: '');
         }
-        print('✅ ユーザー情報取得成功:');
-        print('  - nickname: ${user.nickname}');
-        print('  - ageRange: ${user.ageRange}');
-        print('  - region: ${user.region}');
-        print('  - iconUrl: ${user.iconUrl}');
+        debugPrint('✅ ユーザー情報取得成功:');
+        debugPrint('  - nickname: ${user.nickname}');
+        debugPrint('  - ageRange: ${user.ageRange}');
+        debugPrint('  - region: ${user.region}');
+        debugPrint('  - iconUrl: ${user.iconUrl}');
 
         final state = ProfileEditState.fromUser(
           nickname: user.nickname,
@@ -32,15 +33,15 @@ class ProfileEditNotifier extends Notifier<ProfileEditState> {
           iconUrl: user.iconUrl.isNotEmpty ? user.iconUrl : null,
         );
 
-        print('  - 初期化後のstate.uploadedImageUrl: ${state.uploadedImageUrl}');
+        debugPrint('  - 初期化後のstate.uploadedImageUrl: ${state.uploadedImageUrl}');
         return state;
       },
       loading: () {
-        print('⏳ ユーザー情報読み込み中...');
+        debugPrint('⏳ ユーザー情報読み込み中...');
         return const ProfileEditState(nickname: '');
       },
       error: (error, _) {
-        print('❌ ユーザー情報読み込みエラー: $error');
+        debugPrint('❌ ユーザー情報読み込みエラー: $error');
         // エラーが発生しても空の状態を返す（エラー状態にしない）
         // エラーはユーザーがログインしていない可能性があるため
         return const ProfileEditState(nickname: '');

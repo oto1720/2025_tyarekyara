@@ -40,9 +40,9 @@ class BadgeListScreen extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
               ),
               child: Column(
                 children: [
@@ -108,11 +108,11 @@ class _BadgeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final opacity = isEarned ? 1.0 : 0.3;
     final backgroundColor = isEarned
-        ? badge.color.withOpacity(0.1)
-        : AppColors.textTertiary.withOpacity(0.05);
+        ? badge.color.withValues(alpha: 0.1)
+        : AppColors.textTertiary.withValues(alpha: 0.05);
     final borderColor = isEarned
-        ? badge.color.withOpacity(0.3)
-        : AppColors.textTertiary.withOpacity(0.2);
+        ? badge.color.withValues(alpha: 0.3)
+        : AppColors.textTertiary.withValues(alpha: 0.2);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -131,8 +131,8 @@ class _BadgeCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isEarned
-                    ? badge.color.withOpacity(0.2)
-                    : AppColors.textTertiary.withOpacity(0.1),
+                    ? badge.color.withValues(alpha: 0.2)
+                    : AppColors.textTertiary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

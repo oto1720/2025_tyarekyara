@@ -265,7 +265,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _createTestEvent() async {
     setState(() => isLoading = true);
     try {
-      print('📝 テストイベント作成開始（締切未来）...');
+      debugPrint('📝 テストイベント作成開始（締切未来）...');
 
       final firestore = FirebaseFirestore.instance;
       final eventData = {
@@ -286,14 +286,14 @@ class _EnhancedMatchingDebugPageState
 
       await firestore.collection('debate_events').doc(eventId).set(eventData);
 
-      print('✅ イベント作成成功');
+      debugPrint('✅ イベント作成成功');
       setState(() {
         lastSuccess = '✅ テストイベント作成完了\nID: $eventId\n締切: 1時間後（まだacceptingのまま）';
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ イベント作成失敗: $e');
-      print(stack);
+      debugPrint('❌ イベント作成失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ イベント作成エラー\n\n$e';
         lastSuccess = null;
@@ -306,7 +306,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _createTestEventWithPastDeadline() async {
     setState(() => isLoading = true);
     try {
-      print('📝 テストイベント作成開始（締切過去）...');
+      debugPrint('📝 テストイベント作成開始（締切過去）...');
 
       final firestore = FirebaseFirestore.instance;
       final eventData = {
@@ -327,14 +327,14 @@ class _EnhancedMatchingDebugPageState
 
       await firestore.collection('debate_events').doc(eventId).set(eventData);
 
-      print('✅ イベント作成成功（締切過去）');
+      debugPrint('✅ イベント作成成功（締切過去）');
       setState(() {
         lastSuccess = '✅ テストイベント作成完了\nID: $eventId\n締切: 5分前（ステータス更新でmatchingに遷移するはず）';
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ イベント作成失敗: $e');
-      print(stack);
+      debugPrint('❌ イベント作成失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ イベント作成エラー\n\n$e';
         lastSuccess = null;
@@ -347,7 +347,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _clearData() async {
     setState(() => isLoading = true);
     try {
-      print('🧹 データクリア開始...');
+      debugPrint('🧹 データクリア開始...');
 
       final firestore = FirebaseFirestore.instance;
 
@@ -356,23 +356,23 @@ class _EnhancedMatchingDebugPageState
       for (final doc in entries.docs) {
         await doc.reference.delete();
       }
-      print('削除: ${entries.docs.length} エントリー');
+      debugPrint('削除: ${entries.docs.length} エントリー');
 
       // マッチ削除
       final matches = await firestore.collection('debate_matches').get();
       for (final doc in matches.docs) {
         await doc.reference.delete();
       }
-      print('削除: ${matches.docs.length} マッチ');
+      debugPrint('削除: ${matches.docs.length} マッチ');
 
-      print('✅ データクリア完了');
+      debugPrint('✅ データクリア完了');
       setState(() {
         lastSuccess = '✅ データクリア完了\n削除: ${entries.docs.length}エントリー + ${matches.docs.length}マッチ';
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ データクリア失敗: $e');
-      print(stack);
+      debugPrint('❌ データクリア失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ データクリアエラー\n\n$e';
         lastSuccess = null;
@@ -385,7 +385,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _createSimpleEntries(int count) async {
     setState(() => isLoading = true);
     try {
-      print('📝 $count 人分のエントリー作成開始...');
+      debugPrint('📝 $count 人分のエントリー作成開始...');
 
       final firestore = FirebaseFirestore.instance;
       final format = count == 1 ? 'oneVsOne' : null;
@@ -417,17 +417,17 @@ class _EnhancedMatchingDebugPageState
 
         await firestore.collection('debate_entries').doc(entryId).set(entryData);
 
-        print('作成: $userId - $stance');
+        debugPrint('作成: $userId - $stance');
       }
 
-      print('✅ エントリー作成完了');
+      debugPrint('✅ エントリー作成完了');
       setState(() {
         lastSuccess = '✅ $count 件のエントリー作成完了\n形式: $format\n時間: short';
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ エントリー作成失敗: $e');
-      print(stack);
+      debugPrint('❌ エントリー作成失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ エントリー作成エラー\n\n$e';
         lastSuccess = null;
@@ -440,24 +440,24 @@ class _EnhancedMatchingDebugPageState
   Future<void> _triggerEventStatusUpdate() async {
     setState(() => isLoading = true);
     try {
-      print('🔄 イベントステータス更新開始...');
+      debugPrint('🔄 イベントステータス更新開始...');
 
       final functions =
           FirebaseFunctions.instanceFor(region: 'asia-northeast1');
 
       final result = await functions.httpsCallable('manualEventStatusUpdate').call();
 
-      print('✅ イベントステータス更新完了: ${result.data}');
+      debugPrint('✅ イベントステータス更新完了: ${result.data}');
 
       setState(() {
         lastSuccess = '✅ イベントステータス更新成功\n\n${result.data}';
         lastError = null;
       });
     } on FirebaseFunctionsException catch (e) {
-      print('❌ Firebase Functions エラー発生');
-      print('コード: ${e.code}');
-      print('メッセージ: ${e.message}');
-      print('詳細: ${e.details}');
+      debugPrint('❌ Firebase Functions エラー発生');
+      debugPrint('コード: ${e.code}');
+      debugPrint('メッセージ: ${e.message}');
+      debugPrint('詳細: ${e.details}');
 
       setState(() {
         lastError = '❌ イベントステータス更新エラー\n\n'
@@ -467,8 +467,8 @@ class _EnhancedMatchingDebugPageState
         lastSuccess = null;
       });
     } catch (e, stack) {
-      print('❌ 予期しないエラー: $e');
-      print(stack);
+      debugPrint('❌ 予期しないエラー: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ イベントステータス更新エラー\n\n$e';
         lastSuccess = null;
@@ -481,14 +481,14 @@ class _EnhancedMatchingDebugPageState
   Future<void> _triggerManualMatching() async {
     setState(() => isLoading = true);
     try {
-      print('🎯 マッチング関数呼び出し開始...');
+      debugPrint('🎯 マッチング関数呼び出し開始...');
 
       final functions =
           FirebaseFunctions.instanceFor(region: 'asia-northeast1');
 
       final result = await functions.httpsCallable('manualMatching').call();
 
-      print('✅ マッチング完了: ${result.data}');
+      debugPrint('✅ マッチング完了: ${result.data}');
 
       setState(() {
         lastSuccess = '✅ マッチング成功\n\n${result.data}';
@@ -499,10 +499,10 @@ class _EnhancedMatchingDebugPageState
       await Future.delayed(Duration(milliseconds: 500));
       await _checkMatches();
     } on FirebaseFunctionsException catch (e) {
-      print('❌ Firebase Functions エラー発生');
-      print('コード: ${e.code}');
-      print('メッセージ: ${e.message}');
-      print('詳細: ${e.details}');
+      debugPrint('❌ Firebase Functions エラー発生');
+      debugPrint('コード: ${e.code}');
+      debugPrint('メッセージ: ${e.message}');
+      debugPrint('詳細: ${e.details}');
 
       String errorMessage = '❌ マッチングエラー\n\n';
       errorMessage += '【エラーコード】\n${e.code}\n\n';
@@ -540,8 +540,8 @@ class _EnhancedMatchingDebugPageState
         lastSuccess = null;
       });
     } catch (e, stack) {
-      print('❌ 予期しないエラー: $e');
-      print(stack);
+      debugPrint('❌ 予期しないエラー: $e');
+      debugPrint(stack.toString());
 
       String errorMessage = '❌ 予期しないエラー\n\n';
       errorMessage += '$e\n\n';
@@ -565,7 +565,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _checkEventStatus() async {
     setState(() => isLoading = true);
     try {
-      print('🎪 イベント状態確認...');
+      debugPrint('🎪 イベント状態確認...');
 
       final firestore = FirebaseFirestore.instance;
       final doc = await firestore.collection('debate_events').doc(eventId).get();
@@ -620,15 +620,15 @@ class _EnhancedMatchingDebugPageState
         details += '✅ 正常な状態です\n';
       }
 
-      print(details);
+      debugPrint(details);
 
       setState(() {
         lastSuccess = details;
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ イベント状態確認失敗: $e');
-      print(stack);
+      debugPrint('❌ イベント状態確認失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ イベント状態確認エラー\n\n$e';
         lastSuccess = null;
@@ -641,7 +641,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _checkEntries() async {
     setState(() => isLoading = true);
     try {
-      print('📋 エントリー状態確認...');
+      debugPrint('📋 エントリー状態確認...');
 
       final firestore = FirebaseFirestore.instance;
       final snapshot = await firestore
@@ -668,15 +668,15 @@ class _EnhancedMatchingDebugPageState
         details += '(${data['preferredStance']})\n';
       }
 
-      print(details);
+      debugPrint(details);
 
       setState(() {
         lastSuccess = details;
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ エントリー確認失敗: $e');
-      print(stack);
+      debugPrint('❌ エントリー確認失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ エントリー確認エラー\n\n$e';
         lastSuccess = null;
@@ -689,7 +689,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _checkMatches() async {
     setState(() => isLoading = true);
     try {
-      print('🏆 マッチ結果確認...');
+      debugPrint('🏆 マッチ結果確認...');
 
       final firestore = FirebaseFirestore.instance;
       final snapshot = await firestore
@@ -725,15 +725,15 @@ class _EnhancedMatchingDebugPageState
         details += '\n';
       }
 
-      print(details);
+      debugPrint(details);
 
       setState(() {
         lastSuccess = details;
         lastError = null;
       });
     } catch (e, stack) {
-      print('❌ マッチ確認失敗: $e');
-      print(stack);
+      debugPrint('❌ マッチ確認失敗: $e');
+      debugPrint(stack.toString());
       setState(() {
         lastError = '❌ マッチ確認エラー\n\n$e';
         lastSuccess = null;
@@ -757,7 +757,7 @@ class _EnhancedMatchingDebugPageState
   Future<void> _triggerManualEventStatusUpdate() async {
     setState(() => isLoading = true);
     try {
-      print('🔄 イベントステータス更新関数呼び出し開始...');
+      debugPrint('🔄 イベントステータス更新関数呼び出し開始...');
 
       final functions =
           FirebaseFunctions.instanceFor(region: 'asia-northeast1');
@@ -765,7 +765,7 @@ class _EnhancedMatchingDebugPageState
       final result =
           await functions.httpsCallable('manualEventStatusUpdate').call();
 
-      print('✅ ステータス更新完了: ${result.data}');
+      debugPrint('✅ ステータス更新完了: ${result.data}');
 
       setState(() {
         lastSuccess = '✅ イベントステータス更新成功\n\n${result.data}';
@@ -776,10 +776,10 @@ class _EnhancedMatchingDebugPageState
       await Future.delayed(Duration(milliseconds: 500));
       await _checkEventStatus();
     } on FirebaseFunctionsException catch (e) {
-      print('❌ Firebase Functions エラー発生');
-      print('コード: ${e.code}');
-      print('メッセージ: ${e.message}');
-      print('詳細: ${e.details}');
+      debugPrint('❌ Firebase Functions エラー発生');
+      debugPrint('コード: ${e.code}');
+      debugPrint('メッセージ: ${e.message}');
+      debugPrint('詳細: ${e.details}');
 
       String errorMessage = '❌ ステータス更新エラー\n\n';
       errorMessage += '【エラーコード】\n${e.code}\n\n';
@@ -805,8 +805,8 @@ class _EnhancedMatchingDebugPageState
         lastSuccess = null;
       });
     } catch (e, stack) {
-      print('❌ 予期しないエラー: $e');
-      print(stack);
+      debugPrint('❌ 予期しないエラー: $e');
+      debugPrint(stack.toString());
 
       String errorMessage = '❌ 予期しないエラー\n\n';
       errorMessage += '$e\n\n';
