@@ -59,20 +59,24 @@ class _ReportDialogState extends ConsumerState<ReportDialog> {
           children: [
             const Text('報告する理由を選択してください'),
             const SizedBox(height: 16),
-            ...ReportReason.values.map((reason) {
-              return RadioListTile<ReportReason>(
-                title: Text(_getReasonText(reason)),
-                value: reason,
-                groupValue: _selectedReason,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedReason = value;
-                  });
-                },
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-              );
-            }),
+            RadioGroup<ReportReason>(
+              groupValue: _selectedReason,
+              onChanged: (value) {
+                setState(() {
+                  _selectedReason = value;
+                });
+              },
+              child: Column(
+                children: ReportReason.values.map((reason) {
+                  return RadioListTile<ReportReason>(
+                    title: Text(_getReasonText(reason)),
+                    value: reason,
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                  );
+                }).toList(),
+              ),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: _detailsController,

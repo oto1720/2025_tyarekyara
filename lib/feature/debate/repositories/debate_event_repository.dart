@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debate_event.dart';
-
+import 'package:flutter/foundation.dart';
 /// ディベートイベントリポジトリ
 class DebateEventRepository {
   final FirebaseFirestore _firestore;
@@ -29,7 +29,7 @@ class DebateEventRepository {
           .map((doc) => DebateEvent.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting upcoming events: $e');
+     debugPrint('Error getting upcoming events: $e');
       return [];
     }
   }
@@ -48,7 +48,7 @@ class DebateEventRepository {
           .map((doc) => DebateEvent.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting completed events: $e');
+     debugPrint('Error getting completed events: $e');
       return [];
     }
   }
@@ -64,7 +64,7 @@ class DebateEventRepository {
       if (!doc.exists) return null;
       return DebateEvent.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting event: $e');
+     debugPrint('Error getting event: $e');
       return null;
     }
   }
@@ -109,7 +109,7 @@ class DebateEventRepository {
           .doc(event.id)
           .set(DebateEvent.toFirestore(event));
     } catch (e) {
-      print('Error creating event: $e');
+     debugPrint('Error creating event: $e');
       rethrow;
     }
   }
@@ -122,7 +122,7 @@ class DebateEventRepository {
           .doc(event.id)
           .update(DebateEvent.toFirestore(event));
     } catch (e) {
-      print('Error updating event: $e');
+     debugPrint('Error updating event: $e');
       rethrow;
     }
   }
@@ -138,7 +138,7 @@ class DebateEventRepository {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error updating participant count: $e');
+     debugPrint('Error updating participant count: $e');
       rethrow;
     }
   }

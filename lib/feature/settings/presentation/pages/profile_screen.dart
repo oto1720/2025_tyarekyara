@@ -91,34 +91,34 @@ class ProfileScreen extends ConsumerWidget {
       );
 
       if (pickedFile != null) {
-        print('画像選択成功: ${pickedFile.path}');
+        debugPrint('画像選択成功: ${pickedFile.path}');
 
         // XFileからバイトデータを読み込み、一時ディレクトリに保存
         final bytes = await pickedFile.readAsBytes();
-        print('バイトデータ読み込み成功: ${bytes.length} bytes');
+        debugPrint('バイトデータ読み込み成功: ${bytes.length} bytes');
 
         final tempDir = await getTemporaryDirectory();
-        print('一時ディレクトリ: ${tempDir.path}');
+        debugPrint('一時ディレクトリ: ${tempDir.path}');
 
         final fileName =
             'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(pickedFile.path)}';
         final tempFile = File('${tempDir.path}/$fileName');
 
         await tempFile.writeAsBytes(bytes);
-        print('一時ファイル作成成功: ${tempFile.path}');
+        debugPrint('一時ファイル作成成功: ${tempFile.path}');
 
         final exists = await tempFile.exists();
-        print('ファイル存在確認: $exists');
+        debugPrint('ファイル存在確認: $exists');
 
         ref.read(profileEditProvider.notifier).updateSelectedImage(tempFile);
 
-        print('画像選択処理完了');
+        debugPrint('画像選択処理完了');
       } else {
-        print('画像が選択されませんでした');
+        debugPrint('画像が選択されませんでした');
       }
     } catch (e, stackTrace) {
-      print('画像選択エラー: $e');
-      print('スタックトレース: $stackTrace');
+      debugPrint('画像選択エラー: $e');
+      debugPrint('スタックトレース: $stackTrace');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

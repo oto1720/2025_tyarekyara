@@ -44,16 +44,16 @@ class _EntryComparisonWidgetState extends State<EntryComparisonWidget> {
         error = null;
       });
 
-      print('📋 読み込んだエントリー数: ${entries.length}');
+      debugPrint('📋 読み込んだエントリー数: ${entries.length}');
       for (final entry in entries) {
-        print('  - ${entry['userId']}: ${entry['preferredFormat']}/${entry['preferredDuration']} (${entry['preferredStance']}) - ${entry['status']}');
+        debugPrint('  - ${entry['userId']}: ${entry['preferredFormat']}/${entry['preferredDuration']} (${entry['preferredStance']}) - ${entry['status']}');
       }
     } catch (e) {
       setState(() {
         error = e.toString();
         isLoading = false;
       });
-      print('❌ エントリー読み込みエラー: $e');
+      debugPrint('❌ エントリー読み込みエラー: $e');
     }
   }
 

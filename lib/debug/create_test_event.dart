@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../feature/debate/models/debate_event.dart';
-import '../feature/debate/models/debate_match.dart';
+import 'package:flutter/foundation.dart';
+import 'package:tyarekyara/feature/debate/models/debate_event.dart';
+import 'package:tyarekyara/feature/debate/models/debate_match.dart';
 
 Future<void> createTestEvent() async {
   final firestore = FirebaseFirestore.instance;
@@ -32,7 +33,7 @@ Future<void> createTestEvent() async {
       .doc(event.id)
       .set(DebateEvent.toFirestore(event));
 
-  print('✅ テストイベント作成完了: ${event.id}');
+  debugPrint('✅ テストイベント作成完了: ${event.id}');
 }
 
 Future<void> createTestEntries({
@@ -70,5 +71,5 @@ Future<void> createTestEntries({
         .set(DebateEntry.toFirestore(entry));
   }
 
-  print('✅ $count 件のテストエントリー作成完了');
+  debugPrint('✅ $count 件のテストエントリー作成完了');
 }

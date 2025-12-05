@@ -32,7 +32,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
   @override
   void initState() {
     super.initState();
-    print('🎯 DebateWaitingRoomPage initState called for event: ${widget.eventId}');
+    debugPrint('🎯 DebateWaitingRoomPage initState called for event: ${widget.eventId}');
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -57,13 +57,13 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
 
   @override
   Widget build(BuildContext context) {
-    print('🔄 DebateWaitingRoomPage build called');
+    debugPrint('🔄 DebateWaitingRoomPage build called');
     final authState = ref.watch(authControllerProvider);
     final userId = authState.maybeWhen(
       authenticated: (user) => user.id,
       orElse: () => null,
     );
-    print('👤 UserId: $userId');
+    debugPrint('👤 UserId: $userId');
 
     if (userId == null) {
       return _buildNotAuthenticated(context);
@@ -90,7 +90,7 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
               // マッチング成立したらマッチ詳細画面へ遷移
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
-                  print('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
+                  debugPrint('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
                   context.pushReplacement('/debate/match/${entry.matchId}');
                 }
               });

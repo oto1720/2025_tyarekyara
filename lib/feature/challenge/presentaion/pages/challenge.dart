@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
-import 'package:tyarekyara/feature/challenge/presentaion/widgets/CompletedChallenge_card.dart';
+import 'package:tyarekyara/feature/challenge/presentaion/widgets/completed_challenge_card.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
 import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
@@ -119,7 +119,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                 icon: const Icon(Icons.refresh),
                 tooltip: 'データを再読み込み',
                 onPressed: () async {
-              print('🔄 [UI] リフレッシュボタンが押されました');
+              debugPrint('🔄 [UI] リフレッシュボタンが押されました');
               await ref.read(challengeProvider.notifier).refresh();
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -380,15 +380,14 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                         )
                   : CompletedCard( // 完了済みの場合
                       challenge: challenge,
-                      // TODO: 完了済みカードをタップした時の動作（詳細確認など）
                       // onTap: () { ... }
                       onChallengePressed: () async{
                         // 完了済みカードをタップした時の動作（詳細確認など）
-                        print('完了済みカードがタップされました: ${challenge.title}');
+                        debugPrint('完了済みカードがタップされました: ${challenge.title}');
                       },
                     ),
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 95), // BottomNavigationBar分の余白
             ],
           ),

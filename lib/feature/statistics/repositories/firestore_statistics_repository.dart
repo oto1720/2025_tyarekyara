@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_statistics.dart';
 import '../models/diversity_score.dart';
 import '../models/stance_distribution.dart';
@@ -15,7 +16,7 @@ class FirestoreStatisticsRepository implements StatisticsRepository {
   @override
   Future<UserStatistics> fetchUserStatistics(String userId) async {
     try {
-      print('🔍 Firestore: opinionsクエリ開始 userId=$userId');
+      debugPrint('🔍 Firestore: opinionsクエリ開始 userId=$userId');
       // opinionsコレクションからユーザーの投稿を集計
       final opinionsQuery = await _firestore
           .collection('opinions')
@@ -24,7 +25,7 @@ class FirestoreStatisticsRepository implements StatisticsRepository {
 
       final opinions = opinionsQuery.docs;
       final totalOpinions = opinions.length;
-      print('🔍 Firestore: ${totalOpinions}件の投稿を取得');
+      debugPrint('🔍 Firestore: $totalOpinions件の投稿を取得');
 
       // 参加日数を計算（ユニークな日付の数）
       final participationDates = <String>{};
@@ -56,7 +57,7 @@ class FirestoreStatisticsRepository implements StatisticsRepository {
 
       // 連続参加日数を計算
       final consecutiveDays = _calculateConsecutiveDays(opinions);
-      print('🔍 Firestore: participationDays=$participationDays, consecutiveDays=$consecutiveDays');
+      debugPrint('🔍 Firestore: participationDays=$participationDays, consecutiveDays=$consecutiveDays');
 
       final now = DateTime.now();
       return UserStatistics(
@@ -70,7 +71,7 @@ class FirestoreStatisticsRepository implements StatisticsRepository {
       );
     } catch (e) {
       // エラー時はデフォルト値を返す
-      print('❌ Firestore fetchUserStatistics エラー: $e');
+      debugPrint('❌ Firestore fetchUserStatistics エラー: $e');
       final now = DateTime.now();
       return UserStatistics(
         userId: userId,

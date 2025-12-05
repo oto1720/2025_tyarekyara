@@ -336,7 +336,7 @@ class _DebateEventListPageState extends ConsumerState<DebateEventListPage>
       final event = await repository.getEvent(eventId);
       return event?.topic;
     } catch (e) {
-      print('Error getting event topic: $e');
+      debugPrint('Error getting event topic: $e');
       return null;
     }
   }

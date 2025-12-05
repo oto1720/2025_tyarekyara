@@ -1,15 +1,15 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart' hide NotificationSettings;
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../models/notification_settings.dart';
+import 'package:flutter/foundation.dart';
 
 /// バックグラウンドメッセージハンドラー（トップレベル関数である必要がある）
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Background message received: ${message.messageId}');
+  debugPrint('Background message received: ${message.messageId}');
 }
 
 /// ローカル通知を管理するサービス
@@ -73,28 +73,28 @@ class NotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('FCM authorization granted');
+      debugPrint('FCM authorization granted');
 
       // FCMトークンを取得（iOSではAPNSトークンが準備できるまで待つ必要がある）
       try {
         _fcmToken = await _messaging.getToken();
-        print('FCM Token: $_fcmToken');
+        debugPrint('FCM Token: $_fcmToken');
       } on FirebaseException catch (e) {
         // iOSでAPNSトークンがまだ準備できていない場合はエラーを無視
         if (e.code == 'apns-token-not-set') {
-          print('APNSトークンがまだ準備できていません（後でonTokenRefreshで取得されます）');
+          debugPrint('APNSトークンがまだ準備できていません（後でonTokenRefreshで取得されます）');
         } else {
-          print('FCM Token取得エラー: ${e.code} - ${e.message}');
+          debugPrint('FCM Token取得エラー: ${e.code} - ${e.message}');
         }
       } catch (e) {
         // その他のエラー
-        print('FCM Token取得エラー（後でリトライされます）: $e');
+        debugPrint('FCM Token取得エラー（後でリトライされます）: $e');
       }
 
       // トークン更新を監視（APNSトークンが準備できた時に自動的に呼ばれる）
       _messaging.onTokenRefresh.listen((token) {
         _fcmToken = token;
-        print('FCM Token refreshed: $token');
+        debugPrint('FCM Token refreshed: $token');
       });
 
       // フォアグラウンドメッセージを処理
@@ -113,7 +113,7 @@ class NotificationService {
 
   /// フォアグラウンドメッセージを処理
   void _handleForegroundMessage(RemoteMessage message) {
-    print('Foreground message received: ${message.notification?.title}');
+    debugPrint('Foreground message received: ${message.notification?.title}');
 
     // ローカル通知を表示
     if (message.notification != null) {
@@ -128,7 +128,7 @@ class NotificationService {
 
   /// 通知タップでアプリが開かれた時の処理
   void _handleMessageOpenedApp(RemoteMessage message) {
-    print('Message opened app: ${message.data}');
+    debugPrint('Message opened app: ${message.data}');
     final matchId = message.data['matchId'] as String?;
     if (matchId != null) {
       onMatchNotificationTapped?.call(matchId);
@@ -143,14 +143,14 @@ class NotificationService {
       } on FirebaseException catch (e) {
         // iOSでAPNSトークンがまだ準備できていない場合はエラーを無視
         if (e.code == 'apns-token-not-set') {
-          print('APNSトークンがまだ準備できていません。トークンは後で保存されます。');
+          debugPrint('APNSトークンがまだ準備できていません。トークンは後で保存されます。');
           return;
         } else {
-          print('FCM Token取得エラー: ${e.code} - ${e.message}');
+          debugPrint('FCM Token取得エラー: ${e.code} - ${e.message}');
           return;
         }
       } catch (e) {
-        print('FCM Token取得エラー: $e');
+        debugPrint('FCM Token取得エラー: $e');
         return;
       }
     }
@@ -160,7 +160,7 @@ class NotificationService {
         'fcmToken': _fcmToken,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      print('FCM token saved for user: $userId');
+      debugPrint('FCM token saved for user: $userId');
     }
   }
 
@@ -170,7 +170,7 @@ class NotificationService {
       'fcmToken': FieldValue.delete(),
       'fcmTokenUpdatedAt': FieldValue.delete(),
     });
-    print('FCM token removed for user: $userId');
+    debugPrint('FCM token removed for user: $userId');
   }
 
   /// マッチング通知を表示
@@ -206,7 +206,7 @@ class NotificationService {
 
   /// 通知がタップされた時の処理
   void _onNotificationTapped(NotificationResponse response) {
-    print('Notification tapped: ${response.payload}');
+    debugPrint('Notification tapped: ${response.payload}');
     // マッチング通知の場合
     if (response.payload != null && response.payload!.isNotEmpty) {
       onMatchNotificationTapped?.call(response.payload);

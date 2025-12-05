@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/providers/storage_service_provider.dart';
 

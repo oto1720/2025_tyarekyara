@@ -198,19 +198,19 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
   Widget _buildProfileImage(BuildContext context, String? iconUrl) {
-    print('=== SettingsScreen._buildProfileImage ===');
-    print('iconUrl (raw): $iconUrl');
+    debugPrint('=== SettingsScreen._buildProfileImage ===');
+    debugPrint('iconUrl (raw): $iconUrl');
 
     // 保存済みの画像URLを表示
     if (iconUrl != null && iconUrl.isNotEmpty) {
       // URLをトリム（あらゆる種類の空白文字を除去）
       final cleanUrl = iconUrl.replaceAll(RegExp(r'\s+'), '');
-      print('iconUrlが存在 (cleaned): $cleanUrl');
-      print('iconUrl length: ${iconUrl.length}, cleanUrl length: ${cleanUrl.length}');
+      debugPrint('iconUrlが存在 (cleaned): $cleanUrl');
+      debugPrint('iconUrl length: ${iconUrl.length}, cleanUrl length: ${cleanUrl.length}');
 
       // アセット画像かネットワーク画像かを判定
       if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
-        print('ネットワーク画像として読み込み開始');
+        debugPrint('ネットワーク画像として読み込み開始');
         return Image.network(
           cleanUrl,
           width: 64,
@@ -218,8 +218,8 @@ class SettingsScreen extends ConsumerWidget {
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             // ネットワークエラー時はデフォルトアイコンを表示
-            print('❌ Settings画像読み込みエラー: $error');
-            print('スタックトレース: $stackTrace');
+            debugPrint('❌ Settings画像読み込みエラー: $error');
+            debugPrint('スタックトレース: $stackTrace');
             return Container(
               color: Colors.red[50],
               child: Icon(
@@ -231,14 +231,14 @@ class SettingsScreen extends ConsumerWidget {
           },
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {
-              print('✅ Settings画像読み込み完了');
+              debugPrint('✅ Settings画像読み込み完了');
               return child;
             }
             final progress = loadingProgress.expectedTotalBytes != null
                 ? loadingProgress.cumulativeBytesLoaded /
                     loadingProgress.expectedTotalBytes!
                 : null;
-            print('Settings画像読み込み中: ${progress != null ? "${(progress * 100).toStringAsFixed(0)}%" : "不明"}');
+            debugPrint('Settings画像読み込み中: ${progress != null ? "${(progress * 100).toStringAsFixed(0)}%" : "不明"}');
             return Center(
               child: SizedBox(
                 width: 24,
@@ -252,14 +252,14 @@ class SettingsScreen extends ConsumerWidget {
           },
         );
       } else {
-        print('⚠️ iconUrlがhttp/httpsで始まっていません: $cleanUrl');
+        debugPrint('⚠️ iconUrlがhttp/httpsで始まっていません: $cleanUrl');
       }
     } else {
-      print('iconUrlが空またはnull');
+      debugPrint('iconUrlが空またはnull');
     }
 
     // デフォルトアイコン
-    print('デフォルトアイコンを表示');
+    debugPrint('デフォルトアイコンを表示');
     return Icon(
       Icons.person,
       size: 32,
@@ -295,14 +295,14 @@ class SettingsScreen extends ConsumerWidget {
               currentUserAsync.when(
                 data: (user) {
                   if (user == null) {
-                    print('⚠️ SettingsScreen: ユーザー情報がnull');
+                    debugPrint('⚠️ SettingsScreen: ユーザー情報がnull');
                     return const SizedBox.shrink();
                   }
-                  print('=== SettingsScreen: ユーザー情報取得 ===');
-                  print('  - nickname: ${user.nickname}');
-                  print('  - ageRange: ${user.ageRange}');
-                  print('  - region: ${user.region}');
-                  print('  - iconUrl: ${user.iconUrl}');
+                  debugPrint('=== SettingsScreen: ユーザー情報取得 ===');
+                  debugPrint('  - nickname: ${user.nickname}');
+                  debugPrint('  - ageRange: ${user.ageRange}');
+                  debugPrint('  - region: ${user.region}');
+                  debugPrint('  - iconUrl: ${user.iconUrl}');
                   return GestureDetector(
                     onTap: () {
                       // ★ プロフィール画面へ遷移
@@ -419,7 +419,6 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: 'バージョン、利用規約など',
                 iconColor: Colors.indigo,
                 onTap: () async {
-                  // TODO: 基本情報画面へ遷移
                   final uri = Uri.parse('https://critica-s.vercel.app/');
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri);

@@ -3,7 +3,7 @@ import '../models/debate_room.dart';
 import '../models/debate_message.dart';
 import '../models/debate_match.dart';
 import '../models/judgment_result.dart';
-
+import 'package:flutter/foundation.dart';
 /// ディベートルームリポジトリ
 class DebateRoomRepository {
   final FirebaseFirestore _firestore;
@@ -26,7 +26,7 @@ class DebateRoomRepository {
       if (!doc.exists) return null;
       return DebateRoom.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting room: $e');
+      debugPrint('Error getting room: $e');
       return null;
     }
   }
@@ -55,7 +55,7 @@ class DebateRoomRepository {
       if (snapshot.docs.isEmpty) return null;
       return DebateRoom.fromJson(snapshot.docs.first.data());
     } catch (e) {
-      print('Error getting room by match ID: $e');
+      debugPrint('Error getting room by match ID: $e');
       return null;
     }
   }
@@ -83,7 +83,7 @@ class DebateRoomRepository {
           .doc(message.id)
           .set(DebateMessage.toFirestore(message));
     } catch (e) {
-      print('Error sending message: $e');
+      debugPrint('Error sending message: $e');
       rethrow;
     }
   }
@@ -134,7 +134,7 @@ class DebateRoomRepository {
           .map((doc) => DebateMessage.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting messages by phase: $e');
+      debugPrint('Error getting messages by phase: $e');
       return [];
     }
   }
@@ -154,7 +154,7 @@ class DebateRoomRepository {
           .map((doc) => DebateMessage.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting all messages: $e');
+      debugPrint('Error getting all messages: $e');
       return [];
     }
   }
@@ -167,7 +167,7 @@ class DebateRoomRepository {
           .doc(room.id)
           .update(DebateRoom.toFirestore(room));
     } catch (e) {
-      print('Error updating room: $e');
+      debugPrint('Error updating room: $e');
       rethrow;
     }
   }
@@ -189,7 +189,7 @@ class DebateRoomRepository {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error updating phase: $e');
+      debugPrint('Error updating phase: $e');
       rethrow;
     }
   }
@@ -205,7 +205,7 @@ class DebateRoomRepository {
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      print('Error updating warning count: $e');
+      debugPrint('Error updating warning count: $e');
       rethrow;
     }
   }
@@ -218,7 +218,7 @@ class DebateRoomRepository {
           .doc(judgment.id)
           .set(JudgmentResult.toFirestore(judgment));
     } catch (e) {
-      print('Error saving judgment: $e');
+      debugPrint('Error saving judgment: $e');
       rethrow;
     }
   }
@@ -234,7 +234,7 @@ class DebateRoomRepository {
       if (!doc.exists) return null;
       return JudgmentResult.fromJson(doc.data()!);
     } catch (e) {
-      print('Error getting judgment: $e');
+      debugPrint('Error getting judgment: $e');
       return null;
     }
   }
@@ -251,7 +251,7 @@ class DebateRoomRepository {
       if (snapshot.docs.isEmpty) return null;
       return JudgmentResult.fromJson(snapshot.docs.first.data());
     } catch (e) {
-      print('Error getting judgment by match ID: $e');
+      debugPrint('Error getting judgment by match ID: $e');
       return null;
     }
   }

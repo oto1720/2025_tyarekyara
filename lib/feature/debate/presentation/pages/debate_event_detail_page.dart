@@ -362,7 +362,7 @@ class DebateEventDetailPage extends ConsumerWidget {
               children: options.map((option) {
                 return Chip(
                   label: Text(option),
-                  backgroundColor: color.withOpacity(0.1),
+                  backgroundColor: color.withValues(alpha: 0.1),
                   labelStyle: TextStyle(
                     color: color,
                     fontWeight: FontWeight.w500,
@@ -457,7 +457,7 @@ class DebateEventDetailPage extends ConsumerWidget {
           if (entry.status == MatchStatus.matched && entry.matchId != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
-                print('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
+                debugPrint('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
                 context.pushReplacement('/debate/match/${entry.matchId}');
               }
             });
@@ -629,16 +629,16 @@ class DebateEventDetailPage extends ConsumerWidget {
 
   /// エントリー画面へ遷移
   void _navigateToEntry(BuildContext context, DebateEvent event) {
-    print('🚀 Navigating to entry page: /debate/event/${event.id}/entry');
+    debugPrint('🚀 Navigating to entry page: /debate/event/${event.id}/entry');
     context.push('/debate/event/${event.id}/entry');
-    print('✅ Navigation command executed');
+    debugPrint('✅ Navigation command executed');
   }
 
   /// 待機画面へ遷移
   void _navigateToWaitingRoom(BuildContext context, DebateEvent event) {
-    print('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
+    debugPrint('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
     context.push('/debate/event/${event.id}/waiting');
-    print('✅ Navigation command executed');
+    debugPrint('✅ Navigation command executed');
   }
 
   /// 見つからない表示
@@ -717,7 +717,7 @@ class DebateEventDetailPage extends ConsumerWidget {
                   Icon(
                     Icons.lock_outline,
                     size: 80,
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 24),
                   const Text(

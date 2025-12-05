@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/debate_event.dart';
-import '../repositories/debate_event_repository.dart';
 import 'debate_event_provider.dart';
 
 /// 今日のディベートイベントを取得
@@ -26,7 +26,7 @@ final todayDebateEventProvider = FutureProvider<DebateEvent?>((ref) async {
 
     return todayEvent;
   } catch (e) {
-    print('Error fetching today\'s debate event: $e');
+    debugPrint('Error fetching today\'s debate event: $e');
     return null;
   }
 });

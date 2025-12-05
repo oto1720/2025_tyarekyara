@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 
@@ -61,9 +62,9 @@ class Challenge with _$Challenge {
 
       return _$ChallengeFromJson(jsonCopy);
     } catch (e, stackTrace) {
-      print('❌ [Challenge] fromFirestore変換エラー: $e');
-      print('   スタックトレース: $stackTrace');
-      print('   JSONデータ: $json');
+      debugPrint('❌ [Challenge] fromFirestore変換エラー: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      debugPrint('   JSONデータ: $json');
       rethrow;
     }
   }
