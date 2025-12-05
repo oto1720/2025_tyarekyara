@@ -1,96 +1,366 @@
-# 認証機能 (Auth Feature)
-
-このディレクトリには、アプリケーションの認証機能に関するすべてのコードが含まれています。
+# 認証機能 (Auth Feature) - 詳細ドキュメント
 
 ## 目次
 
-- [概要](#概要)
-- [ディレクトリー構造](#ディレクトリー構造)
-- [主要コンポーネント](#主要コンポーネント)
-- [認証フロー](#認証フロー)
-- [状態管理アーキテクチャ](#状態管理アーキテクチャ)
-- [使用方法](#使用方法)
-- [エラーハンドリング](#エラーハンドリング)
-- [セキュリティ](#セキュリティ)
-- [今後の拡張](#今後の拡張)
+1. [概要](#概要)
+2. [ディレクトリ構造と各ファイルの役割](#ディレクトリ構造と各ファイルの役割)
+3. [依存関係図](#依存関係図)
+4. [クラス図と関係性](#クラス図と関係性)
+5. [主要コンポーネント詳細](#主要コンポーネント詳細)
+6. [データフローと処理の流れ](#データフローと処理の流れ)
+7. [他のfeatureとの連携](#他のfeatureとの連携)
+8. [使用方法](#使用方法)
+9. [技術スタック](#技術スタック)
+10. [セキュリティ](#セキュリティ)
+11. [トラブルシューティング](#トラブルシューティング)
 
 ---
 
 ## 概要
 
-この認証機能は、以下の機能を提供します：
+この認証機能は、Firebase Authenticationを使用したユーザー認証システムです。
 
-- **ユーザー登録**: メールアドレスとパスワードによる新規アカウント作成
-- **ログイン**: 既存アカウントでのログイン
-- **ログアウト**: セッションの終了
-- **プロフィール設定**: ユーザーのプロフィール情報（アイコン、ニックネーム、年齢、地域）の登録・更新
-- **画像アップロード**: Firebase Storageへのプロフィール画像のアップロード
+### 提供機能
 
-### 技術スタック
+- ✅ メール/パスワード認証（登録・ログイン）
+- ✅ Google認証（実装済み）
+- ✅ Apple認証（実装済み）
+- ✅ ゲストログイン
+- ✅ プロフィール設定（アイコン、ニックネーム、年齢、地域）
+- ✅ プロフィール画像のアップロード（Firebase Storage）
+- ✅ パスワードリセット
+- ✅ アカウント削除
 
-- **認証**: Firebase Authentication (Email/Password)
-- **データベース**: Cloud Firestore
-- **ストレージ**: Firebase Storage
-- **状態管理**: Riverpod (NotifierProvider)
+### アーキテクチャパターン
+
+- **レイヤードアーキテクチャ**: Presentation → Provider → Repository → Service
+- **状態管理**: Riverpod（NotifierProvider）
 - **不変性**: Freezed
 - **ルーティング**: GoRouter
 
 ---
 
-## ディレクトリー構造
+## ディレクトリ構造と各ファイルの役割
 
 ```
 lib/feature/auth/
-├── models/                          # データモデル
+│
+├── models/                                    # データモデル層
 │   └── user/
-│       ├── user_model.dart          # ユーザーモデル定義
-│       ├── user_model.freezed.dart  # 自動生成（Freezed）
-│       └── user_model.g.dart        # 自動生成（JSON）
+│       ├── user_model.dart                    # ユーザーモデル（Freezed）
+│       ├── user_model.freezed.dart            # 自動生成
+│       └── user_model.g.dart                  # JSON シリアライゼーション
 │
-├── providers/                       # 状態管理
-│   ├── auth_provider.dart           # 認証のメインProvider
-│   ├── auth_state.dart              # 認証状態の定義
-│   ├── auth_state.freezed.dart      # 自動生成
-│   ├── profile_setup_provider.dart  # プロフィール設定Provider
-│   ├── profile_setup_state.dart     # プロフィール設定状態
-│   ├── profile_setup_state.freezed.dart
-│   └── storage_service_provider.dart # StorageサービスProvider
+├── providers/                                 # 状態管理層（Riverpod）
+│   ├── auth_provider.dart                     # 🔑 認証の中心的Provider
+│   │   ├─ authServiceProvider                 #    → AuthServiceのDI
+│   │   ├─ authStateChangesProvider            #    → 認証状態のStream監視
+│   │   ├─ currentUserProvider                 #    → 現在のユーザー情報取得
+│   │   └─ authControllerProvider              #    → 認証操作の実行
+│   │
+│   ├── auth_state.dart                        # 認証状態の定義（Freezed Sealed Class）
+│   │   ├─ initial                             #    → 初期状態
+│   │   ├─ loading                             #    → 処理中
+│   │   ├─ guest                               #    → ゲストモード
+│   │   ├─ authenticated                       #    → 認証済み
+│   │   ├─ unauthenticated                     #    → 未認証
+│   │   └─ error                               #    → エラー
+│   │
+│   ├── auth_state.freezed.dart                # 自動生成
+│   │
+│   ├── profile_setup_provider.dart            # プロフィール設定専用Provider
+│   │   └─ ProfileSetupNotifier                #    → プロフィール設定ロジック
+│   │       ├─ pickImage()                     #       → 画像選択
+│   │       ├─ setAgeRange()                   #       → 年齢設定
+│   │       ├─ setRegion()                     #       → 地域設定
+│   │       └─ saveProfile()                   #       → 保存処理
+│   │
+│   ├── profile_setup_state.dart               # プロフィール設定状態
+│   ├── profile_setup_state.freezed.dart       # 自動生成
+│   │
+│   └── storage_service_provider.dart          # StorageServiceのProvider
 │
-├── repositories/                    # 抽象インターフェース
-│   └── auth_repository.dart         # 認証リポジトリの抽象定義
+├── repositories/                              # リポジトリ層（抽象インターフェース）
+│   └── auth_repository.dart                   # 🔑 認証リポジトリの抽象定義
+│       ├─ signUpWithEmail()                   #    → メール登録
+│       ├─ signInWithEmail()                   #    → メールログイン
+│       ├─ signInWithGoogle()                  #    → Google認証
+│       ├─ signInWithApple()                   #    → Apple認証
+│       ├─ signOut()                           #    → ログアウト
+│       ├─ getCurrentUser()                    #    → 現在のユーザー取得
+│       ├─ saveUserData()                      #    → ユーザーデータ保存
+│       ├─ getUserData()                       #    → ユーザーデータ取得
+│       ├─ updateUserData()                    #    → ユーザーデータ更新
+│       ├─ updateEmail()                       #    → メールアドレス更新
+│       ├─ updatePassword()                    #    → パスワード更新
+│       ├─ sendPasswordResetEmail()            #    → パスワードリセット
+│       └─ deleteAccount()                     #    → アカウント削除
 │
-├── services/                        # ビジネスロジック実装
-│   ├── auth_service.dart            # Firebase認証の実装
-│   └── storage_service.dart         # Firebase Storageの実装
+├── services/                                  # サービス層（実装）
+│   ├── auth_service.dart                      # 🔑 AuthRepositoryの実装
+│   │   └─ AuthService                         #    → Firebase Auth + Firestore
+│   │       ├─ _auth (FirebaseAuth)            #       → Firebase Authentication
+│   │       ├─ _firestore (FirebaseFirestore)  #       → Cloud Firestore
+│   │       └─ すべてのメソッド実装
+│   │
+│   └── storage_service.dart                   # Firebase Storage操作
+│       └─ StorageService
+│           ├─ uploadProfileImage()            #    → 画像アップロード
+│           └─ deleteProfileImage()            #    → 画像削除
 │
-└── presentaion/                     # UI
-    └── pages/
-        ├── login.dart               # ログイン画面
-        ├── signup_page.dart         # 新規登録画面
-        └── profile_setup_page.dart  # プロフィール設定画面
+├── presentaion/                               # プレゼンテーション層（UI）
+│   ├── pages/
+│   │   ├── login.dart                         # ログイン画面
+│   │   │   └─ LoginPage (ConsumerStatefulWidget)
+│   │   │       ├─ 依存: authControllerProvider
+│   │   │       └─ 使用Widget: CustomTextField, CustomButton
+│   │   │
+│   │   ├── signup_page.dart                   # 新規登録画面
+│   │   │   └─ SignUpPage
+│   │   │       ├─ 依存: authControllerProvider
+│   │   │       └─ フォームバリデーション
+│   │   │
+│   │   ├── profile_setup_page.dart            # プロフィール設定画面
+│   │   │   └─ ProfileSetupPage
+│   │   │       ├─ 依存: profileSetupProvider
+│   │   │       └─ 依存: authControllerProvider
+│   │   │
+│   │   ├── forgot_password_page.dart          # パスワードリセット画面
+│   │   │   └─ ForgotPasswordPage
+│   │   │
+│   │   └── change_password_page.dart          # パスワード変更画面
+│   │       └─ ChangePasswordPage
+│   │
+│   └── widgets/                               # （現在は空）
+│
+├── ARCHITECTURE.md                            # アーキテクチャ詳細設計書
+├── README.md                                  # このファイル
+├── firestore.rules.example                    # Firestore セキュリティルール例
+└── storage.rules.example                      # Storage セキュリティルール例
 ```
 
 ---
 
-## 主要コンポーネント
+## 依存関係図
 
-### 1. Models（データモデル）
+### ファイル間のimport依存関係
 
-#### UserModel
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Presentation Layer                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  login.dart                                                          │
+│  ├── import: providers/auth_provider.dart ────────┐                │
+│  ├── import: providers/auth_state.dart            │                │
+│  ├── import: widgets/custom_text_field.dart       │                │
+│  └── import: widgets/custom_button.dart           │                │
+│                                                    │                │
+│  signup_page.dart                                 │                │
+│  ├── import: providers/auth_provider.dart ────────┤                │
+│  └── import: providers/auth_state.dart            │                │
+│                                                    │                │
+│  profile_setup_page.dart                          │                │
+│  ├── import: providers/auth_provider.dart ────────┤                │
+│  ├── import: providers/profile_setup_provider.dart│                │
+│  └── import: providers/profile_setup_state.dart   │                │
+│                                                    │                │
+└────────────────────────────────────────────────────┼────────────────┘
+                                                     │
+┌────────────────────────────────────────────────────┼────────────────┐
+│                          Provider Layer             ▼                │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  auth_provider.dart ◄────────────────────────────────┐             │
+│  ├── import: auth_state.dart                         │             │
+│  ├── import: repositories/auth_repository.dart ──┐   │             │
+│  ├── import: services/auth_service.dart          │   │             │
+│  └── import: models/user/user_model.dart         │   │             │
+│                                                   │   │             │
+│  profile_setup_provider.dart                     │   │             │
+│  ├── import: profile_setup_state.dart            │   │             │
+│  ├── import: auth_provider.dart ─────────────────┘   │             │
+│  ├── import: storage_service_provider.dart           │             │
+│  └── import: models/user/user_model.dart             │             │
+│                                                       │             │
+│  storage_service_provider.dart                       │             │
+│  └── import: services/storage_service.dart           │             │
+│                                                       │             │
+└───────────────────────────────────────────────────────┼─────────────┘
+                                                        │
+┌───────────────────────────────────────────────────────┼─────────────┐
+│                       Repository Layer                ▼             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  auth_repository.dart (抽象インターフェース) ◄──────────┐           │
+│  └── import: models/user/user_model.dart              │           │
+│                                                        │           │
+└────────────────────────────────────────────────────────┼───────────┘
+                                                         │
+┌────────────────────────────────────────────────────────┼───────────┐
+│                        Service Layer                   ▼           │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  auth_service.dart (実装) ◄─────────────────────────────┘           │
+│  ├── implements: repositories/auth_repository.dart                  │
+│  ├── import: models/user/user_model.dart                            │
+│  ├── import: firebase_auth                                          │
+│  └── import: cloud_firestore                                        │
+│                                                                      │
+│  storage_service.dart                                               │
+│  ├── import: firebase_storage                                       │
+│  └── import: image_picker                                           │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+┌───────────────────────────────▼─────────────────────────────────────┐
+│                        External Services                             │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  Firebase Authentication  │  Cloud Firestore  │  Firebase Storage   │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**ファイル**: `models/user/user_model.dart`
+### Provider間の依存関係
 
-ユーザー情報を表す不変データクラス。
+```
+currentUserProvider
+    ↓ depends on
+authStateChangesProvider
+    ↓ depends on
+authServiceProvider ──────┐
+                          │
+authControllerProvider ───┤
+    ↓ depends on          │
+authServiceProvider ◄─────┘
+    ↓ provides
+AuthService (implements AuthRepository)
 
-```dart
+
+profileSetupProvider
+    ↓ depends on
+┌───┴────────────────────┐
+│                        │
+authControllerProvider   storageServiceProvider
+│                        │
+└────────────────────────┘
+```
+
+---
+
+## クラス図と関係性
+
+### 主要クラスの関係図
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                            UI Layer                                  │
+└─────────────────────────────────────────────────────────────────────┘
+        │
+        │ uses
+        ▼
+┌──────────────────────────────────────────────────────────────┐
+│  AuthController (Notifier<AuthState>)                        │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │  - state: AuthState                                    │  │
+│  │  - _authRepository: AuthRepository                     │  │
+│  │  ┌──────────────────────────────────────────────────┐  │  │
+│  │  │  + signUpWithEmail()                             │  │  │
+│  │  │  + signInWithEmail()                             │  │  │
+│  │  │  + signInWithGoogle()                            │  │  │
+│  │  │  + signInWithApple()                             │  │  │
+│  │  │  + signOut()                                     │  │  │
+│  │  │  + updateProfile()                               │  │  │
+│  │  │  + deleteAccount()                               │  │  │
+│  │  └──────────────────────────────────────────────────┘  │  │
+│  └────────────────────────────────────────────────────────┘  │
+└────────────────┬─────────────────────────────────────────────┘
+                 │ uses
+                 ▼
+┌────────────────────────────────────────────────────────────┐
+│  AuthRepository (abstract)                                 │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  + authStateChanges: Stream<User?>                   │  │
+│  │  + signUpWithEmail()                                 │  │
+│  │  + signInWithEmail()                                 │  │
+│  │  + signInWithGoogle()                                │  │
+│  │  + signInWithApple()                                 │  │
+│  │  + signOut()                                         │  │
+│  │  + getCurrentUser(): User?                           │  │
+│  │  + saveUserData(UserModel)                           │  │
+│  │  + getUserData(String): UserModel?                   │  │
+│  │  + updateUserData(UserModel)                         │  │
+│  │  + updateEmail(String)                               │  │
+│  │  + updatePassword(String)                            │  │
+│  │  + reauthenticate(String)                            │  │
+│  │  + sendPasswordResetEmail(String)                    │  │
+│  │  + deleteAccount()                                   │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+                 ▲
+                 │ implements
+                 │
+┌────────────────┴───────────────────────────────────────────┐
+│  AuthService                                               │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  - _auth: FirebaseAuth                               │  │
+│  │  - _firestore: FirebaseFirestore                     │  │
+│  │  ┌────────────────────────────────────────────────┐  │  │
+│  │  │  すべてのメソッドを実装                          │  │  │
+│  │  │  + Firebase Authenticationとの連携              │  │  │
+│  │  │  + Cloud Firestoreとの連携                      │  │  │
+│  │  │  + エラーハンドリング                            │  │  │
+│  │  └────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+```
+
+### AuthStateの状態遷移図
+
+```
+@freezed
+class AuthState with _$AuthState {
+  const factory AuthState.initial() = _Initial;
+  const factory AuthState.loading() = _Loading;
+  const factory AuthState.guest() = _Guest;
+  const factory AuthState.authenticated(UserModel user) = _Authenticated;
+  const factory AuthState.unauthenticated() = _Unauthenticated;
+  const factory AuthState.error(String message) = _Error;
+}
+
+状態遷移:
+
+        [initial]
+            │
+            ├─── signUpWithEmail() ───→ [loading] ───→ [authenticated] / [error]
+            │                                              │
+            ├─── signInWithEmail() ───→ [loading] ───────┤
+            │                                              │
+            ├─── signInWithGoogle() ──→ [loading] ───────┤
+            │                                              │
+            ├─── signInWithApple() ───→ [loading] ───────┤
+            │                                              │
+            ├─── continueAsGuest() ───→ [guest] ──────────┤
+            │                                              │
+            └─────────────────────────────────────────────┘
+                                                           │
+        [authenticated] ─── signOut() ───→ [loading] ───→ [unauthenticated]
+                      │
+                      └─── deleteAccount() ──→ [loading] ──→ [unauthenticated]
+```
+
+### UserModelのデータ構造
+
+```
 @freezed
 class UserModel with _$UserModel {
   const factory UserModel({
     required String id,              // Firebase UID
     required String nickname,        // ニックネーム (2-20文字)
     required String email,           // メールアドレス
-    @Default('') String ageRange,    // 年齢範囲 (例: "20代")
-    @Default('') String region,      // 地域 (都道府県)
+    @Default('') String ageRange,    // 年齢範囲 ("10代", "20代", etc.)
+    @Default('') String region,      // 地域（都道府県）
     @Default('assets/images/default_avatar.png') String iconUrl,
     required DateTime createdAt,     // 作成日時
     required DateTime updatedAt,     // 更新日時
@@ -99,481 +369,645 @@ class UserModel with _$UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) =>
     _$UserModelFromJson(json);
 }
+
+Firestoreデータ構造:
+users/{userId}/
+  ├─ id: string
+  ├─ nickname: string
+  ├─ email: string
+  ├─ ageRange: string
+  ├─ region: string
+  ├─ iconUrl: string
+  ├─ createdAt: Timestamp
+  └─ updatedAt: Timestamp
 ```
 
-**特徴**:
-- Freezedによる不変性の保証
-- JSON シリアライゼーション対応
-- デフォルト値の設定
+### ProfileSetupStateのデータ構造
 
----
-
-### 2. Providers（状態管理）
-
-#### AuthController & AuthState
-
-**ファイル**: `providers/auth_provider.dart`, `providers/auth_state.dart`
-
-認証全般の状態管理を担当。
-
-**AuthState**（5つの状態）:
-```dart
-@freezed
-class AuthState with _$AuthState {
-  const factory AuthState.initial() = _Initial;        // 初期状態
-  const factory AuthState.loading() = _Loading;        // 処理中
-  const factory AuthState.authenticated(UserModel user) = _Authenticated; // 認証済み
-  const factory AuthState.unauthenticated() = _Unauthenticated; // 未認証
-  const factory AuthState.error(String message) = _Error; // エラー
-}
 ```
-
-**AuthController**の主要メソッド:
-
-| メソッド | 説明 | パラメータ |
-|---------|------|-----------|
-| `signUpWithEmail()` | 新規登録 | email, password, nickname |
-| `signInWithEmail()` | ログイン | email, password |
-| `signOut()` | ログアウト | なし |
-| `updateProfile()` | プロフィール更新 | userId, nickname, ageRange, region, iconUrl |
-| `fetchUserData()` | ユーザーデータ取得 | userId |
-
-**Providers**:
-
-```dart
-// AuthServiceのProvider
-final authServiceProvider = Provider<AuthRepository>((ref) {
-  return AuthService();
-});
-
-// Firebase認証状態のStream
-final authStateChangesProvider = StreamProvider<User?>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges;
-});
-
-// 現在ログイン中のユーザー
-final currentUserProvider = FutureProvider<UserModel?>((ref) async {
-  final authService = ref.watch(authServiceProvider);
-  final user = authService.getCurrentUser();
-  if (user == null) return null;
-  return await authService.getUserData(user.uid);
-});
-
-// メインのAuthController
-final authControllerProvider = NotifierProvider<AuthController, AuthState>(() {
-  return AuthController();
-});
-```
-
-#### ProfileSetupNotifier & ProfileSetupState
-
-**ファイル**: `providers/profile_setup_provider.dart`, `providers/profile_setup_state.dart`
-
-プロフィール設定画面専用の状態管理。
-
-**ProfileSetupState**:
-```dart
 @freezed
 class ProfileSetupState with _$ProfileSetupState {
   const factory ProfileSetupState({
-    File? selectedImage,           // 選択された画像
+    File? selectedImage,           // 選択された画像ファイル
     String? selectedAgeRange,      // 選択された年齢範囲
     String? selectedRegion,        // 選択された地域
     @Default(false) bool isUploading, // アップロード中フラグ
     String? errorMessage,          // エラーメッセージ
   }) = _ProfileSetupState;
 }
+
+ProfileSetupNotifierのメソッド:
+  ┌─ pickImage() ─────────→ selectedImage更新
+  ├─ setAgeRange(String) ─→ selectedAgeRange更新
+  ├─ setRegion(String) ───→ selectedRegion更新
+  ├─ saveProfile() ───────→ 画像アップロード + プロフィール更新
+  ├─ initializeFromUser() → 既存データで初期化
+  ├─ clearError() ────────→ errorMessage削除
+  └─ reset() ─────────────→ 全状態リセット
 ```
-
-**ProfileSetupNotifier**の主要メソッド:
-
-| メソッド | 説明 | 戻り値 |
-|---------|------|--------|
-| `pickImage()` | ギャラリーから画像を選択 | Future<void> |
-| `setAgeRange()` | 年齢範囲を設定 | void |
-| `setRegion()` | 地域を設定 | void |
-| `saveProfile()` | プロフィールを保存 | Future<bool> |
-| `initializeFromUser()` | 既存データで初期化 | void |
-| `clearError()` | エラーをクリア | void |
-| `reset()` | 状態をリセット | void |
 
 ---
 
-### 3. Repositories（抽象インターフェース）
+## 主要コンポーネント詳細
 
-#### AuthRepository
+### 1. AuthController（認証の中心的コントローラー）
 
-**ファイル**: `repositories/auth_repository.dart`
+**ファイル**: `providers/auth_provider.dart`
 
-認証機能の抽象インターフェース。実装の詳細を隠蔽し、テスト可能性を向上。
+**役割**: 認証に関するすべての操作を統括
+
+**状態**: `AuthState`（6つの状態を持つSealed Class）
+
+**主要メソッド**:
+
+| メソッド | 引数 | 戻り値 | 説明 | 依存先 |
+|---------|------|--------|------|-------|
+| `signUpWithEmail()` | email, password, nickname | `Future<void>` | メールアドレスで新規登録 | `AuthService.signUpWithEmail()` |
+| `signInWithEmail()` | email, password | `Future<void>` | メールアドレスでログイン | `AuthService.signInWithEmail()` |
+| `signInWithGoogle()` | なし | `Future<void>` | Googleアカウントでログイン | `AuthService.signInWithGoogle()` |
+| `signInWithApple()` | なし | `Future<void>` | Appleアカウントでログイン | `AuthService.signInWithApple()` |
+| `signOut()` | なし | `Future<void>` | ログアウト | `AuthService.signOut()` |
+| `continueAsGuest()` | なし | `void` | ゲストモードで続行 | なし |
+| `updateProfile()` | userId, nickname, ageRange, region, iconUrl | `Future<void>` | プロフィール更新 | `AuthService.updateUserData()` |
+| `fetchUserData()` | userId | `Future<void>` | ユーザーデータ取得 | `AuthService.getUserData()` |
+| `deleteAccount()` | なし | `Future<void>` | アカウント削除 | `AuthService.deleteAccount()` |
+
+**使用例**:
 
 ```dart
-abstract class AuthRepository {
-  Stream<User?> get authStateChanges;
-  Future<UserCredential> signUpWithEmail({
-    required String email,
-    required String password,
-  });
-  Future<UserCredential> signInWithEmail({
-    required String email,
-    required String password,
-  });
-  Future<void> signOut();
-  User? getCurrentUser();
-  Future<void> saveUserData(UserModel user);
-  Future<UserModel?> getUserData(String userId);
-  Future<void> updateUserData(UserModel user);
-}
-```
+// UIからの呼び出し
+final controller = ref.read(authControllerProvider.notifier);
 
-**メリット**:
-- 依存性の逆転（DIコンテナで実装を切り替え可能）
-- Mockを使った単体テストが容易
-- 将来的に別の認証プロバイダーへの移行が容易
+// 新規登録
+await controller.signUpWithEmail(
+  email: 'user@example.com',
+  password: 'password123',
+  nickname: 'ユーザー太郎',
+);
+
+// ログイン
+await controller.signInWithEmail(
+  email: 'user@example.com',
+  password: 'password123',
+);
+
+// ログアウト
+await controller.signOut();
+```
 
 ---
 
-### 4. Services（ビジネスロジック実装）
-
-#### AuthService
+### 2. AuthService（Firebase実装）
 
 **ファイル**: `services/auth_service.dart`
 
-Firebase AuthenticationとFirestoreを使用した`AuthRepository`の実装。
+**役割**: Firebase AuthenticationとFirestoreの操作を実装
 
-**主要機能**:
-- Firebase Authentication（Email/Password）
-- Firestoreへのユーザーデータ保存（`users`コレクション）
-- エラーハンドリング（日本語メッセージ）
+**依存ライブラリ**:
+- `firebase_auth`: Firebase Authentication
+- `cloud_firestore`: Cloud Firestore
 
-**Firestoreデータ構造**:
-```
-users/
-  └── {userId}/
-      ├── id: string
-      ├── nickname: string
-      ├── email: string
-      ├── ageRange: string
-      ├── region: string
-      ├── iconUrl: string
-      ├── createdAt: timestamp
-      └── updatedAt: timestamp
-```
+**主要フィールド**:
 
-**エラーコードと日本語メッセージのマッピング**:
-
-| Firebaseエラーコード | 日本語メッセージ |
-|---------------------|--------------|
-| `weak-password` | パスワードが弱すぎます（6文字以上） |
-| `email-already-in-use` | このメールアドレスは既に使用されています |
-| `user-not-found` | ユーザーが見つかりません |
-| `wrong-password` | パスワードが間違っています |
-| `invalid-email` | 無効なメールアドレスです |
-| `user-disabled` | このアカウントは無効化されています |
-
-#### StorageService
-
-**ファイル**: `services/storage_service.dart`
-
-Firebase Storageへの画像アップロード機能。
-
-**主要機能**:
 ```dart
-class StorageService {
-  // プロフィール画像をアップロード
-  Future<String> uploadProfileImage({
-    required String userId,
-    required File imageFile,
-  });
+class AuthService implements AuthRepository {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // プロフィール画像を削除
-  Future<void> deleteProfileImage(String imageUrl);
+  // ...
 }
 ```
 
-**ストレージパス**: `profile_images/{userId}.{拡張子}`
+**エラーハンドリング**:
 
-**画像仕様**:
-- 最大サイズ: 1024x1024
-- 画質: 85%
-- サポート形式: jpg, png, webp など
+```dart
+// Firebaseのエラーコード → 日本語メッセージ変換
+Future<void> _handleAuthException(FirebaseAuthException e) async {
+  switch (e.code) {
+    case 'weak-password':
+      throw 'パスワードが弱すぎます（6文字以上）';
+    case 'email-already-in-use':
+      throw 'このメールアドレスは既に使用されています';
+    case 'user-not-found':
+      throw 'ユーザーが見つかりません';
+    case 'wrong-password':
+      throw 'パスワードが間違っています';
+    case 'invalid-email':
+      throw '無効なメールアドレスです';
+    // ...
+  }
+}
+```
+
+**Firestoreパス**:
+
+```
+users/{userId}
+  ↓ コレクション
+  - id: string
+  - nickname: string
+  - email: string
+  - ageRange: string
+  - region: string
+  - iconUrl: string
+  - createdAt: Timestamp
+  - updatedAt: Timestamp
+```
 
 ---
 
-### 5. Presentation（UI）
+### 3. StorageService（画像アップロード）
 
-#### LoginPage
+**ファイル**: `services/storage_service.dart`
 
-**ファイル**: `presentaion/pages/login.dart`
+**役割**: Firebase Storageへの画像アップロード・削除
 
-**機能**:
-- メールアドレス・パスワード入力
-- バリデーション
-  - メールアドレス: 正規表現による形式チェック
-  - パスワード: 必須
-- ログインボタン（ローディング表示対応）
-- 新規登録へのリンク
-- 「パスワードを忘れた場合」（TODO）
+**主要メソッド**:
 
-**使用Widget**:
-- `CustomTextField`: 共通テキストフィールド
-- `CustomButton`: 共通ボタン
+| メソッド | 引数 | 戻り値 | 説明 |
+|---------|------|--------|------|
+| `uploadProfileImage()` | userId, imageFile | `Future<String>` | プロフィール画像をアップロードしてURLを返す |
+| `deleteProfileImage()` | imageUrl | `Future<void>` | プロフィール画像を削除 |
 
-**状態監視**:
+**画像処理**:
+
 ```dart
-ref.listen<AuthState>(authControllerProvider, (previous, next) {
-  next.when(
-    authenticated: (user) => context.go('/'),  // ホーム画面へ
-    error: (message) => showSnackBar(message),
-    // ...
+Future<String> uploadProfileImage({
+  required String userId,
+  required File imageFile,
+}) async {
+  // 1. 画像をリサイズ（1024x1024、画質85%）
+  final compressedImage = await FlutterImageCompress.compressWithFile(
+    imageFile.path,
+    quality: 85,
+    minWidth: 1024,
+    minHeight: 1024,
+  );
+
+  // 2. Firebase Storageにアップロード
+  final storageRef = _storage.ref().child('profile_images/$userId.jpg');
+  await storageRef.putData(compressedImage);
+
+  // 3. ダウンロードURLを取得して返す
+  return await storageRef.getDownloadURL();
+}
+```
+
+**Storageパス**:
+
+```
+profile_images/{userId}.jpg
+```
+
+---
+
+### 4. ProfileSetupNotifier（プロフィール設定）
+
+**ファイル**: `providers/profile_setup_provider.dart`
+
+**役割**: プロフィール設定画面の状態管理とロジック
+
+**依存Provider**:
+- `authControllerProvider`: プロフィール更新
+- `storageServiceProvider`: 画像アップロード
+
+**処理フロー（saveProfile）**:
+
+```dart
+Future<bool> saveProfile({
+  required String userId,
+  required String nickname,
+}) async {
+  // 1. バリデーション
+  if (state.selectedAgeRange == null || state.selectedRegion == null) {
+    state = state.copyWith(errorMessage: '年齢と地域を選択してください');
+    return false;
+  }
+
+  // 2. アップロード開始
+  state = state.copyWith(isUploading: true);
+
+  try {
+    String iconUrl = '';
+
+    // 3. 画像がある場合はアップロード
+    if (state.selectedImage != null) {
+      final storageService = ref.read(storageServiceProvider);
+      iconUrl = await storageService.uploadProfileImage(
+        userId: userId,
+        imageFile: state.selectedImage!,
+      );
+    }
+
+    // 4. プロフィール更新
+    await ref.read(authControllerProvider.notifier).updateProfile(
+      userId: userId,
+      nickname: nickname,
+      ageRange: state.selectedAgeRange!,
+      region: state.selectedRegion!,
+      iconUrl: iconUrl.isNotEmpty ? iconUrl : null,
+    );
+
+    // 5. 成功
+    state = state.copyWith(isUploading: false);
+    return true;
+
+  } catch (e) {
+    // 6. エラー処理
+    state = state.copyWith(
+      isUploading: false,
+      errorMessage: e.toString(),
+    );
+    return false;
+  }
+}
+```
+
+---
+
+## データフローと処理の流れ
+
+### 新規登録フローの詳細
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ [1] ユーザーがSignUpPageでフォーム入力                           │
+│     - nickname: "太郎"                                          │
+│     - email: "taro@example.com"                                 │
+│     - password: "password123"                                   │
+└───────────────────────┬─────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [2] 登録ボタン押下                                                 │
+│     signup_page.dart:_handleSignUp()                              │
+│     ↓                                                             │
+│     ref.read(authControllerProvider.notifier).signUpWithEmail()   │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [3] AuthController.signUpWithEmail()                              │
+│     providers/auth_provider.dart                                  │
+│     ↓                                                             │
+│     state = AuthState.loading()  // 状態を「処理中」に            │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [4] AuthService.signUpWithEmail()                                 │
+│     services/auth_service.dart                                    │
+│     ↓                                                             │
+│     final credential = await _auth.createUserWithEmailAndPassword(│
+│       email: email,                                               │
+│       password: password,                                         │
+│     );                                                            │
+│     // → Firebase Authenticationでアカウント作成                   │
+│     // → Firebase UIDを取得                                       │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [5] UserModelインスタンス作成                                      │
+│     auth_service.dart                                             │
+│     ↓                                                             │
+│     final user = UserModel(                                       │
+│       id: credential.user!.uid,                                   │
+│       nickname: nickname,                                         │
+│       email: email,                                               │
+│       ageRange: '',                                               │
+│       region: '',                                                 │
+│       iconUrl: 'assets/images/default_avatar.png',               │
+│       createdAt: DateTime.now(),                                  │
+│       updatedAt: DateTime.now(),                                  │
+│     );                                                            │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [6] Firestoreにユーザーデータ保存                                  │
+│     AuthService.saveUserData()                                    │
+│     ↓                                                             │
+│     await _firestore.collection('users').doc(user.id).set(        │
+│       user.toJson(),                                              │
+│     );                                                            │
+│     // → users/{uid}にドキュメント作成                             │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [7] 状態を「認証済み」に更新                                        │
+│     AuthController                                                │
+│     ↓                                                             │
+│     state = AuthState.authenticated(user);                        │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [8] UIで状態変化を検知                                             │
+│     signup_page.dart                                              │
+│     ↓                                                             │
+│     ref.listen<AuthState>(authControllerProvider, (prev, next) {  │
+│       next.when(                                                  │
+│         authenticated: (user) {                                   │
+│           context.go('/profile-setup');  // 画面遷移               │
+│         },                                                        │
+│         error: (msg) => showSnackBar(msg),                        │
+│         // ...                                                    │
+│       );                                                          │
+│     });                                                           │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [9] ProfileSetupPageに遷移                                        │
+│     プロフィール設定画面が表示される                                │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+### プロフィール設定フローの詳細
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ [1] ProfileSetupPageで画像選択ボタン押下                          │
+│     profile_setup_page.dart                                      │
+│     ↓                                                            │
+│     ref.read(profileSetupProvider.notifier).pickImage()          │
+└───────────────────────┬─────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [2] ImagePickerで画像選択                                         │
+│     ProfileSetupNotifier.pickImage()                              │
+│     ↓                                                             │
+│     final image = await _imagePicker.pickImage(                   │
+│       source: ImageSource.gallery,                                │
+│     );                                                            │
+│     if (image != null) {                                          │
+│       state = state.copyWith(selectedImage: File(image.path));    │
+│     }                                                             │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [3] UIで画像プレビュー更新                                         │
+│     profile_setup_page.dart                                       │
+│     ↓                                                             │
+│     final profileState = ref.watch(profileSetupProvider);         │
+│     if (profileState.selectedImage != null) {                     │
+│       Image.file(profileState.selectedImage!)  // プレビュー表示   │
+│     }                                                             │
+└───────────────────────────────────────────────────────────────────┘
+                        │
+                        ▼ ユーザーが年齢・地域を選択
+┌───────────────────────────────────────────────────────────────────┐
+│ [4] 年齢範囲選択                                                   │
+│     ref.read(profileSetupProvider.notifier).setAgeRange('20代')   │
+│     ↓                                                             │
+│     state = state.copyWith(selectedAgeRange: '20代');             │
+│                                                                   │
+│ [5] 地域選択                                                       │
+│     ref.read(profileSetupProvider.notifier).setRegion('東京都')   │
+│     ↓                                                             │
+│     state = state.copyWith(selectedRegion: '東京都');             │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼ 保存ボタン押下
+┌───────────────────────────────────────────────────────────────────┐
+│ [6] ProfileSetupNotifier.saveProfile()                            │
+│     ↓                                                             │
+│     state = state.copyWith(isUploading: true);                    │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [7] 画像をFirebase Storageにアップロード（画像がある場合）          │
+│     StorageService.uploadProfileImage()                           │
+│     ↓                                                             │
+│     final iconUrl = await storageService.uploadProfileImage(      │
+│       userId: userId,                                             │
+│       imageFile: state.selectedImage!,                            │
+│     );                                                            │
+│     // → profile_images/{userId}.jpgにアップロード                 │
+│     // → ダウンロードURLを取得                                     │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [8] プロフィール情報を更新                                         │
+│     AuthController.updateProfile()                                │
+│     ↓                                                             │
+│     await _authRepository.updateUserData(updatedUser);            │
+│     // → Firestore: users/{userId}を更新                          │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [9] 状態更新                                                       │
+│     state = AuthState.authenticated(updatedUser);                 │
+│     profileState = profileState.copyWith(isUploading: false);     │
+└───────────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+┌───────────────────────────────────────────────────────────────────┐
+│ [10] ホーム画面に遷移                                              │
+│      context.go('/');                                             │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 他のfeatureとの連携
+
+### 1. settings feature との連携
+
+**ファイル**: `lib/feature/settings/`
+
+**連携方法**:
+
+```dart
+// settings/presentation/pages/profile_screen.dart
+
+import '../../auth/providers/auth_provider.dart';
+import '../../auth/models/user/user_model.dart';
+
+class ProfileScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 現在のユーザー情報を取得
+    final currentUserAsync = ref.watch(currentUserProvider);
+
+    return currentUserAsync.when(
+      data: (user) {
+        if (user == null) return Text('未ログイン');
+
+        // ユーザー情報を表示
+        return Column(
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(user.iconUrl),
+            ),
+            Text(user.nickname),
+            Text(user.email),
+            // プロフィール編集ボタン
+            ElevatedButton(
+              onPressed: () {
+                // プロフィール編集機能を呼び出し
+                ref.read(authControllerProvider.notifier).updateProfile(
+                  userId: user.id,
+                  nickname: '新しいニックネーム',
+                  // ...
+                );
+              },
+              child: Text('プロフィール編集'),
+            ),
+          ],
+        );
+      },
+      loading: () => CircularProgressIndicator(),
+      error: (e, _) => Text('エラー: $e'),
+    );
+  }
+}
+```
+
+### 2. home feature との連携
+
+**ファイル**: `lib/feature/home/`
+
+**連携方法**:
+
+```dart
+// home/presentation/pages/home.dart
+
+import '../../auth/providers/auth_provider.dart';
+
+class HomePage extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 認証状態を監視
+    final authState = ref.watch(authControllerProvider);
+
+    return authState.when(
+      authenticated: (user) {
+        // 認証済みユーザー向けの画面
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('こんにちは、${user.nickname}さん'),
+          ),
+          body: HomeContent(),
+        );
+      },
+      guest: () {
+        // ゲストユーザー向けの画面
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('ゲストモード'),
+          ),
+          body: GuestContent(),
+        );
+      },
+      unauthenticated: () {
+        // 未認証の場合、ログイン画面へリダイレクト
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          context.go('/login');
+        });
+        return SizedBox();
+      },
+      loading: () => Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (message) => Scaffold(
+        body: Center(child: Text('エラー: $message')),
+      ),
+      initial: () => Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+}
+```
+
+### 3. core/route (GoRouter) との連携
+
+**ファイル**: `lib/core/route/app_router.dart`
+
+**認証状態によるリダイレクト**:
+
+```dart
+import '../../feature/auth/providers/auth_provider.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  return GoRouter(
+    redirect: (context, state) {
+      // 認証状態のStreamを監視
+      final authStateAsync = ref.watch(authStateChangesProvider);
+
+      return authStateAsync.when(
+        data: (user) {
+          final isAuthRoute = state.matchedLocation.startsWith('/login') ||
+                             state.matchedLocation.startsWith('/signup');
+
+          if (user == null) {
+            // 未認証ユーザー → ログイン画面
+            return isAuthRoute ? null : '/login';
+          } else {
+            // 認証済みユーザー → ホーム画面
+            return isAuthRoute ? '/' : null;
+          }
+        },
+        loading: () => null,
+        error: (_, __) => '/login',
+      );
+    },
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: '/profile-setup',
+        builder: (context, state) => const ProfileSetupPage(),
+      ),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const HomePage(),
+      ),
+      // ...
+    ],
   );
 });
 ```
 
-#### SignUpPage
-
-**ファイル**: `presentaion/pages/signup_page.dart`
-
-**機能**:
-- ニックネーム、メールアドレス、パスワード、パスワード確認の入力
-- バリデーション
-  - ニックネーム: 2-20文字
-  - メールアドレス: 正規表現による形式チェック
-  - パスワード: 6文字以上
-  - パスワード確認: パスワードと一致
-- パスワードの表示/非表示切り替え
-- 登録成功後、プロフィール設定画面へ遷移
-
-**フロー**:
-1. フォーム入力
-2. バリデーション
-3. Firebase Authenticationでアカウント作成
-4. Firestoreにユーザーデータ保存
-5. `/profile-setup` へ遷移
-
-#### ProfileSetupPage
-
-**ファイル**: `presentaion/pages/profile_setup_page.dart`
-
-**機能**:
-- プロフィール画像選択（ギャラリーから）
-- ニックネーム入力（2-20文字）
-- 年齢選択（ドロップダウン: 10歳未満〜90代）
-- 地域選択（ドロップダウン: 47都道府県）
-
-**特徴**:
-- **setStateを使用しない**: すべての状態はProviderで管理
-- **リアクティブUI**: Providerの状態変更で自動リビルド
-- **エラーハンドリング**: SnackBarでユーザーフレンドリーな通知
-
-**状態管理の例**:
-```dart
-// 画像選択（setStateなし）
-ref.read(profileSetupProvider.notifier).pickImage();
-
-// 年齢範囲設定
-ref.read(profileSetupProvider.notifier).setAgeRange('20代');
-
-// 状態の監視
-final profileState = ref.watch(profileSetupProvider);
-```
-
-**保存フロー**:
-1. フォームバリデーション
-2. 必須項目チェック（年齢、地域）
-3. 画像が選択されている場合、Firebase Storageにアップロード
-4. ダウンロードURLを取得
-5. Firestoreのユーザーデータを更新
-6. 成功時、ホーム画面へ遷移
-
----
-
-## 認証フロー
-
-### 1. 新規登録フロー
-
-```
-[SignUpPage]
-    ↓ ユーザー入力
-    ↓ (nickname, email, password)
-    ↓
-[AuthController.signUpWithEmail()]
-    ↓
-[AuthService.signUpWithEmail()]
-    ↓ Firebase Authentication
-    ↓ アカウント作成
-    ↓
-[AuthService.saveUserData()]
-    ↓ Firestore
-    ↓ users/{userId}に保存
-    ↓
-[AuthState.authenticated(user)]
-    ↓
-[ProfileSetupPage]
-    ↓ プロフィール入力
-    ↓ (icon, ageRange, region)
-    ↓
-[ProfileSetupNotifier.saveProfile()]
-    ↓
-[StorageService.uploadProfileImage()] (画像が選択されている場合)
-    ↓ Firebase Storage
-    ↓ profile_images/{userId}
-    ↓ ダウンロードURL取得
-    ↓
-[AuthController.updateProfile()]
-    ↓ Firestore更新
-    ↓
-[HomeScreen]
-```
-
-### 2. ログインフロー
-
-```
-[LoginPage]
-    ↓ ユーザー入力
-    ↓ (email, password)
-    ↓
-[AuthController.signInWithEmail()]
-    ↓
-[AuthService.signInWithEmail()]
-    ↓ Firebase Authentication
-    ↓ 認証
-    ↓
-[AuthService.getUserData()]
-    ↓ Firestore
-    ↓ users/{userId}取得
-    ↓
-[AuthState.authenticated(user)]
-    ↓
-[HomeScreen]
-```
-
-### 3. ログアウトフロー
-
-```
-[任意の画面]
-    ↓
-[AuthController.signOut()]
-    ↓
-[AuthService.signOut()]
-    ↓ Firebase Authentication
-    ↓ サインアウト
-    ↓
-[AuthState.unauthenticated()]
-    ↓
-[LoginPage]
-```
-
-### 4. 認証状態の監視
+### 4. 他のfeatureでの現在のユーザーID取得
 
 ```dart
-// アプリ起動時、Firebase認証状態をStreamで監視
-authStateChangesProvider
-    ↓
-Firebase.authStateChanges (Stream<User?>)
-    ↓
-currentUserProvider (ユーザーがいればFirestoreからデータ取得)
-    ↓
-画面のリビルド
-```
+// どのfeatureからでも現在のユーザーIDを取得可能
 
----
+import '../../auth/providers/auth_provider.dart';
 
-## 状態管理アーキテクチャ
+class SomeFeature extends ConsumerWidget {
+  Future<void> doSomething(WidgetRef ref) async {
+    // 方法1: authControllerProviderから取得
+    final authState = ref.read(authControllerProvider);
+    authState.whenOrNull(
+      authenticated: (user) {
+        final userId = user.id;
+        // userIdを使って処理
+      },
+    );
 
-このプロジェクトでは、Riverpodを使用した状態管理を採用しています。
-
-### 設計原則
-
-1. **単一責任の原則**: 各Providerは1つの責務のみを持つ
-2. **不変性**: Freezedを使用して状態を不変に保つ
-3. **宣言的UI**: UIはProviderの状態を監視し、自動的にリビルド
-4. **ビジネスロジックとUIの分離**: Notifierでロジックをカプセル化
-
-### Provider の種類と使い分け
-
-#### 1. Provider（不変）
-
-サービスやリポジトリのシングルトンインスタンスを提供。
-
-```dart
-final authServiceProvider = Provider<AuthRepository>((ref) {
-  return AuthService();
-});
-```
-
-**用途**: DI（依存性注入）
-
-#### 2. StreamProvider（リアクティブ）
-
-Firebase認証状態などのStreamを監視。
-
-```dart
-final authStateChangesProvider = StreamProvider<User?>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges;
-});
-```
-
-**用途**: リアルタイム更新が必要なデータ
-
-#### 3. FutureProvider（非同期）
-
-非同期でデータを取得。
-
-```dart
-final currentUserProvider = FutureProvider<UserModel?>((ref) async {
-  // ユーザーデータを非同期取得
-});
-```
-
-**用途**: 初回ロード時のデータ取得
-
-#### 4. NotifierProvider（状態管理）
-
-ミュータブルな状態とロジックを管理。
-
-```dart
-final authControllerProvider =
-    NotifierProvider<AuthController, AuthState>(() {
-  return AuthController();
-});
-```
-
-**用途**: 複雑な状態管理とビジネスロジック
-
-### ref の使い分け
-
-#### ref.watch()
-- **用途**: 値の監視（値が変わると自動リビルド）
-- **使用場所**: buildメソッド内
-
-```dart
-final authState = ref.watch(authControllerProvider);
-```
-
-#### ref.listen()
-- **用途**: 副作用の実行（SnackBar表示、画面遷移など）
-- **使用場所**: buildメソッド内
-
-```dart
-ref.listen<AuthState>(authControllerProvider, (previous, next) {
-  next.when(
-    authenticated: (user) => context.go('/'),
-    error: (message) => showSnackBar(message),
-    // ...
-  );
-});
-```
-
-#### ref.read()
-- **用途**: 一度だけ値を読む、メソッドを呼び出す
-- **使用場所**: イベントハンドラ内
-
-```dart
-onPressed: () {
-  ref.read(authControllerProvider.notifier).signOut();
+    // 方法2: currentUserProviderから取得
+    final currentUser = await ref.read(currentUserProvider.future);
+    if (currentUser != null) {
+      final userId = currentUser.id;
+      // userIdを使って処理
+    }
+  }
 }
 ```
 
@@ -581,12 +1015,204 @@ onPressed: () {
 
 ## 使用方法
 
-### 新しい画面から認証機能を使う
-
-#### 1. 現在のユーザー情報を取得
+### 1. 新規登録の実装例
 
 ```dart
-class MyPage extends ConsumerWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
+import '../providers/auth_state.dart';
+
+class SignUpPage extends ConsumerStatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  ConsumerState<SignUpPage> createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends ConsumerState<SignUpPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _nicknameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    // 認証状態を監視して、画面遷移やエラー表示
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.when(
+        authenticated: (user) {
+          // プロフィール設定画面へ遷移
+          context.go('/profile-setup');
+        },
+        error: (message) {
+          // エラー表示
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        },
+        initial: () {},
+        loading: () {},
+        guest: () {},
+        unauthenticated: () {},
+      );
+    });
+
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState is _Loading;
+
+    return Scaffold(
+      appBar: AppBar(title: Text('新規登録')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              controller: _nicknameController,
+              decoration: InputDecoration(labelText: 'ニックネーム'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'ニックネームを入力してください';
+                }
+                if (value.length < 2 || value.length > 20) {
+                  return 'ニックネームは2〜20文字で入力してください';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: 'メールアドレス'),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'メールアドレスを入力してください';
+                }
+                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                if (!emailRegex.hasMatch(value)) {
+                  return '有効なメールアドレスを入力してください';
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'パスワード'),
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'パスワードを入力してください';
+                }
+                if (value.length < 6) {
+                  return 'パスワードは6文字以上で入力してください';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                if (_formKey.currentState!.validate()) {
+                  await ref.read(authControllerProvider.notifier).signUpWithEmail(
+                    email: _emailController.text,
+                    password: _passwordController.text,
+                    nickname: _nicknameController.text,
+                  );
+                }
+              },
+              child: isLoading
+                  ? CircularProgressIndicator()
+                  : Text('登録'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 2. ログインの実装例
+
+```dart
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    // 認証状態を監視
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      next.when(
+        authenticated: (user) => context.go('/'),  // ホームへ
+        error: (message) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        ),
+        initial: () {},
+        loading: () {},
+        guest: () {},
+        unauthenticated: () {},
+      );
+    });
+
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState is _Loading;
+
+    return Scaffold(
+      appBar: AppBar(title: Text('ログイン')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: 'メールアドレス'),
+            ),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'パスワード'),
+              obscureText: true,
+            ),
+            SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                await ref.read(authControllerProvider.notifier).signInWithEmail(
+                  email: _emailController.text,
+                  password: _passwordController.text,
+                );
+              },
+              child: isLoading ? CircularProgressIndicator() : Text('ログイン'),
+            ),
+            TextButton(
+              onPressed: () => context.go('/signup'),
+              child: Text('アカウントを作成'),
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(authControllerProvider.notifier).continueAsGuest();
+              },
+              child: Text('ゲストとして続ける'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 3. ユーザー情報の表示
+
+```dart
+class UserProfileWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserAsync = ref.watch(currentUserProvider);
@@ -596,7 +1222,23 @@ class MyPage extends ConsumerWidget {
         if (user == null) {
           return Text('ログインしていません');
         }
-        return Text('こんにちは、${user.nickname}さん');
+        return Column(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: user.iconUrl.startsWith('http')
+                  ? NetworkImage(user.iconUrl)
+                  : AssetImage(user.iconUrl) as ImageProvider,
+            ),
+            SizedBox(height: 8),
+            Text(
+              user.nickname,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Text(user.email),
+            Text('${user.ageRange} | ${user.region}'),
+          ],
+        );
       },
       loading: () => CircularProgressIndicator(),
       error: (error, stack) => Text('エラー: $error'),
@@ -605,288 +1247,117 @@ class MyPage extends ConsumerWidget {
 }
 ```
 
-#### 2. ログアウト機能を追加
+### 4. ログアウト
 
 ```dart
 ElevatedButton(
-  onPressed: () {
-    ref.read(authControllerProvider.notifier).signOut();
+  onPressed: () async {
+    await ref.read(authControllerProvider.notifier).signOut();
+    context.go('/login');
   },
   child: Text('ログアウト'),
 )
 ```
 
-#### 3. プロフィール更新
-
-```dart
-Future<void> updateNickname(String newNickname) async {
-  final user = ref.read(currentUserProvider).value;
-  if (user == null) return;
-
-  await ref.read(authControllerProvider.notifier).updateProfile(
-    userId: user.id,
-    nickname: newNickname,
-    ageRange: user.ageRange,
-    region: user.region,
-    iconUrl: user.iconUrl,
-  );
-}
-```
-
-#### 4. 認証状態に応じて画面を切り替える
-
-```dart
-// app_router.dart での例
-final authStateAsync = ref.watch(authStateChangesProvider);
-
-authStateAsync.when(
-  data: (user) {
-    if (user == null) {
-      return '/login';  // 未認証 → ログイン画面
-    }
-    return '/';  // 認証済み → ホーム画面
-  },
-  loading: () => '/splash',
-  error: (_, __) => '/error',
-);
-```
-
-### 新しいプロバイダーを作成する場合
-
-例: プロフィール編集画面用のProvider
-
-```dart
-// 1. 状態を定義（Freezed）
-@freezed
-class ProfileEditState with _$ProfileEditState {
-  const factory ProfileEditState({
-    @Default(false) bool isSaving,
-    String? errorMessage,
-  }) = _ProfileEditState;
-}
-
-// 2. Notifierを作成
-class ProfileEditNotifier extends Notifier<ProfileEditState> {
-  @override
-  ProfileEditState build() => const ProfileEditState();
-
-  Future<void> save({required String nickname}) async {
-    state = state.copyWith(isSaving: true);
-    try {
-      // 保存処理
-      await ref.read(authControllerProvider.notifier).updateProfile(...);
-      state = state.copyWith(isSaving: false);
-    } catch (e) {
-      state = state.copyWith(
-        isSaving: false,
-        errorMessage: e.toString(),
-      );
-    }
-  }
-}
-
-// 3. Providerを公開
-final profileEditProvider =
-    NotifierProvider<ProfileEditNotifier, ProfileEditState>(() {
-  return ProfileEditNotifier();
-});
-```
-
 ---
 
-## エラーハンドリング
+## 技術スタック
 
-### エラーの種類
+### 依存パッケージ
 
-1. **Firebase Authenticationエラー**
-   - 弱いパスワード
-   - メールアドレス重複
-   - 認証情報の誤り
+| パッケージ | バージョン | 用途 |
+|-----------|----------|------|
+| `firebase_auth` | ^4.x.x | Firebase Authentication |
+| `cloud_firestore` | ^4.x.x | Cloud Firestore |
+| `firebase_storage` | ^11.x.x | Firebase Storage |
+| `flutter_riverpod` | ^2.x.x | 状態管理 |
+| `freezed` | ^2.x.x | 不変データクラス |
+| `freezed_annotation` | ^2.x.x | Freezedアノテーション |
+| `json_annotation` | ^4.x.x | JSONシリアライゼーション |
+| `go_router` | ^13.x.x | ルーティング |
+| `image_picker` | ^1.x.x | 画像選択 |
+| `flutter_image_compress` | ^2.x.x | 画像圧縮 |
 
-2. **Firestoreエラー**
-   - 権限エラー
-   - ネットワークエラー
-   - データ不整合
+### 開発時の依存パッケージ
 
-3. **Firebase Storageエラー**
-   - アップロード失敗
-   - 容量制限
-   - 権限エラー
+| パッケージ | 用途 |
+|-----------|------|
+| `build_runner` | コード生成 |
+| `freezed` | Freezedコード生成 |
+| `json_serializable` | JSON生成 |
 
-4. **バリデーションエラー**
-   - 必須項目の未入力
-   - 形式不正（メール、パスワードなど）
+### コード生成コマンド
 
-### エラー表示方法
+```bash
+# Freezed + JSON生成
+flutter pub run build_runner build --delete-conflicting-outputs
 
-#### 1. AuthStateのerror状態
-
-```dart
-ref.listen<AuthState>(authControllerProvider, (previous, next) {
-  next.when(
-    error: (message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    },
-    // ...
-  );
-});
+# ウォッチモード（自動生成）
+flutter pub run build_runner watch --delete-conflicting-outputs
 ```
-
-#### 2. ProfileSetupStateのerrorMessage
-
-```dart
-ref.listen(profileSetupProvider, (previous, next) {
-  if (next.errorMessage != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(next.errorMessage!)),
-    );
-  }
-});
-```
-
-#### 3. FormValidation
-
-```dart
-String? _validateEmail(String? value) {
-  if (value == null || value.isEmpty) {
-    return 'メールアドレスは必須です';
-  }
-  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-  if (!emailRegex.hasMatch(value)) {
-    return '有効なメールアドレスを入力してください';
-  }
-  return null;
-}
-```
-
-### エラーハンドリングのベストプラクティス
-
-1. **ユーザーフレンドリーなメッセージ**: 技術的な詳細を隠し、わかりやすい日本語で表示
-2. **色分け**: エラーレベルに応じた色（赤=エラー、オレンジ=警告）
-3. **自動クリア**: エラー表示後、状態をクリアしてUI更新を防ぐ
-4. **ロギング**: 本番環境ではエラーログを記録（Firebase Crashlyticsなど）
 
 ---
 
 ## セキュリティ
 
-### 実装されているセキュリティ対策
+### Firestore Security Rules
 
-1. **パスワード**
-   - 最低6文字（Firebase Authenticationの制約）
-   - クライアント側でハッシュ化せず、Firebase側で管理
-   - パスワード確認による誤入力防止
+**ファイル**: `firestore.rules.example`
 
-2. **メールアドレス**
-   - 形式検証（正規表現）
-   - Firebase Authenticationによる重複チェック
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ユーザーコレクション
+    match /users/{userId} {
+      // 読み取り: 認証済みユーザーのみ
+      allow read: if request.auth != null;
 
-3. **Firestore Security Rules**（要設定）
-   ```javascript
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       // ユーザーは自分のデータのみ読み書き可能
-       match /users/{userId} {
-         allow read: if request.auth != null;
-         allow write: if request.auth != null && request.auth.uid == userId;
-       }
-     }
-   }
-   ```
+      // 書き込み: 本人のみ
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
-4. **Firebase Storage Security Rules**（要設定）
-   ```javascript
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       // ユーザーは自分のプロフィール画像のみアップロード可能
-       match /profile_images/{userId}.{ext} {
-         allow read: if request.auth != null;
-         allow write: if request.auth != null && request.auth.uid == userId;
-       }
-     }
-   }
-   ```
+### Firebase Storage Security Rules
 
-### セキュリティチェックリスト
+**ファイル**: `storage.rules.example`
 
-- [ ] Firestore Security Rulesを設定済み
-- [ ] Firebase Storage Security Rulesを設定済み
-- [ ] パスワードをログに出力していない
-- [ ] APIキーを環境変数で管理（`firebase_options.dart`）
-- [ ] HTTPS通信のみ使用
-- [ ] 画像サイズ・形式の検証
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // プロフィール画像
+    match /profile_images/{userId}.{ext} {
+      // 読み取り: 認証済みユーザーのみ
+      allow read: if request.auth != null;
 
-### 今後実装すべきセキュリティ機能
+      // 書き込み: 本人のみ、最大5MB
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.size < 5 * 1024 * 1024;
+    }
+  }
+}
+```
 
-- [ ] メール認証（Email Verification）
-- [ ] パスワードリセット
-- [ ] 2段階認証
-- [ ] レート制限（ログイン試行回数制限）
-- [ ] セッションタイムアウト
-- [ ] 機密情報のマスキング
+### セキュリティ対策チェックリスト
 
----
-
-## 今後の拡張
-
-### 予定されている機能
-
-1. **パスワードリセット**
-   - メールによるパスワードリセットリンク送信
-   - 新しいパスワードの設定画面
-
-2. **メール認証**
-   - 新規登録時に認証メール送信
-   - メール認証完了後のみログイン可能
-
-3. **ソーシャルログイン**
-   - Google認証
-   - Apple認証
-
-4. **プロフィール編集**
-   - ログイン後にプロフィールを編集可能
-   - 画像のトリミング機能
-
-5. **アカウント削除**
-   - ユーザー自身によるアカウント削除
-   - 関連データの完全削除
-
-6. **セッション管理**
-   - 自動ログアウト
-   - リフレッシュトークン
-
-### 拡張時の注意点
-
-1. **Provider の追加**
-   - 新しいProviderを追加する際は、責務を明確に分離
-   - 既存のProviderとの依存関係を最小限に
-
-2. **状態の設計**
-   - Freezedを使用して不変性を保つ
-   - sealed classによるパターンマッチングを活用
-
-3. **テスト**
-   - 単体テストを必ず作成
-   - Mockを使用してProviderをテスト
-
-4. **ドキュメント更新**
-   - 新機能追加時は必ずこのREADMEを更新
-   - コード内のコメントも充実
+- ✅ パスワードは6文字以上（Firebase Authenticationの制約）
+- ✅ メールアドレス形式のバリデーション
+- ✅ Firestore Security Rulesによるアクセス制御
+- ✅ Storage Security Rulesによるアクセス制御
+- ✅ Firebase Authenticationによる認証
+- ✅ エラーメッセージの日本語化（技術的詳細を隠蔽）
+- ✅ 画像サイズ制限（最大5MB）
+- ✅ 画像のリサイズ処理
 
 ---
 
 ## トラブルシューティング
 
-### よくある問題
-
-#### 1. ログイン後に画面が遷移しない
+### 1. ログイン後に画面が遷移しない
 
 **原因**: `authStateChangesProvider`が正しく監視されていない
 
@@ -899,45 +1370,71 @@ redirect: (context, state) {
 }
 ```
 
-#### 2. プロフィール画像がアップロードできない
+### 2. プロフィール画像がアップロードできない
 
 **原因**: Firebase Storage Security Rulesが設定されていない
 
-**解決策**: Firebaseコンソールで適切なルールを設定
+**解決策**: Firebaseコンソールで`storage.rules.example`の内容を適用
 
-#### 3. Freezedファイルが生成されない
+### 3. Freezedファイルが生成されない
 
-**原因**: build_runnerが実行されていない
+**原因**: `build_runner`が実行されていない
 
 **解決策**:
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-#### 4. 画像選択時にクラッシュ（iOS）
+### 4. iOS で画像選択時にクラッシュ
 
 **原因**: `Info.plist`に権限の記述がない
 
-**解決策**: `ios/Runner/Info.plist`に以下を追加
+**解決策**: `ios/Runner/Info.plist`に追加
 ```xml
 <key>NSPhotoLibraryUsageDescription</key>
 <string>プロフィール画像を設定するために写真ライブラリへのアクセスが必要です</string>
 ```
 
-#### 5. Android で画像選択時にクラッシュ
+### 5. Android で画像選択時にクラッシュ
 
 **原因**: `AndroidManifest.xml`に権限の記述がない
 
 **解決策**: `android/app/src/main/AndroidManifest.xml`に追加
 ```xml
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/> <!-- Android 13+ -->
+```
+
+### 6. 認証状態がリセットされる
+
+**原因**: Firebase Authenticationの永続化が無効になっている
+
+**解決策**: デフォルトで永続化は有効なので、通常は問題なし。明示的に設定する場合:
+```dart
+await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
 ```
 
 ---
 
-## 参考資料
+## まとめ
 
-### 公式ドキュメント
+この認証機能は、以下の特徴を持つ堅牢なシステムです：
+
+✅ **レイヤー分離**: Presentation → Provider → Repository → Service
+✅ **状態管理**: Riverpodによる宣言的UI
+✅ **不変性**: Freezedによる型安全性
+✅ **テスト可能**: Repository Patternによるモック化
+✅ **セキュア**: Firebase + Security Rulesによる多層防御
+✅ **拡張性**: 新機能の追加が容易
+✅ **保守性**: 各層の責務が明確
+
+### 関連ドキュメント
+
+- `ARCHITECTURE.md`: アーキテクチャ詳細設計
+- `firestore.rules.example`: Firestoreセキュリティルール
+- `storage.rules.example`: Storageセキュリティルール
+
+### 参考リンク
 
 - [Firebase Authentication - Flutter](https://firebase.google.com/docs/auth/flutter/start)
 - [Cloud Firestore - Flutter](https://firebase.google.com/docs/firestore/quickstart?hl=ja#flutter)
@@ -946,38 +1443,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 - [Freezed](https://pub.dev/packages/freezed)
 - [GoRouter](https://pub.dev/packages/go_router)
 
-### コーディング規約
-
-- Dartの命名規則に従う（lowerCamelCase, UpperCamelCase）
-- 1ファイル1クラスを原則とする
-- コメントは日本語でわかりやすく記述
-- Providerの命名: `{機能名}Provider`（例: `authControllerProvider`）
-- Stateの命名: `{機能名}State`（例: `ProfileSetupState`）
-
 ---
 
-## 変更履歴
-
-### v1.0.0 (2025-01-XX)
-
-- 初版リリース
-- 基本的な認証機能（登録、ログイン、ログアウト）
-- プロフィール設定機能
-- 画像アップロード機能
-- Riverpodによる状態管理のリファクタリング
-
----
-
-## 貢献
-
-新しい機能を追加した場合は、以下を必ず実施してください：
-
-1. このREADMEを更新
-2. テストコードを追加
-3. コードレビューを受ける
-
----
-
-## ライセンス
-
-このプロジェクトのライセンスについては、プロジェクトルートの`LICENSE`ファイルを参照してください。
+**最終更新**: 2025年1月
+**メンテナー**: 開発チーム
