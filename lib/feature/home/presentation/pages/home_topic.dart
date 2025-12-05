@@ -9,12 +9,12 @@ class TopicCard extends StatelessWidget {
   final String description;
 
   const TopicCard({
-    Key? key,
+    super.key,
     required this.category,
     required this.date,
     required this.title,
     required this.description,
-  }) : super(key: key);
+  });
 
   /// カテゴリーに応じたテーマカラーを返す
   Color getCategoryColor() {
@@ -57,12 +57,12 @@ class TopicCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: categoryColor.withOpacity(0.08), // 背景を薄く色づけ
+        color: categoryColor.withValues(alpha: 0.08), // 背景を薄く色づけ
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: categoryColor.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: categoryColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -75,7 +75,7 @@ class TopicCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: categoryColor.withOpacity(0.2),
+              color: categoryColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
@@ -385,7 +385,7 @@ class _OpinionPostScreenState extends ConsumerState<OpinionPostScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -436,7 +436,7 @@ class _StanceButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.shade100,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,

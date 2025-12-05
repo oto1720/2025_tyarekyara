@@ -21,7 +21,7 @@ class ParticipationStatsCardImpl extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -37,7 +37,7 @@ class ParticipationStatsCardImpl extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.08),
+                  color: accentColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(

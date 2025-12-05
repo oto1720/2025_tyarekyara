@@ -28,7 +28,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('📄 DebateEntryPage build called for event: ${widget.eventId}');
+    debugPrint('📄 DebateEntryPage build called for event: ${widget.eventId}');
     final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
     final authState = ref.watch(authControllerProvider);
     final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(widget.eventId));
@@ -291,9 +291,9 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
 
       // リポジトリに保存
       final repository = ref.read(debateMatchRepositoryProvider);
-      print('📝 Creating entry for event: ${event.id}');
+      debugPrint('📝 Creating entry for event: ${event.id}');
       await repository.createEntry(entry);
-      print('✅ Entry created successfully');
+      debugPrint('✅ Entry created successfully');
 
       // イベントの参加者数を更新
       try {
@@ -301,19 +301,19 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
         final eventRepository = ref.read(debateEventRepositoryProvider);
         await eventRepository.updateParticipantCount(event.id, entryCount);
       } catch (e) {
-        print('Error updating participant count: $e');
+        debugPrint('Error updating participant count: $e');
         // エントリーは成功しているので、参加者数の更新エラーは無視
       }
 
       if (!context.mounted) return;
 
       // ウェイティングルームへ遷移
-      print('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
+      debugPrint('🚀 Navigating to waiting room: /debate/event/${event.id}/waiting');
       context.pushReplacement('/debate/event/${event.id}/waiting');
-      print('✅ Navigation triggered');
+      debugPrint('✅ Navigation triggered');
     } catch (e, stackTrace) {
-      print('❌ Entry error: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('❌ Entry error: $e');
+      debugPrint('Stack trace: $stackTrace');
 
       if (!context.mounted) return;
 

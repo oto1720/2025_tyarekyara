@@ -45,7 +45,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
           if (_loadedUserId != 'guest') {
             _loadedUserId = 'guest';
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              print('👤 ゲストモード: モックデータを表示');
+              debugPrint('👤 ゲストモード: モックデータを表示');
               ref.read(statisticsNotifierProvider.notifier).loadUserStatistics('guest');
             });
           }
@@ -203,7 +203,7 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
               if (userData != null && _loadedUserId != userData.id) {
                 _loadedUserId = userData.id;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  print('🔐 認証済みユーザー: userId=${userData.id}');
+                  debugPrint('🔐 認証済みユーザー: userId=${userData.id}');
                   ref.read(statisticsNotifierProvider.notifier).loadUserStatistics(userData.id);
                   ref.read(badgeNotifierProvider.notifier).loadEarnedBadges(userData.id);
                 });

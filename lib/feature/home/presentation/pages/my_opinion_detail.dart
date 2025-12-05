@@ -372,7 +372,7 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : AppColors.surface,
+          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : AppColors.border,
@@ -428,9 +428,9 @@ class _MyOpinionDetailScreenState extends ConsumerState<MyOpinionDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

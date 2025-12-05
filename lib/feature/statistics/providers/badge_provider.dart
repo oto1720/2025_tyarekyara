@@ -11,7 +11,6 @@ class BadgeNotifier extends Notifier<BadgeState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await Future.delayed(const Duration(milliseconds: 200));
-      // TODO: 実データ取得処理を実装
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(error: e.toString(), isLoading: false);

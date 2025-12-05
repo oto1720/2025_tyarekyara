@@ -8,10 +8,10 @@ class TopicCard extends StatelessWidget {
   final String? dateText; // オプションで日付テキストをオーバーライド可能
 
   const TopicCard({
-    Key? key,
+    super.key,
     required this.topic,
     this.dateText,
-  }) : super(key: key);
+  });
 
   /// カテゴリーに応じたテーマカラーを返す
   Color getCategoryColor() {
@@ -66,9 +66,9 @@ class TopicCard extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: categoryColor.withOpacity(0.08),
+        color: categoryColor.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: categoryColor.withOpacity(0.5), width: 1.5),
+        border: Border.all(color: categoryColor.withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadow,
@@ -89,7 +89,7 @@ class TopicCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(0.2),
+                  color: categoryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -112,7 +112,7 @@ class TopicCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: getDifficultyColor().withOpacity(0.2),
+                  color: getDifficultyColor().withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -136,7 +136,7 @@ class TopicCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.aiGenerated.withOpacity(0.2),
+                    color: AppColors.aiGenerated.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(

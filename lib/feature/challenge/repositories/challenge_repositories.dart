@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/challenge_model.dart';
 import '../../home/models/opinion.dart';
 import '../../home/models/topic.dart'; // TopicDifficultyをインポート
@@ -19,66 +20,66 @@ class ChallengeRepository {
 
   /// チャレンジを保存する
   Future<void> saveUserChallenge(Challenge challenge) async {
-    print('💾 [Repository] ========== saveUserChallenge() 開始 ==========');
-    print('   コレクション名: $_collectionName');
+    debugPrint('💾 [Repository] ========== saveUserChallenge() 開始 ==========');
+    debugPrint('   コレクション名: $_collectionName');
 
     try {
       final docId = '${challenge.userId}_${challenge.id}';
-      print('   ドキュメントID: $docId');
+      debugPrint('   ドキュメントID: $docId');
 
       final data = challenge.toJson();
-      print('   保存データ内容:');
-      print('     - id: ${data['id']}');
-      print('     - userId: ${data['userId']}');
-      print('     - status: ${data['status']}');
-      print('     - oppositeOpinionText: ${data['oppositeOpinionText']}');
-      print('     - earnedPoints: ${data['earnedPoints']}');
-      print('     - completedAt: ${data['completedAt']}');
+      debugPrint('   保存データ内容:');
+      debugPrint('     - id: ${data['id']}');
+      debugPrint('     - userId: ${data['userId']}');
+      debugPrint('     - status: ${data['status']}');
+      debugPrint('     - oppositeOpinionText: ${data['oppositeOpinionText']}');
+      debugPrint('     - earnedPoints: ${data['earnedPoints']}');
+      debugPrint('     - completedAt: ${data['completedAt']}');
 
-      print('   Firestoreへの書き込み開始...');
+      debugPrint('   Firestoreへの書き込み開始...');
       await _firestore
           .collection(_collectionName)
           .doc(docId)
           .set(data);
 
-      print('✅ [Repository] Firestoreへの書き込み成功！');
-      print('💾 [Repository] ========================================\n');
+      debugPrint('✅ [Repository] Firestoreへの書き込み成功！');
+      debugPrint('💾 [Repository] ========================================\n');
     } catch (e, stackTrace) {
-      print('❌ [Repository] Firestoreへの書き込み失敗！');
-      print('   エラー内容: $e');
-      print('   スタックトレース: $stackTrace');
-      print('💾 [Repository] ========================================\n');
+      debugPrint('❌ [Repository] Firestoreへの書き込み失敗！');
+      debugPrint('   エラー内容: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      debugPrint('💾 [Repository] ========================================\n');
       rethrow;
     }
   }
 
   /// ユーザーのチャレンジ一覧を取得する
   Future<List<Challenge>> getUserChallenges(String userId) async {
-    print('🔍 [Repository] ========== getUserChallenges() 開始 ==========');
-    print('   コレクション名: $_collectionName');
-    print('   ユーザーID: $userId');
+    debugPrint('🔍 [Repository] ========== getUserChallenges() 開始 ==========');
+    debugPrint('   コレクション名: $_collectionName');
+    debugPrint('   ユーザーID: $userId');
 
     try {
-      print('   Firestoreクエリ実行中...');
+      debugPrint('   Firestoreクエリ実行中...');
       final snapshot = await _firestore
           .collection(_collectionName)
           .where('userId', isEqualTo: userId)
           .get();
 
-      print('   取得したドキュメント数: ${snapshot.docs.length}');
+      debugPrint('   取得したドキュメント数: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        print('   ⚪ ドキュメントが見つかりませんでした');
-        print('🔍 [Repository] ========================================\n');
+        debugPrint('   ⚪ ドキュメントが見つかりませんでした');
+        debugPrint('🔍 [Repository] ========================================\n');
         return [];
       }
 
       // ドキュメントの詳細を表示
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        print('   ドキュメント: ${doc.id}');
-        print('     - status: ${data['status']}');
-        print('     - oppositeOpinionText: ${data['oppositeOpinionText'] != null ? "あり(${(data['oppositeOpinionText'] as String).length}文字)" : "なし"}');
+        debugPrint('   ドキュメント: ${doc.id}');
+        debugPrint('     - status: ${data['status']}');
+        debugPrint('     - oppositeOpinionText: ${data['oppositeOpinionText'] != null ? "あり(${(data['oppositeOpinionText'] as String).length}文字)" : "なし"}');
       }
 
       final challenges = snapshot.docs
@@ -86,13 +87,13 @@ class ChallengeRepository {
             try {
               return Challenge.fromFirestore(doc.data());
             } catch (e) {
-              print('❌ [Repository] ドキュメント ${doc.id} のパースに失敗: $e');
+              debugPrint('❌ [Repository] ドキュメント ${doc.id} のパースに失敗: $e');
               rethrow;
             }
           })
           .toList();
 
-      print('   パース成功: ${challenges.length}件');
+      debugPrint('   パース成功: ${challenges.length}件');
 
       // チャレンジを完了日時でソート
       challenges.sort((a, b) {
@@ -107,14 +108,14 @@ class ChallengeRepository {
         return a.id.compareTo(b.id);
       });
 
-      print('✅ [Repository] データ取得成功！返却件数: ${challenges.length}');
-      print('🔍 [Repository] ========================================\n');
+      debugPrint('✅ [Repository] データ取得成功！返却件数: ${challenges.length}');
+      debugPrint('🔍 [Repository] ========================================\n');
       return challenges;
     } catch (e, stackTrace) {
-      print('❌ [Repository] エラー発生！');
-      print('   エラー内容: $e');
-      print('   スタックトレース: $stackTrace');
-      print('🔍 [Repository] ========================================\n');
+      debugPrint('❌ [Repository] エラー発生！');
+      debugPrint('   エラー内容: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      debugPrint('🔍 [Repository] ========================================\n');
       return [];
     }
   }
@@ -131,7 +132,7 @@ class ChallengeRepository {
       if (!doc.exists) return null;
       return Challenge.fromFirestore(doc.data()!);
     } catch (e) {
-      print('Error getting user challenge: $e');
+      debugPrint('Error getting user challenge: $e');
       return null;
     }
   }
@@ -167,7 +168,7 @@ class ChallengeRepository {
           .doc(docId)
           .update(updateData);
     } catch (e) {
-      print('Error updating challenge status: $e');
+      debugPrint('Error updating challenge status: $e');
       rethrow;
     }
   }
@@ -209,7 +210,7 @@ class ChallengeRepository {
 
       return snapshot.docs.length;
     } catch (e) {
-      print('Error getting completed challenge count: $e');
+      debugPrint('Error getting completed challenge count: $e');
       return 0;
     }
   }
@@ -231,34 +232,34 @@ class ChallengeRepository {
 
       return totalPoints;
     } catch (e) {
-      print('Error getting total earned points: $e');
+      debugPrint('Error getting total earned points: $e');
       return 0;
     }
   }
 
   /// ユーザーの投稿した意見を取得してチャレンジに変換する
   Future<List<Challenge>> getChallengesFromUserOpinions(String userId) async {
-    print('🔍 [Repository] ========== getChallengesFromUserOpinions() 開始 ==========');
-    print('   ユーザーID: $userId');
+    debugPrint('🔍 [Repository] ========== getChallengesFromUserOpinions() 開始 ==========');
+    debugPrint('   ユーザーID: $userId');
 
     try {
       // ユーザーの投稿した意見を取得
       final opinions = await _opinionRepository.getOpinionsByUser(userId);
-      print('   取得した意見数: ${opinions.length}');
+      debugPrint('   取得した意見数: ${opinions.length}');
 
       // OpinionをChallengeに変換
       final challenges = opinions.map((opinion) {
         return _opinionToChallenge(opinion, userId);
       }).toList();
 
-      print('✅ [Repository] チャレンジ変換完了: ${challenges.length}件');
-      print('🔍 [Repository] ========================================\n');
+      debugPrint('✅ [Repository] チャレンジ変換完了: ${challenges.length}件');
+      debugPrint('🔍 [Repository] ========================================\n');
       return challenges;
     } catch (e, stackTrace) {
-      print('❌ [Repository] エラー発生！');
-      print('   エラー内容: $e');
-      print('   スタックトレース: $stackTrace');
-      print('🔍 [Repository] ========================================\n');
+      debugPrint('❌ [Repository] エラー発生！');
+      debugPrint('   エラー内容: $e');
+      debugPrint('   スタックトレース: $stackTrace');
+      debugPrint('🔍 [Repository] ========================================\n');
       return [];
     }
   }

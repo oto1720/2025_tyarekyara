@@ -85,7 +85,7 @@ class _DebateJudgmentWaitingPageState
         }
       } catch (e) {
         // エラーの場合は次のポーリングで再試行
-        print('判定結果取得エラー: $e');
+        debugPrint('判定結果取得エラー: $e');
       }
     });
   }
@@ -102,7 +102,7 @@ class _DebateJudgmentWaitingPageState
            room.currentPhase.name == 'completed')) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            print('🎯 結果フェーズに変更！結果画面へ遷移');
+            debugPrint('🎯 結果フェーズに変更！結果画面へ遷移');
             context.pushReplacement('/debate/result/${widget.matchId}');
           }
         });

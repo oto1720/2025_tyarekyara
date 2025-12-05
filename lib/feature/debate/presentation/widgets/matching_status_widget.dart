@@ -30,7 +30,7 @@ class MatchingStatusWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: info.color.withOpacity(0.1),
+        color: info.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: info.color, width: 1.5),
       ),
@@ -57,7 +57,7 @@ class MatchingStatusWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: info.color.withOpacity(0.1),
+        color: info.color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
         border: Border.all(color: info.color, width: 1.5),
       ),

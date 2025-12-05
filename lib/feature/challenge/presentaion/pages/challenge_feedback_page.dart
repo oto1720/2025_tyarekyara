@@ -359,16 +359,16 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     Color textColor;
 
     if (score >= 80) {
-      backgroundColor = AppColors.agree.withOpacity(0.2);
+      backgroundColor = AppColors.agree.withValues(alpha: 0.2);
       textColor = AppColors.agree;
     } else if (score >= 60) {
-      backgroundColor = AppColors.difficultyNormal.withOpacity(0.2);
+      backgroundColor = AppColors.difficultyNormal.withValues(alpha: 0.2);
       textColor = AppColors.difficultyNormal;
     } else if (score >= 40) {
-      backgroundColor = AppColors.difficultyHard.withOpacity(0.2);
+      backgroundColor = AppColors.difficultyHard.withValues(alpha: 0.2);
       textColor = AppColors.difficultyHard;
     } else {
-      backgroundColor = AppColors.disagree.withOpacity(0.2);
+      backgroundColor = AppColors.disagree.withValues(alpha: 0.2);
       textColor = AppColors.disagree;
     }
 

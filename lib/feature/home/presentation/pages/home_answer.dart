@@ -283,7 +283,7 @@ class OpinionListScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -442,9 +442,9 @@ class _StatItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -522,20 +522,20 @@ class _OpinionCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isMyOpinion
-            ? Colors.blue.shade50.withOpacity(0.5)
+            ? Colors.blue.shade50.withValues(alpha: 0.5)
             : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isMyOpinion
-              ? Colors.blue.withOpacity(0.5)
-              : stanceColor.withOpacity(0.3),
+              ? Colors.blue.withValues(alpha: 0.5)
+              : stanceColor.withValues(alpha: 0.3),
           width: isMyOpinion ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isMyOpinion
-                ? Colors.blue.withOpacity(0.15)
-                : Colors.grey.withOpacity(0.1),
+                ? Colors.blue.withValues(alpha: 0.15)
+                : Colors.grey.withValues(alpha: 0.1),
             blurRadius: isMyOpinion ? 8 : 4,
             offset: const Offset(0, 2),
           ),
@@ -551,7 +551,7 @@ class _OpinionCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: stanceColor.withOpacity(0.15),
+                  color: stanceColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -799,13 +799,13 @@ class _ReactionButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: hasReacted
-              ? Colors.blue.withOpacity(0.1)
-              : Colors.grey.withOpacity(0.05),
+              ? Colors.blue.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: hasReacted
-                ? Colors.blue.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.2),
+                ? Colors.blue.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -954,7 +954,7 @@ class _FeedbackCardState extends ConsumerState<_FeedbackCard> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1045,7 +1045,7 @@ class _FeedbackButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : Colors.grey.shade50,
+          color: isSelected ? color.withValues(alpha: 0.15) : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade300,

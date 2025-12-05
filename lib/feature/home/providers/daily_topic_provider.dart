@@ -9,7 +9,7 @@ import '../services/news_service.dart';
 import '../utils/random_topic_selector.dart';
 import '../../debate/repositories/debate_event_repository.dart';
 import '../../debate/models/debate_event.dart';
-
+import 'package:flutter/foundation.dart';
 part 'daily_topic_provider.freezed.dart';
 
 /// 日別トピックの状態
@@ -191,12 +191,12 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
 
       // 既に存在する場合はスキップ
       if (hasTodayEvent) {
-        print('今日のdebateイベントは既に存在します');
+        debugPrint('今日のdebateイベントは既に存在します');
         return;
       }
     } catch (e) {
       // エラーが発生しても作成を続行
-      print('既存イベント確認中にエラー: $e');
+      debugPrint('既存イベント確認中にエラー: $e');
     }
 
     try {
@@ -234,9 +234,9 @@ class DailyTopicNotifier extends Notifier<DailyTopicState> {
       );
 
       await debateEventRepository.createEvent(debateEvent);
-      print('✅ debateイベントを作成しました: ${debateEvent.id}');
+      debugPrint('✅ debateイベントを作成しました: ${debateEvent.id}');
     } catch (e) {
-      print('⚠️ debateイベントの作成に失敗しました: $e');
+      debugPrint('⚠️ debateイベントの作成に失敗しました: $e');
       // エラーが発生してもトピック生成は続行
     }
   }
