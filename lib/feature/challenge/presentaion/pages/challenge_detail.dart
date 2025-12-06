@@ -83,7 +83,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       ),
                       const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
                       Text(
-                        '$widget.challenge.title',
+                        widget.challenge.title,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

@@ -1,239 +1,152 @@
-# チュートリアル機能 (Guide Feature)
+# Guide機能 (チュートリアル・ガイドシステム)
 
-このディレクトリには、初回登録後に表示されるチュートリアル機能が含まれています。
+このディレクトリには、アプリのオンボーディングおよび操作ガイド機能が含まれています。
 
 ## 目次
 
 - [概要](#概要)
-- [ディレクトリー構造](#ディレクトリー構造)
-- [主要コンポーネント](#主要コンポーネント)
-- [機能フロー](#機能フロー)
+- [システムアーキテクチャ](#システムアーキテクチャ)
+- [ディレクトリ構造](#ディレクトリ構造)
+- [2つのチュートリアルシステム](#2つのチュートリアルシステム)
+  - [1. 初回チュートリアル](#1-初回チュートリアル)
+  - [2. ページ内チュートリアル](#2-ページ内チュートリアル)
+- [主要コンポーネント詳細](#主要コンポーネント詳細)
+- [依存関係](#依存関係)
+- [他機能との関係](#他機能との関係)
+- [使用例](#使用例)
 - [拡張方法](#拡張方法)
-- [カスタマイズガイド](#カスタマイズガイド)
-- [実装の詳細](#実装の詳細)
 - [トラブルシューティング](#トラブルシューティング)
 
 ---
 
 ## 概要
 
-チュートリアル機能は、新規登録したユーザーに対して、アプリの使い方を視覚的に説明するためのオンボーディング機能です。
+Guide機能は、ユーザーがアプリを効果的に利用できるようサポートする、2つの異なるチュートリアルシステムを提供します。
+
+### 目的
+
+1. **新規ユーザーへのオンボーディング**: アプリの全体像と主要機能の紹介
+2. **画面ごとの操作ガイド**: 各機能の詳細な使い方を説明
 
 ### 特徴
 
-- ✨ **視覚的に魅力的**: グラデーション付きのフローティングカード
-- 👆 **直感的な操作**: スワイプまたはボタンでページ移動
-- 🎨 **カスタマイズ可能**: 色、アイコン、テキストを簡単に変更
-- 💾 **永続化**: SharedPreferencesで完了状態を保存
+- ✨ **2つの独立したチュートリアルシステム**
+  - 初回チュートリアル: スライド形式の全体説明
+  - ページ内チュートリアル: 各画面での操作ガイド
+- 💾 **永続化**: SharedPreferencesで表示状態を管理
+- 🎨 **視覚的デザイン**: グラデーション、画像、アニメーション
 - ⏭️ **スキップ可能**: ユーザーの選択を尊重
-
-### デザインコンセプト
-
-- **白背景**: 清潔感と視認性
-- **フローティングカード**: 浮遊感のあるデザイン
-- **グラデーション**: 各ページで異なる色使い
-- **アニメーション**: スムーズな遷移とインジケーター
+- 📱 **レスポンシブ**: タブレット・スマートフォン対応
 
 ---
 
-## ディレクトリー構造
+## システムアーキテクチャ
+
+```
+Guide機能
+├── 初回チュートリアル
+│   ├── FirstPage (ウェルカム画面)
+│   └── TutorialPage (スライド式説明)
+│
+└── ページ内チュートリアル
+    ├── ShowcaseView (UI要素ハイライト)
+    └── TutorialBottomSheet (操作ガイド表示)
+```
+
+### データフロー
+
+```
+起動
+ ├─→ 初回起動？
+ │    ├─ Yes → FirstPage → TutorialPage → Home
+ │    └─ No  → Home
+ │
+ └─→ 各画面遷移時
+      └─→ 初回表示？
+           ├─ Yes → ShowcaseView表示 & TutorialBottomSheet利用可能
+           └─ No  → 通常表示
+```
+
+---
+
+## ディレクトリ構造
 
 ```
 lib/feature/guide/
 ├── models/
-│   └── tutorial_item.dart          # チュートリアルデータモデル
+│   ├── tutorial_item.dart           # 初回チュートリアルのデータモデル
+│   └── page_tutorial_data.dart      # ページ内チュートリアルのデータモデル
+│
 ├── providers/
-│   └── tutorial_provider.dart      # 状態管理（Riverpod）
+│   ├── tutorial_provider.dart       # 初回チュートリアルの状態管理
+│   └── page_tutorial_provider.dart  # ページ内チュートリアルの状態管理
+│
 ├── presentaion/
 │   ├── pages/
-│   │   └── tutorial_page.dart      # メイン画面
+│   │   ├── first_page.dart          # アプリ起動時の最初のページ
+│   │   └── tutorial_page.dart       # スライド式チュートリアル
+│   │
 │   └── widgets/
-│       └── tutorial_card.dart      # カードWidget
-└── README.md                        # このファイル
+│       ├── tutorial_card.dart               # チュートリアルカードWidget
+│       ├── tutorial_dialog.dart             # 操作ガイドボトムシート
+│       └── tutorial_showcase_wrapper.dart   # ShowcaseView管理Wrapper
+│
+└── README.md
 ```
+
+**注意**: `presentaion` ディレクトリはスペルミスですが、既存コードとの整合性のためそのままにしています。
 
 ---
 
-## 主要コンポーネント
+## 2つのチュートリアルシステム
 
-### 1. TutorialItem モデル
+### 1. 初回チュートリアル
 
-**ファイル**: `models/tutorial_item.dart`
+新規ユーザーに対して、アプリ全体の使い方を説明するワンタイム表示のチュートリアル。
 
-チュートリアルの各ページを表すデータモデル。
+#### 構成
 
-```dart
-class TutorialItem {
-  final String title;            // ページのタイトル
-  final String description;      // 説明文
-  final IconData icon;           // 表示するアイコン
-  final Color primaryColor;      // グラデーションの主色
-  final Color secondaryColor;    // グラデーションの副色
-}
-```
+##### FirstPage (`presentaion/pages/first_page.dart`)
 
-#### フィールド詳細
-
-| フィールド | 型 | 説明 | 例 |
-|-----------|-----|------|-----|
-| `title` | String | ページのタイトル（太字・大きめ） | "ようこそ！" |
-| `description` | String | 説明文（改行可能） | "このアプリでは..." |
-| `icon` | IconData | Material Icons | `Icons.waving_hand` |
-| `primaryColor` | Color | グラデーション開始色 | `Color(0xFF6366F1)` |
-| `secondaryColor` | Color | グラデーション終了色 | `Color(0xFF8B5CF6)` |
-
-#### TutorialData クラス
-
-チュートリアルのコンテンツを管理する静的クラス。
+- **役割**: アプリ起動時の最初の画面
+- **表示タイミング**: 未ログイン & チュートリアル未完了時
+- **主要機能**:
+  - アプリ名とロゴの表示
+  - レスポンシブデザイン（画面サイズに応じた自動調整）
+  - 「始める」ボタン → `/tutorial` へ遷移
+  - 「ログイン」リンク → `/login` へ遷移
 
 ```dart
-class TutorialData {
-  static const List<TutorialItem> items = [
-    // チュートリアルページのリスト
-  ];
-}
+// 遷移例
+context.go('/tutorial');  // チュートリアルへ
+context.go('/login');      // ログインへ
 ```
 
-**現在のコンテンツ（5ページ）**:
-1. ようこそ！
-2. 意見を投稿
-3. 他の人の意見を見る
-4. プロフィール設定
-5. さあ、始めましょう！
+##### TutorialPage (`presentaion/pages/tutorial_page.dart`)
 
----
+- **役割**: PageView形式のスライドチュートリアル
+- **ページ数**: 9ページ（TutorialData.itemsで定義）
+- **主要機能**:
+  - スワイプでページ移動
+  - ページインジケーター
+  - スキップボタン
+  - 完了後にSharedPreferencesへ保存
 
-### 2. TutorialProvider
-
-**ファイル**: `providers/tutorial_provider.dart`
-
-Riverpodを使用した状態管理。
-
-#### 提供されるProvider
-
-##### 2.1 tutorialCompletedProvider
-
-```dart
-final tutorialCompletedProvider = FutureProvider<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
-  return prefs.getBool('tutorial_completed') ?? false;
-});
-```
-
-- **型**: `FutureProvider<bool>`
-- **役割**: チュートリアルが完了しているかを取得
-- **保存先**: SharedPreferences
-- **キー**: `tutorial_completed`
-
-##### 2.2 tutorialNotifierProvider
-
-```dart
-final tutorialNotifierProvider = NotifierProvider<TutorialNotifier, int>(() {
-  return TutorialNotifier();
-});
-```
-
-- **型**: `NotifierProvider<TutorialNotifier, int>`
-- **状態**: 現在のページインデックス（0から始まる）
-- **役割**: ページ遷移とチュートリアル完了の管理
-
-#### TutorialNotifier クラス
-
-| メソッド | 説明 | 戻り値 |
-|---------|------|--------|
-| `nextPage()` | 次のページへ移動 | void |
-| `previousPage()` | 前のページへ移動 | void |
-| `goToPage(int page)` | 特定のページへ移動 | void |
-| `completeTutorial()` | チュートリアルを完了としてマーク | Future<void> |
-| `resetTutorial()` | チュートリアルをリセット（デバッグ用） | Future<void> |
-
-**使用例**:
-```dart
-// 次のページへ
-ref.read(tutorialNotifierProvider.notifier).nextPage();
-
-// チュートリアル完了
-await ref.read(tutorialNotifierProvider.notifier).completeTutorial();
-```
-
----
-
-### 3. TutorialCard Widget
-
-**ファイル**: `presentaion/widgets/tutorial_card.dart`
-
-フローティングカードの見た目を担当するWidget。
-
-#### 構造
-
-```
-┌─────────────────────────────────┐
-│  Card (elevation: 8)             │
-│  ┌───────────────────────────┐  │
-│  │ Container (グラデーション)  │  │
-│  │  ┌─────────────────────┐  │  │
-│  │  │  円形アイコン          │  │  │
-│  │  │  (グラデーション背景)  │  │  │
-│  │  └─────────────────────┘  │  │
-│  │                            │  │
-│  │  タイトル（大きく太字）      │  │
-│  │                            │  │
-│  │  説明文（グレー）           │  │
-│  └───────────────────────────┘  │
-└─────────────────────────────────┘
-```
-
-#### デザイン仕様
-
-| 要素 | 値 | 説明 |
-|------|-----|------|
-| カード幅 | 最大400px | レスポンシブ対応 |
-| カード高さ | 最大500px | コンテンツに応じて調整 |
-| カード角丸 | 24px | 柔らかい印象 |
-| カード影 | elevation: 8 | 浮遊感を演出 |
-| アイコンサイズ | 120x120 | 円形 |
-| アイコン内アイコン | 60px | Material Icon |
-| タイトルサイズ | 32px | 太字 |
-| 説明文サイズ | 18px | 行間1.6 |
-
-#### PageIndicator Widget
-
-ページ位置を示すドットインジケーター。
-
-```dart
-PageIndicator(
-  currentPage: 2,           // 現在のページ（0から開始）
-  totalPages: 5,            // 総ページ数
-  activeColor: Colors.blue, // アクティブなドットの色
-  inactiveColor: Colors.grey, // 非アクティブなドットの色
-)
-```
-
-**アニメーション**:
-- アクティブなドット: 幅24px
-- 非アクティブなドット: 幅8px
-- トランジション: 300ms（ease-in-out）
-
----
-
-### 4. TutorialPage
-
-**ファイル**: `presentaion/pages/tutorial_page.dart`
-
-チュートリアルのメイン画面。
-
-#### UI構成
-
+**UI構成**:
 ```
 ┌─────────────────────────────────────┐
-│  AppBar (透明)                       │
+│  AppBar                              │
 │    右上: [スキップ] ボタン            │
 ├─────────────────────────────────────┤
 │                                     │
 │  PageView (スワイプ可能)              │
 │    ┌─────────────────────┐         │
 │    │   TutorialCard      │         │
-│    │                     │         │
+│    │   - グラデーション    │         │
+│    │   - アイコン         │         │
+│    │   - タイトル         │         │
+│    │   - 説明文          │         │
+│    │   - 画像 (オプション) │         │
 │    └─────────────────────┘         │
 │                                     │
 ├─────────────────────────────────────┤
@@ -243,451 +156,265 @@ PageIndicator(
 └─────────────────────────────────────┘
 ```
 
-#### 主要機能
+#### データモデル
 
-1. **スワイプナビゲーション**
-   - PageViewを使用
-   - 左右スワイプでページ移動
-   - アニメーション: 300ms
-
-2. **ボタンナビゲーション**
-   - 「戻る」ボタン: 2ページ目以降に表示
-   - 「次へ」ボタン: 最終ページ以外
-   - 「始める」ボタン: 最終ページのみ
-
-3. **スキップ機能**
-   - 右上の「スキップ」ボタン
-   - 最終ページでは非表示
-   - タップで即座にチュートリアル完了
-
-#### 状態管理の流れ
-
-```
-1. PageView.onPageChanged
-   ↓
-2. TutorialNotifier.goToPage(index)
-   ↓
-3. state = index (Providerが更新)
-   ↓
-4. UI自動リビルド
-   - PageIndicator更新
-   - ボタンテキスト更新
-```
-
-#### 完了時の処理
+##### TutorialItem (`models/tutorial_item.dart`)
 
 ```dart
-Future<void> _completeTutorial() async {
-  // 1. SharedPreferencesに保存
-  await ref.read(tutorialNotifierProvider.notifier).completeTutorial();
-
-  // 2. ホーム画面に遷移
-  if (mounted) {
-    context.go('/');
-  }
+class TutorialItem {
+  final String title;              // タイトル
+  final String description;        // 説明文
+  final IconData icon;             // アイコン
+  final String? imagePath;         // 画像パス (オプション)
+  final Color primaryColor;        // グラデーション開始色
+  final Color secondaryColor;      // グラデーション終了色
+  final String? subtitle;          // サブタイトル (オプション)
+  final List<String>? bulletPoints; // 箇条書きリスト (オプション)
+  final bool showImage;            // 画像表示フラグ (デフォルト: true)
 }
 ```
 
----
-
-## 機能フロー
-
-### 初回登録時のフロー
-
-```
-新規登録
-    ↓
-メールアドレス・パスワード入力
-    ↓
-SignUpPage
-    ↓ Firebase Authentication
-    ↓
-ProfileSetupPage
-    ↓ プロフィール情報入力
-    ↓ 保存成功
-    ↓
-TutorialPage ← ここ
-    ↓ 5ページのチュートリアル
-    ↓ 「始める」ボタン押下
-    ↓
-SharedPreferencesに保存
-  - tutorial_completed: true
-    ↓
-HomeScreen
-```
-
-### 2回目以降のログイン
-
-```
-ログイン
-    ↓
-LoginPage
-    ↓ 認証成功
-    ↓
-チュートリアル完了チェック
-    ↓
-tutorial_completed == true
-    ↓
-HomeScreen (チュートリアルスキップ)
-```
-
----
-
-## 拡張方法
-
-### 1. 新しいチュートリアルページを追加
-
-**難易度**: ⭐️ (簡単)
-
-`models/tutorial_item.dart` を編集：
+##### TutorialData (`models/tutorial_item.dart`)
 
 ```dart
 class TutorialData {
   static const List<TutorialItem> items = [
-    // 既存のアイテム...
-
-    // 新規追加（最後に追加するだけ）
-    TutorialItem(
-      title: '新機能の説明',
-      description: 'この機能を使うと○○ができます。\n簡単に始められます！',
-      icon: Icons.lightbulb,
-      primaryColor: Color(0xFFFFAA00),
-      secondaryColor: Color(0xFFFF6B00),
-    ),
+    // 9ページのチュートリアル定義
+    // 1. エコチェンバー現象の説明
+    // 2. Criticaの目的
+    // 3. 機能一覧
+    // 4. 意見を投稿
+    // 5. 他の人の意見を見る
+    // 6. チャレンジ機能
+    // 7. ディベートを始める
+    // 8. 統計情報を見る
+    // 9. 始めましょう！
   ];
 }
 ```
 
-**これだけで**:
-- ✅ 自動的にページが追加される
-- ✅ PageIndicatorが自動更新される
-- ✅ スワイプナビゲーションが動作する
+#### 状態管理
 
----
-
-### 2. 既存ページの内容を変更
-
-**難易度**: ⭐️ (簡単)
-
-`models/tutorial_item.dart` の該当項目を編集：
+##### TutorialProvider (`providers/tutorial_provider.dart`)
 
 ```dart
-TutorialItem(
-  title: '新しいタイトル',              // タイトル変更
-  description: '変更した説明文',        // 説明文変更
-  icon: Icons.star,                    // アイコン変更
-  primaryColor: Color(0xFFFF0000),     // 色変更
-  secondaryColor: Color(0xFFFF6666),
-),
-```
-
-**変更可能な要素**:
-- タイトル（制限なし）
-- 説明文（改行は`\n`で挿入）
-- アイコン（[Material Icons](https://fonts.google.com/icons)）
-- 色（HEXカラーコード）
-
----
-
-### 3. カスタムウィジェットを追加
-
-**難易度**: ⭐️⭐️ (中級)
-
-`TutorialCard` をカスタマイズして、画像やボタンを追加。
-
-**ステップ**:
-
-1. `TutorialItem` に新しいフィールドを追加：
-
-```dart
-class TutorialItem {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color primaryColor;
-  final Color secondaryColor;
-  final String? imageUrl;  // 追加
-
-  const TutorialItem({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.primaryColor,
-    required this.secondaryColor,
-    this.imageUrl,  // 追加
-  });
-}
-```
-
-2. `TutorialCard` で画像を表示：
-
-```dart
-// tutorial_card.dart の build メソッド内
-if (item.imageUrl != null)
-  Image.network(
-    item.imageUrl!,
-    height: 200,
-    fit: BoxFit.cover,
-  ),
-```
-
-3. データに画像URLを追加：
-
-```dart
-TutorialItem(
-  title: '画像付きページ',
-  description: '画像で説明します',
-  icon: Icons.image,
-  primaryColor: Color(0xFF00AA00),
-  secondaryColor: Color(0xFF00FF00),
-  imageUrl: 'https://example.com/image.png',
-),
-```
-
----
-
-### 4. チュートリアルのバージョン管理
-
-**難易度**: ⭐️⭐️⭐️ (上級)
-
-アプリ更新時に新機能のチュートリアルを表示する。
-
-**実装方法**:
-
-1. バージョン番号を保存：
-
-```dart
-// tutorial_provider.dart に追加
-Future<void> completeTutorial({String version = '1.0.0'}) async {
+// チュートリアル完了状態の取得
+final tutorialCompletedProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('tutorial_completed', true);
-  await prefs.setString('tutorial_version', version);
-}
-
-Future<bool> shouldShowTutorial(String currentVersion) async {
-  final prefs = await SharedPreferences.getInstance();
-  final completed = prefs.getBool('tutorial_completed') ?? false;
-  final savedVersion = prefs.getString('tutorial_version') ?? '0.0.0';
-
-  // 完了していない、またはバージョンが古い場合に表示
-  return !completed || savedVersion != currentVersion;
-}
-```
-
-2. アプリ起動時にチェック：
-
-```dart
-final currentVersion = '1.1.0';
-final shouldShow = await ref.read(tutorialNotifierProvider.notifier)
-    .shouldShowTutorial(currentVersion);
-
-if (shouldShow) {
-  context.go('/tutorial');
-}
-```
-
----
-
-### 5. 条件分岐によるチュートリアル切り替え
-
-**難易度**: ⭐️⭐️⭐️ (上級)
-
-ユーザーの属性（年齢、地域など）に応じて異なるチュートリアルを表示。
-
-**実装例**:
-
-```dart
-class TutorialData {
-  // 一般ユーザー向け
-  static const List<TutorialItem> standardItems = [...];
-
-  // 高齢者向け（大きな文字）
-  static const List<TutorialItem> seniorItems = [...];
-
-  // ユーザーに応じて適切なチュートリアルを返す
-  static List<TutorialItem> getItemsForUser(UserModel user) {
-    if (user.ageRange == '60代' || user.ageRange == '70代') {
-      return seniorItems;
-    }
-    return standardItems;
-  }
-}
-```
-
-```dart
-// tutorial_page.dart で使用
-final currentUser = ref.watch(currentUserProvider).value;
-final tutorialItems = currentUser != null
-    ? TutorialData.getItemsForUser(currentUser)
-    : TutorialData.standardItems;
-```
-
----
-
-## カスタマイズガイド
-
-### 色の変更
-
-Material Design のカラーパレットを参考に：
-
-```dart
-// 青系
-primaryColor: Color(0xFF2196F3),
-secondaryColor: Color(0xFF64B5F6),
-
-// 緑系
-primaryColor: Color(0xFF4CAF50),
-secondaryColor: Color(0xFF81C784),
-
-// 赤系
-primaryColor: Color(0xFFF44336),
-secondaryColor: Color(0xFFE57373),
-
-// 紫系
-primaryColor: Color(0xFF9C27B0),
-secondaryColor: Color(0xFFBA68C8),
-```
-
-### アイコンの選び方
-
-よく使われるMaterial Icons:
-
-| カテゴリ | アイコン | 用途 |
-|---------|---------|------|
-| 挨拶 | `Icons.waving_hand` | ようこそ |
-| 作成 | `Icons.create`, `Icons.edit` | 投稿機能 |
-| コミュニティ | `Icons.people`, `Icons.groups` | ソーシャル機能 |
-| 設定 | `Icons.settings`, `Icons.tune` | 設定画面 |
-| 完了 | `Icons.check_circle`, `Icons.done` | 完了画面 |
-| スタート | `Icons.rocket_launch`, `Icons.play_arrow` | 開始 |
-
-### レイアウトの調整
-
-`tutorial_card.dart` でサイズを調整：
-
-```dart
-Container(
-  constraints: const BoxConstraints(
-    maxWidth: 400,   // カード最大幅（変更可能）
-    maxHeight: 500,  // カード最大高さ（変更可能）
-  ),
-  // ...
-)
-```
-
-```dart
-// アイコンサイズ
-Container(
-  width: 120,   // 変更可能
-  height: 120,  // 変更可能
-  child: Icon(
-    item.icon,
-    size: 60,    // 変更可能
-  ),
-)
-```
-
-```dart
-// フォントサイズ
-Text(
-  item.title,
-  style: TextStyle(
-    fontSize: 32,  // タイトルサイズ（変更可能）
-    fontWeight: FontWeight.bold,
-  ),
-)
-
-Text(
-  item.description,
-  style: TextStyle(
-    fontSize: 18,  // 説明文サイズ（変更可能）
-    height: 1.6,   // 行間（変更可能）
-  ),
-)
-```
-
----
-
-## 実装の詳細
-
-### SharedPreferences の使用
-
-チュートリアル完了フラグは端末に永続化されます。
-
-**保存先**: アプリのローカルストレージ
-**キー**: `tutorial_completed`
-**値**: `true` (完了) / `false` (未完了)
-
-```dart
-// 保存
-final prefs = await SharedPreferences.getInstance();
-await prefs.setBool('tutorial_completed', true);
-
-// 取得
-final completed = prefs.getBool('tutorial_completed') ?? false;
-
-// 削除（リセット）
-await prefs.remove('tutorial_completed');
-```
-
-### Riverpod との統合
-
-```dart
-// 1. Provider定義
-final tutorialNotifierProvider = NotifierProvider<TutorialNotifier, int>(...);
-
-// 2. 読み取り（監視）
-final currentPage = ref.watch(tutorialNotifierProvider);
-
-// 3. 書き込み
-ref.read(tutorialNotifierProvider.notifier).nextPage();
-
-// 4. リスニング（副作用）
-ref.listen(tutorialNotifierProvider, (previous, next) {
-  print('ページが変更されました: $previous → $next');
+  return prefs.getBool('tutorial_completed') ?? false;
 });
+
+// ページ遷移の管理
+final tutorialNotifierProvider = NotifierProvider<TutorialNotifier, int>(() {
+  return TutorialNotifier();
+});
+
+class TutorialNotifier extends Notifier<int> {
+  int build() => 0;  // 初期ページ: 0
+
+  void nextPage()      // 次のページへ
+  void previousPage()  // 前のページへ
+  void goToPage(int)   // 指定ページへ
+  Future<void> completeTutorial()  // チュートリアル完了
+  Future<void> resetTutorial()     // リセット (デバッグ用)
+}
 ```
 
-### PageView の制御
-
-```dart
-final _pageController = PageController();
-
-// プログラムでページ移動
-_pageController.nextPage(
-  duration: const Duration(milliseconds: 300),
-  curve: Curves.easeInOut,
-);
-
-_pageController.previousPage(
-  duration: const Duration(milliseconds: 300),
-  curve: Curves.easeInOut,
-);
-
-// ユーザーのスワイプを検知
-PageView(
-  controller: _pageController,
-  onPageChanged: (index) {
-    ref.read(tutorialNotifierProvider.notifier).goToPage(index);
-  },
-  // ...
-)
-```
+**SharedPreferencesキー**:
+- `tutorial_completed`: boolean - チュートリアル完了フラグ
 
 ---
 
-## トラブルシューティング
+### 2. ページ内チュートリアル
 
-### Q1: チュートリアルが表示されない
+各画面で、その画面固有の操作方法を説明するチュートリアル。
 
-**原因**: ルーティングが正しく設定されていない
+#### 構成
 
-**解決策**:
-1. `app_router.dart` に `/tutorial` ルートが存在するか確認
-2. `profile_setup_page.dart` で `context.go('/tutorial')` が呼ばれているか確認
+##### TutorialShowcaseWrapper (`presentaion/widgets/tutorial_showcase_wrapper.dart`)
+
+- **役割**: ShowCaseViewパッケージを使った、UI要素のハイライト表示管理
+- **表示タイミング**: 各画面の初回表示時
+- **依存パッケージ**: `showcaseview: ^3.0.0`
 
 ```dart
-// app_router.dart
+// 使用例
+TutorialShowcaseWrapper(
+  pageKey: 'home',           // ページ識別子
+  showcaseKey: _showcaseKey, // ハイライト対象のGlobalKey
+  child: YourWidget(),
+)
+```
+
+**動作フロー**:
+```
+1. initState()
+   ↓
+2. hasShownTutorial()で表示済みかチェック
+   ↓
+3. 未表示の場合
+   ↓
+4. WidgetsBinding.instance.addPostFrameCallback()
+   ↓
+5. ShowCaseWidget.of(context).startShowCase([showcaseKey])
+   ↓
+6. markTutorialShown()で表示済みフラグを保存
+```
+
+##### TutorialBottomSheet (`presentaion/widgets/tutorial_dialog.dart`)
+
+- **役割**: 各画面の操作手順を詳細に説明するボトムシート
+- **表示方法**: ヘルプボタンなどから手動で呼び出し
+
+```dart
+// 使用例
+TutorialBottomSheet.show(context, 'home');
+```
+
+**UI構成**:
+```
+┌─────────────────────────────┐
+│  ハンドルバー                 │
+│  ┌─────────────────────┐    │
+│  │ 📖 操作ガイド    [×] │    │
+│  └─────────────────────┘    │
+│  ─────────────────────────  │
+│                             │
+│  1. トピックを確認           │
+│  [画像]                     │
+│  トピックを確認し...         │
+│                             │
+│  2. 意見を投稿              │
+│  [画像]                     │
+│  賛成・反対・中立...         │
+│                             │
+│  ...                        │
+│                             │
+│  [閉じる]                   │
+└─────────────────────────────┘
+```
+
+#### データモデル
+
+##### TutorialStep (`models/page_tutorial_data.dart`)
+
+```dart
+class TutorialStep {
+  final String title;        // ステップタイトル
+  final String description;  // ステップ説明
+  final String? imagePath;   // 説明画像パス (オプション)
+}
+```
+
+##### PageTutorialData (`models/page_tutorial_data.dart`)
+
+```dart
+class PageTutorialData {
+  static const Map<String, List<TutorialStep>> tutorials = {
+    'home': [/* ホーム画面のチュートリアルステップ */],
+    'statistics': [/* 統計画面のチュートリアルステップ */],
+    'challenge': [/* チャレンジ画面のチュートリアルステップ */],
+    'debate': [/* ディベート画面のチュートリアルステップ */],
+  };
+}
+```
+
+**定義済みページ**:
+- `home`: 5ステップ（トピック確認、意見投稿、意見閲覧、チャレンジ、ディベート）
+- `statistics`: 3ステップ（参加統計、多様性スコア、バッジ）
+- `challenge`: 4ステップ（選択、意見考案、フィードバック、ポイント獲得）
+- `debate`: 5ステップ（選択、エントリー、待機、ディベート、AI判定）
+
+#### 状態管理
+
+##### PageTutorialProvider (`providers/page_tutorial_provider.dart`)
+
+```dart
+final pageTutorialProvider =
+    NotifierProvider<PageTutorialNotifier, Map<String, bool>>(() {
+  return PageTutorialNotifier();
+});
+
+class PageTutorialNotifier extends Notifier<Map<String, bool>> {
+  Future<bool> hasShownTutorial(String pageKey)        // 表示済みチェック
+  Future<void> markTutorialShown(String pageKey)       // 表示済みマーク
+  Future<void> resetTutorial(String pageKey)           // リセット
+  Future<void> resetAllTutorials()                     // 全リセット
+}
+```
+
+**SharedPreferencesキー**:
+- `tutorial_shown_{pageKey}`: boolean - 各ページのチュートリアル表示済みフラグ
+  - 例: `tutorial_shown_home`, `tutorial_shown_statistics`
+
+---
+
+## 主要コンポーネント詳細
+
+### TutorialCard (`presentaion/widgets/tutorial_card.dart`)
+
+初回チュートリアルで使用されるカードWidget。
+
+**プロパティ**:
+- `item`: TutorialItem - 表示するチュートリアルデータ
+
+**デザイン仕様**:
+- カード幅: 最大400px (レスポンシブ)
+- カード高さ: 最大500px (コンテンツに応じて調整)
+- カード角丸: 24px
+- elevation: 8 (浮遊感)
+- グラデーション: LinearGradient (primaryColor → secondaryColor)
+
+**表示要素**:
+1. アイコン (円形、グラデーション背景)
+2. サブタイトル (オプション)
+3. タイトル (32px、太字)
+4. 説明文 (18px、行間1.6)
+5. 箇条書きリスト (オプション)
+6. 画像 (オプション、showImage=trueの場合)
+
+---
+
+## 依存関係
+
+### 外部パッケージ
+
+| パッケージ | バージョン | 用途 |
+|-----------|-----------|------|
+| `flutter_riverpod` | ^3.0.0 | 状態管理 |
+| `go_router` | ^16.0.2 | ルーティング |
+| `shared_preferences` | ^2.2.2 | ローカルストレージ（表示状態の永続化） |
+| `showcaseview` | ^3.0.0 | UI要素のハイライト表示 |
+
+### アプリ内依存
+
+```dart
+// core
+import 'package:tyarekyara/core/constants/app_colors.dart';
+
+// ルーティング設定
+import 'package:tyarekyara/core/route/app_router.dart';
+```
+
+**app_colors.dart**:
+- `AppColors.primary`: プライマリカラー
+- `AppColors.primaryLight`: プライマリライトカラー
+- `AppColors.background`: 背景色
+- `AppColors.textSecondary`: セカンダリテキストカラー
+- `AppColors.textOnPrimary`: プライマリ上のテキストカラー
+
+### ルーティング設定 (`lib/core/route/app_router.dart`)
+
+```dart
+// 初回起動画面
+GoRoute(
+  path: '/first',
+  pageBuilder: (context, state) => const NoTransitionPage(
+    child: FirstPage(),
+  ),
+),
+
+// チュートリアル画面
 GoRoute(
   path: '/tutorial',
   pageBuilder: (context, state) => const NoTransitionPage(
@@ -696,80 +423,503 @@ GoRoute(
 ),
 ```
 
+**リダイレクトロジック**:
+```dart
+redirect: (context, state) async {
+  final tutorialCompleted = prefs.getBool('tutorial_completed') ?? false;
+  final isAuthenticated = FirebaseAuth.instance.currentUser != null;
+
+  // 未ログイン & チュートリアル未完了 → /first へ
+  if (!isAuthenticated && !tutorialCompleted) {
+    return '/first';
+  }
+
+  // ログイン済み & チュートリアル未完了 → /tutorial へ
+  if (isAuthenticated && !tutorialCompleted) {
+    return '/tutorial';
+  }
+
+  // チュートリアル完了済み → / (ホーム) へ
+  return null;
+}
+```
+
 ---
 
-### Q2: チュートリアルを再表示したい（デバッグ用）
+## 他機能との関係
 
-**方法1**: Providerのメソッドを使用
+Guide機能は、以下の4つのfeatureで使用されています。
+
+### 1. Home機能 (`lib/feature/home/`)
+
+**使用箇所**: `presentation/pages/daily_topic_home.dart`
 
 ```dart
+import 'package:tyarekyara/feature/guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import 'package:tyarekyara/feature/guide/presentaion/widgets/tutorial_dialog.dart';
+
+// ShowcaseViewでUI要素をハイライト
+TutorialShowcaseWrapper(
+  pageKey: 'home',
+  showcaseKey: _showcaseKey,
+  child: SomeWidget(),
+);
+
+// ヘルプボタンからボトムシート表示
+IconButton(
+  icon: Icon(Icons.help_outline),
+  onPressed: () => TutorialBottomSheet.show(context, 'home'),
+);
+```
+
+### 2. Statistics機能 (`lib/feature/statistics/`)
+
+**使用箇所**: `presentation/pages/statistic.dart`
+
+```dart
+// 統計画面のチュートリアル
+TutorialShowcaseWrapper(
+  pageKey: 'statistics',
+  showcaseKey: _showcaseKey,
+  child: StatisticsContent(),
+);
+
+TutorialBottomSheet.show(context, 'statistics');
+```
+
+### 3. Challenge機能 (`lib/feature/challenge/`)
+
+**使用箇所**: `presentaion/pages/challenge.dart`
+
+```dart
+// チャレンジ画面のチュートリアル
+TutorialShowcaseWrapper(
+  pageKey: 'challenge',
+  showcaseKey: _showcaseKey,
+  child: ChallengeContent(),
+);
+
+TutorialBottomSheet.show(context, 'challenge');
+```
+
+### 4. Debate機能 (`lib/feature/debate/`)
+
+**使用箇所**: `presentation/pages/debate_event_list_page.dart`
+
+```dart
+// ディベート画面のチュートリアル
+TutorialShowcaseWrapper(
+  pageKey: 'debate',
+  showcaseKey: _showcaseKey,
+  child: DebateContent(),
+);
+
+TutorialBottomSheet.show(context, 'debate');
+```
+
+---
+
+## 使用例
+
+### 初回チュートリアルの完了チェック
+
+```dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tyarekyara/feature/guide/providers/tutorial_provider.dart';
+
+class SomeWidget extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tutorialCompleted = ref.watch(tutorialCompletedProvider);
+
+    return tutorialCompleted.when(
+      data: (completed) {
+        if (completed) {
+          return HomeScreen();
+        } else {
+          return TutorialPage();
+        }
+      },
+      loading: () => CircularProgressIndicator(),
+      error: (err, stack) => ErrorWidget(err),
+    );
+  }
+}
+```
+
+### ページ内チュートリアルの実装
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:tyarekyara/feature/guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
+import 'package:tyarekyara/feature/guide/presentaion/widgets/tutorial_dialog.dart';
+
+class NewFeaturePage extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<NewFeaturePage> createState() => _NewFeaturePageState();
+}
+
+class _NewFeaturePageState extends ConsumerState<NewFeaturePage> {
+  final GlobalKey _showcaseKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    return ShowCaseWidget(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: Text('新機能'),
+          actions: [
+            // ヘルプボタン
+            IconButton(
+              icon: Icon(Icons.help_outline),
+              onPressed: () {
+                TutorialBottomSheet.show(context, 'new_feature');
+              },
+            ),
+          ],
+        ),
+        body: TutorialShowcaseWrapper(
+          pageKey: 'new_feature',
+          showcaseKey: _showcaseKey,
+          child: YourContent(
+            child: Showcase(
+              key: _showcaseKey,
+              title: '重要な機能',
+              description: 'この機能を使うと○○ができます',
+              child: ElevatedButton(
+                onPressed: () {},
+                child: Text('アクション'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 新しいページのチュートリアルデータ追加
+
+**1. `models/page_tutorial_data.dart` にデータ追加**:
+
+```dart
+class PageTutorialData {
+  static const Map<String, List<TutorialStep>> tutorials = {
+    // 既存のチュートリアル...
+
+    // 新しいページのチュートリアル
+    'new_feature': [
+      TutorialStep(
+        title: '1. 機能の選択',
+        description: 'まず使いたい機能を選択します',
+        imagePath: 'assets/images/tutorial/new_feature/step1.png',
+      ),
+      TutorialStep(
+        title: '2. 設定の調整',
+        description: '必要に応じて設定を調整できます',
+        imagePath: 'assets/images/tutorial/new_feature/step2.png',
+      ),
+    ],
+  };
+}
+```
+
+**2. 画面で使用**:
+
+```dart
+TutorialBottomSheet.show(context, 'new_feature');
+```
+
+---
+
+## 拡張方法
+
+### 1. 初回チュートリアルにページを追加
+
+**難易度**: ⭐ (簡単)
+
+`models/tutorial_item.dart` の `TutorialData.items` に追加:
+
+```dart
+class TutorialData {
+  static const List<TutorialItem> items = [
+    // 既存のアイテム...
+
+    // 新規追加
+    TutorialItem(
+      title: '新機能',
+      subtitle: '新しく追加された機能',
+      description: 'この新機能を使うと○○ができます',
+      icon: Icons.new_releases,
+      primaryColor: Color(0xFF00BCD4),
+      secondaryColor: Color(0xFF0097A7),
+      bulletPoints: [
+        '機能1の説明',
+        '機能2の説明',
+        '機能3の説明',
+      ],
+      imagePath: 'assets/images/onboarding/new_feature.png',
+      showImage: true,
+    ),
+  ];
+}
+```
+
+**自動的に**:
+- ページが追加される
+- PageIndicatorが更新される
+- スワイプナビゲーションが動作する
+
+### 2. ページ内チュートリアルのカスタマイズ
+
+**難易度**: ⭐⭐ (中級)
+
+**ShowcaseViewのカスタマイズ**:
+
+```dart
+Showcase(
+  key: _showcaseKey,
+  title: 'カスタムタイトル',
+  description: 'カスタム説明文',
+  targetShapeBorder: CircleBorder(),  // ハイライト形状
+  tooltipBackgroundColor: Colors.blue,
+  textColor: Colors.white,
+  targetBorderRadius: BorderRadius.circular(16),
+  child: YourWidget(),
+)
+```
+
+**複数の要素をハイライト**:
+
+```dart
+final _showcaseKeys = [
+  GlobalKey(),
+  GlobalKey(),
+  GlobalKey(),
+];
+
+// 表示開始
+ShowCaseWidget.of(context).startShowCase(_showcaseKeys);
+```
+
+### 3. チュートリアル完了後のアクション
+
+**難易度**: ⭐⭐ (中級)
+
+```dart
+class TutorialNotifier extends Notifier<int> {
+  Future<void> completeTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('tutorial_completed', true);
+
+    // カスタムアクション
+    // 例: 初回ボーナスポイントを付与
+    await _grantWelcomeBonus();
+
+    // 例: アナリティクスイベント送信
+    await _trackTutorialCompletion();
+
+    ref.invalidate(tutorialCompletedProvider);
+  }
+
+  Future<void> _grantWelcomeBonus() async {
+    // ボーナスポイント付与処理
+  }
+
+  Future<void> _trackTutorialCompletion() async {
+    // アナリティクス送信処理
+  }
+}
+```
+
+### 4. バージョン管理によるチュートリアル再表示
+
+**難易度**: ⭐⭐⭐ (上級)
+
+アプリ更新時に新機能のチュートリアルを表示する:
+
+```dart
+class TutorialNotifier extends Notifier<int> {
+  static const String currentVersion = '2.0.0';
+
+  Future<bool> shouldShowTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool('tutorial_completed') ?? false;
+    final lastVersion = prefs.getString('tutorial_version') ?? '0.0.0';
+
+    // 未完了、またはバージョンが古い場合
+    return !completed || lastVersion != currentVersion;
+  }
+
+  Future<void> completeTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('tutorial_completed', true);
+    await prefs.setString('tutorial_version', currentVersion);
+    ref.invalidate(tutorialCompletedProvider);
+  }
+}
+```
+
+---
+
+## トラブルシューティング
+
+### Q1: チュートリアルが表示されない
+
+**原因1**: ルーティングの問題
+
+**解決策**:
+```dart
+// app_router.dart を確認
+GoRoute(
+  path: '/first',
+  pageBuilder: (context, state) => const NoTransitionPage(
+    child: FirstPage(),
+  ),
+),
+GoRoute(
+  path: '/tutorial',
+  pageBuilder: (context, state) => const NoTransitionPage(
+    child: TutorialPage(),
+  ),
+),
+```
+
+**原因2**: 既に完了済み
+
+**解決策**:
+```dart
+// チュートリアルをリセット
+final prefs = await SharedPreferences.getInstance();
+await prefs.setBool('tutorial_completed', false);
+
+// または
 await ref.read(tutorialNotifierProvider.notifier).resetTutorial();
 ```
 
-**方法2**: SharedPreferencesを直接操作
+---
 
+### Q2: ShowcaseViewが表示されない
+
+**原因**: ShowCaseWidgetでラップされていない
+
+**解決策**:
 ```dart
-final prefs = await SharedPreferences.getInstance();
-await prefs.remove('tutorial_completed');
+// ページ全体をShowCaseWidgetでラップ
+ShowCaseWidget(
+  builder: (context) => YourPage(),
+)
 ```
 
-**方法3**: アプリデータを削除（最終手段）
+**原因**: GlobalKeyが重複している
+
+**解決策**:
+```dart
+// 各Showcaseに固有のGlobalKeyを使用
+final _showcaseKey1 = GlobalKey();
+final _showcaseKey2 = GlobalKey();
+final _showcaseKey3 = GlobalKey();
+```
+
+---
+
+### Q3: 画像が表示されない
+
+**原因**: assets の登録忘れ
+
+**解決策**:
+```yaml
+# pubspec.yaml
+flutter:
+  assets:
+    - assets/images/onboarding/
+    - assets/images/tutorial/home/
+    - assets/images/tutorial/statistics/
+    - assets/images/tutorial/challenge/
+    - assets/images/tutorial/debate/
+```
+
+**原因**: パスの間違い
+
+**解決策**:
+```dart
+// 正しいパス
+imagePath: 'assets/images/onboarding/icon.png',
+
+// 間違い
+imagePath: '/assets/images/onboarding/icon.png',  // 先頭の / は不要
+imagePath: 'assets/images/onboarding/icon',       // 拡張子が必要
+```
+
+---
+
+### Q4: ページ内チュートリアルが毎回表示される
+
+**原因**: markTutorialShownが呼ばれていない
+
+**解決策**:
+```dart
+// TutorialShowcaseWrapperを使用（自動でマークされる）
+TutorialShowcaseWrapper(
+  pageKey: 'your_page',
+  showcaseKey: _showcaseKey,
+  child: YourContent(),
+);
+
+// 手動でマークする場合
+ref.read(pageTutorialProvider.notifier).markTutorialShown('your_page');
+```
+
+---
+
+### Q5: リセット方法（開発・デバッグ用）
+
+**初回チュートリアルのリセット**:
+```dart
+// Provider経由
+await ref.read(tutorialNotifierProvider.notifier).resetTutorial();
+
+// SharedPreferences直接操作
+final prefs = await SharedPreferences.getInstance();
+await prefs.setBool('tutorial_completed', false);
+```
+
+**ページ内チュートリアルのリセット**:
+```dart
+// 特定のページ
+await ref.read(pageTutorialProvider.notifier).resetTutorial('home');
+
+// 全ページ
+await ref.read(pageTutorialProvider.notifier).resetAllTutorials();
+
+// SharedPreferences直接操作
+final prefs = await SharedPreferences.getInstance();
+await prefs.remove('tutorial_shown_home');
+```
+
+**アプリデータの完全リセット**:
 - iOS: アプリを削除して再インストール
 - Android: 設定 > アプリ > データを削除
 
 ---
 
-### Q3: ページインジケーターの色が変わらない
-
-**原因**: `activeColor` が正しく渡されていない
-
-**解決策**:
-
-```dart
-PageIndicator(
-  currentPage: currentPage,
-  totalPages: _tutorialItems.length,
-  activeColor: _tutorialItems[currentPage].primaryColor,  // ← 現在のページの色
-  inactiveColor: Colors.grey[300]!,
-)
-```
-
----
-
-### Q4: 画像を追加したい
-
-**現在のTutorialItemモデルでは画像フィールドがありません。**
-
-**解決策**: [拡張方法 #3](#3-カスタムウィジェットを追加) を参照
-
----
-
-### Q5: ページ数が多すぎる場合の対処
-
-**推奨**: 5-7ページ程度に抑える
-
-**多い場合の対策**:
-1. **グループ化**: 関連する機能をまとめる
-2. **省略**: 重要な機能に絞る
-3. **分割**: 基本チュートリアルと詳細チュートリアルに分ける
-
-```dart
-// 基本チュートリアル（必須）
-static const List<TutorialItem> basicItems = [
-  // 3-5ページ
-];
-
-// 詳細チュートリアル（オプション）
-static const List<TutorialItem> advancedItems = [
-  // 追加の説明
-];
-```
-
----
-
 ## ベストプラクティス
 
-### 1. テキストは簡潔に
+### 1. チュートリアルの長さ
+
+**初回チュートリアル**:
+- 推奨: 5-7ページ
+- 最大: 10ページまで
+- 各ページ: 30秒以内で読める量
+
+**ページ内チュートリアル**:
+- 推奨: 3-5ステップ
+- 最大: 7ステップまで
+
+### 2. テキストの簡潔さ
 
 ❌ 悪い例:
 ```dart
@@ -783,128 +933,54 @@ description: 'このアプリケーションでは、様々な機能を利用す
 description: 'プロフィールを設定して\nアプリを始めましょう！'
 ```
 
-### 2. 1ページに1つのコンセプト
+### 3. 視覚的階層
 
-各ページは1つの機能や概念に集中させる。
+```dart
+// タイトル: 大きく太字
+fontSize: 32,
+fontWeight: FontWeight.bold,
 
-### 3. 視覚的な階層
+// サブタイトル: 中程度
+fontSize: 20,
+fontWeight: FontWeight.w600,
 
-- **タイトル**: 大きく太字（32px）
-- **説明文**: 中程度（18px）
-- **補足**: 小さく（14px）
+// 説明文: 標準
+fontSize: 18,
+height: 1.6,
 
-### 4. 色使いのガイドライン
+// 補足: 小さめ
+fontSize: 14,
+color: Colors.grey[600],
+```
 
-- **暖色系**（赤・オレンジ）: アクション、重要な機能
-- **寒色系**（青・緑）: 情報、安全な操作
-- **紫系**: 特別な機能、プレミアム
-- **黄色系**: 注意、新機能
-
-### 5. アクセシビリティ
+### 4. アクセシビリティ
 
 ```dart
 // コントラスト比を確保
 primaryColor: Color(0xFF1976D2),  // 十分な濃さ
-textColor: Colors.white,           // 背景とのコントラスト
+textColor: Colors.white,          // 背景とのコントラスト
 
 // 読みやすいフォントサイズ
 fontSize: 18,  // 最小でも16px以上推奨
+
+// タップ領域を十分に確保
+minWidth: 48,
+minHeight: 48,
 ```
 
----
+### 5. パフォーマンス最適化
 
-## パフォーマンス最適化
-
-### 1. 画像の最適化
-
-もし画像を追加する場合:
+**画像の最適化**:
 - サイズ: 最大1024x1024
 - 形式: WebP推奨（軽量）
 - 圧縮: 品質80-90%
 
-### 2. アニメーションの軽量化
-
+**アニメーション**:
 ```dart
-// 過度なアニメーションは避ける
-duration: const Duration(milliseconds: 300),  // 適度な速さ
+// 適度な速さ
+duration: const Duration(milliseconds: 300),
+curve: Curves.easeInOut,
 ```
-
-### 3. 遅延読み込み
-
-必要に応じて画像を遅延読み込み:
-
-```dart
-FadeInImage.memoryNetwork(
-  placeholder: kTransparentImage,
-  image: imageUrl,
-)
-```
-
----
-
-## テスト
-
-### 単体テスト例
-
-```dart
-void main() {
-  test('TutorialNotifier starts at page 0', () {
-    final container = ProviderContainer();
-    final notifier = container.read(tutorialNotifierProvider);
-    expect(notifier, 0);
-  });
-
-  test('nextPage increments page', () {
-    final container = ProviderContainer();
-    container.read(tutorialNotifierProvider.notifier).nextPage();
-    final page = container.read(tutorialNotifierProvider);
-    expect(page, 1);
-  });
-}
-```
-
-### ウィジェットテスト例
-
-```dart
-testWidgets('TutorialCard displays title and description', (tester) async {
-  const item = TutorialItem(
-    title: 'Test Title',
-    description: 'Test Description',
-    icon: Icons.star,
-    primaryColor: Colors.blue,
-    secondaryColor: Colors.lightBlue,
-  );
-
-  await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(
-        body: TutorialCard(item: item),
-      ),
-    ),
-  );
-
-  expect(find.text('Test Title'), findsOneWidget);
-  expect(find.text('Test Description'), findsOneWidget);
-});
-```
-
----
-
-## まとめ
-
-### チュートリアル機能の拡張は簡単
-
-1. **新しいページを追加**: `TutorialData.items` にアイテムを追加するだけ
-2. **内容を変更**: 既存のアイテムを編集するだけ
-3. **色を変更**: `primaryColor`と`secondaryColor`を変更するだけ
-
-### 推奨される拡張順序
-
-1. まず内容を決定（テキスト、アイコン）
-2. 次に色を決定（ブランドカラーに合わせる）
-3. 必要に応じてカスタムウィジェットを追加
-4. ユーザーテストを実施
-5. フィードバックに基づいて改善
 
 ---
 
@@ -914,14 +990,23 @@ testWidgets('TutorialCard displays title and description', (tester) async {
 - [Flutter PageView](https://api.flutter.dev/flutter/widgets/PageView-class.html)
 - [Riverpod Documentation](https://riverpod.dev/)
 - [SharedPreferences](https://pub.dev/packages/shared_preferences)
+- [ShowcaseView](https://pub.dev/packages/showcaseview)
 
 ---
 
 ## 変更履歴
 
-### v1.0.0 (2025-01-XX)
+### v2.0.0 (2025-01-XX)
+- ページ内チュートリアル機能を追加
+- ShowcaseView統合
+- TutorialBottomSheet追加
+- PageTutorialDataモデル追加
+- 4つの機能画面（home, statistics, challenge, debate）で使用開始
 
+### v1.0.0 (2025-01-XX)
 - 初版リリース
 - 基本的なチュートリアル機能
-- 5ページのモックコンテンツ
+- FirstPage追加
+- TutorialPage実装
+- 9ページのチュートリアルコンテンツ
 - SharedPreferencesによる永続化
