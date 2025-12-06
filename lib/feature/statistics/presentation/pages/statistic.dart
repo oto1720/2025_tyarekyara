@@ -64,6 +64,15 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
                 ),
               ),
               actions: [
+                // リロードボタン
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+                  onPressed: () {
+                    debugPrint('🔄 統計データをリロード中（ゲストモード）...');
+                    ref.read(statisticsNotifierProvider.notifier).loadUserStatistics('guest');
+                  },
+                  tooltip: 'データを再読み込み',
+                ),
                 Showcase(
                   key: _helpButtonKey,
                   title: '操作ガイド',
@@ -226,6 +235,18 @@ class _StatisticPageState extends ConsumerState<StatisticPage> {
               ),
             ),
             actions: [
+              // リロードボタン
+              IconButton(
+                icon: const Icon(Icons.refresh, color: AppColors.textPrimary),
+                onPressed: () {
+                  debugPrint('🔄 統計データをリロード中...');
+                  if (_loadedUserId != null && _loadedUserId != 'guest') {
+                    ref.read(statisticsNotifierProvider.notifier).loadUserStatistics(_loadedUserId!);
+                    ref.read(badgeNotifierProvider.notifier).loadEarnedBadges(_loadedUserId!);
+                  }
+                },
+                tooltip: 'データを再読み込み',
+              ),
               Showcase(
                 key: _helpButtonKey,
                 title: '操作ガイド',
