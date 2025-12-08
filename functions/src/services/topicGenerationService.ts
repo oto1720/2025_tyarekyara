@@ -43,21 +43,31 @@ const DIFFICULTY_LABELS: Record<TopicDifficulty, string> = {
  * トピックテキストをAIで生成
  * @param {TopicCategory} category トピックカテゴリ
  * @param {TopicDifficulty} difficulty トピック難易度
+ * @param {string[]} avoidTopics 避けるべきトピック（重複防止用）
  * @return {Promise<string>} 生成されたトピックテキスト
  */
 export async function generateTopicText(
   category: TopicCategory,
-  difficulty: TopicDifficulty
+  difficulty: TopicDifficulty,
+  avoidTopics: string[] = []
 ): Promise<string> {
   const generativeModel = vertexAI.getGenerativeModel({
     model: MODEL_CONFIG.model,
     generationConfig: {
-      temperature: MODEL_CONFIG.temperature,
+      temperature: 0.7, // 多様性を高めるために上げる
       maxOutputTokens: MODEL_CONFIG.maxOutputTokens,
       topP: MODEL_CONFIG.topP,
       topK: MODEL_CONFIG.topK,
     },
   });
+
+  // 避けるべきトピックリストを整形
+  const avoidTopicsSection = avoidTopics.length > 0 ? `
+
+## 避けるべきトピック（これらと似た内容は生成しないでください）
+以下のトピックとは異なる、新しいトピックを生成してください：
+${avoidTopics.map((topic, index) => `${index + 1}. ${topic}`).join("\n")}
+` : "";
 
   const prompt = `あなたは議論を促すトピックを生成するアシスタントです。
 
@@ -85,7 +95,7 @@ export async function generateTopicText(
 - 「宇宙人は存在するか？」（事実確認で立場が取りにくい）
 
 ## カテゴリ: ${CATEGORY_LABELS[category]}
-## 難易度: ${DIFFICULTY_LABELS[difficulty]}
+## 難易度: ${DIFFICULTY_LABELS[difficulty]}${avoidTopicsSection}
 
 ## 出力形式
 トピックのみを出力してください。説明や前置きは不要です。`;
@@ -256,11 +266,13 @@ export async function fetchRelatedNews(
  * 完全なトピックを生成
  * @param {TopicCategory} category トピックカテゴリ（省略可）
  * @param {TopicDifficulty} difficulty トピック難易度（省略可）
+ * @param {Topic[]} existingTopics 既存のトピック（重複防止用）
  * @return {Promise<Topic>} 生成されたトピック
  */
 export async function generateTopic(
   category?: TopicCategory,
-  difficulty?: TopicDifficulty
+  difficulty?: TopicDifficulty,
+  existingTopics: Topic[] = []
 ): Promise<Topic> {
   // ランダムにカテゴリと難易度を選択（指定がない場合）
   const selectedCategory = category ||
@@ -276,10 +288,14 @@ export async function generateTopic(
   logger.info(`Generating topic - Category: ${selectedCategory}, ` +
     `Difficulty: ${selectedDifficulty}`);
 
+  // 既存のトピックテキストを抽出
+  const avoidTopics = existingTopics.map((t) => t.text);
+
   // 1. トピックテキストを生成
   const topicText = await generateTopicText(
     selectedCategory,
-    selectedDifficulty
+    selectedDifficulty,
+    avoidTopics
   );
   logger.info(`Generated topic text: ${topicText}`);
 
@@ -331,12 +347,12 @@ export async function generateMultipleTopics(
   let retries = 0;
 
   while (topics.length < count && retries < maxRetries) {
-    const topic = await generateTopic();
+    // 既存のトピック + これまでに生成したトピックを避けるリストとして渡す
+    const allExistingTopics = existingTopics.concat(topics);
+    const topic = await generateTopic(undefined, undefined, allExistingTopics);
 
     // 高度な重複チェック
-    const allExistingTexts = existingTopics
-      .concat(topics)
-      .map((t) => t.text);
+    const allExistingTexts = allExistingTopics.map((t) => t.text);
     const duplicateCheck = findDuplicates(topic.text, allExistingTexts, 0.75);
 
     if (!duplicateCheck.hasDuplicates) {
@@ -403,12 +419,19 @@ export async function generateSmartTopic(
   // 5. トピック生成（重複チェック付き）
   const maxRetries = 5;
   let retries = 0;
+  const rejectedTopics: Topic[] = []; // リトライ時に重複判定されたトピックを蓄積
 
   while (retries < maxRetries) {
-    const topic = await generateTopic(finalCategory, finalDifficulty);
+    // 既存のトピック + これまでに重複判定されたトピックを避けるリストとして渡す
+    const allExistingTopics = existingTopics.concat(rejectedTopics);
+    const topic = await generateTopic(
+      finalCategory,
+      finalDifficulty,
+      allExistingTopics
+    );
 
     // 高度な重複検出を実施
-    const existingTexts = existingTopics.map((t) => t.text);
+    const existingTexts = allExistingTopics.map((t) => t.text);
     const duplicateCheck = findDuplicates(topic.text, existingTexts, 0.75);
 
     if (!duplicateCheck.hasDuplicates) {
@@ -427,10 +450,14 @@ export async function generateSmartTopic(
       duplicates: duplicateCheck.duplicates.length,
     });
 
+    // 重複判定されたトピックを記録（次回のリトライで避ける）
+    rejectedTopics.push(topic);
+
     retries++;
   }
 
   // 最大試行回数に達した場合でも最後に生成したものを返す
   logger.warn("Max retries reached, using last generated topic");
-  return generateTopic(finalCategory, finalDifficulty);
+  const allExistingTopics = existingTopics.concat(rejectedTopics);
+  return generateTopic(finalCategory, finalDifficulty, allExistingTopics);
 }
