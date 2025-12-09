@@ -14,6 +14,7 @@ import '../../../auth/providers/auth_provider.dart';
 import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/keyboard_dismisser.dart';
 
 /// ディベートルーム画面
 class DebateRoomPage extends ConsumerStatefulWidget {
@@ -151,7 +152,8 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     // イベント情報を取得
     final eventAsync = ref.watch(eventDetailProvider(match.eventId));
 
-    return Scaffold(
+    return KeyboardDismisser(
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
         automaticallyImplyLeading: false, // 戻るボタンを非表示
@@ -225,6 +227,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -835,12 +838,13 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
     final seconds = _remainingSeconds % 60;
     final isWarning = _remainingSeconds <= 10;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('お試しディベート'),
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
+    return KeyboardDismisser(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('お試しディベート'),
+          automaticallyImplyLeading: false,
+        ),
+        body: Column(
         children: [
           // ヘッダー部分
           Container(
@@ -980,6 +984,7 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

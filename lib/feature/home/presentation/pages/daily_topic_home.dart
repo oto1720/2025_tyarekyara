@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
+import 'package:tyarekyara/core/widgets/keyboard_dismisser.dart';
 import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
 import '../../providers/opinion_provider.dart';
@@ -64,9 +65,10 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
       builder: (context) => TutorialShowcaseWrapper(
         pageKey: 'home',
         showcaseKey: _helpButtonKey,
-        child: Scaffold(
-          backgroundColor: AppColors.surface,
-      appBar: AppBar(
+        child: KeyboardDismisser(
+          child: Scaffold(
+            backgroundColor: AppColors.surface,
+        appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
@@ -142,6 +144,7 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
         ],
       ),
       body: _buildBody(state, notifier),
+          ),
         ),
       ),
     );

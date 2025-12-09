@@ -4,6 +4,7 @@ import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
+import 'package:tyarekyara/core/widgets/keyboard_dismisser.dart';
 
 class ChallengeDetailPage extends StatefulWidget {
   // どのチャレンジかを受け取るためのID
@@ -31,9 +32,10 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return KeyboardDismisser(
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 16.0),
             child: Column(
@@ -449,6 +451,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
           ),
         ),
       ),
+    ),
     );
   }
 
