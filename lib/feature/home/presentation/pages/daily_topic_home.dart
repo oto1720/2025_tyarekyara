@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../models/opinion.dart';
 import '../../providers/daily_topic_provider.dart';
@@ -24,9 +25,23 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
   final TextEditingController _opinionController = TextEditingController();
   String? _selectedStance;
   final GlobalKey _helpButtonKey = GlobalKey();
+  bool _isGuestMode = false;
 
   final int _minLength = 100;
   final int _maxLength = 3000;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkGuestMode();
+  }
+
+  Future<void> _checkGuestMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isGuestMode = prefs.getBool('is_guest_mode') ?? false;
+    });
+  }
 
   @override
   void dispose() {
@@ -111,10 +126,11 @@ class _DailyTopicHomeScreenState extends ConsumerState<DailyTopicHomeScreen> {
               tooltip: '操作ガイド',
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
-          ),
+          if (!_isGuestMode)
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () => context.push('/settings'),
+            ),
           // リロードボタン（管理者用）
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.textPrimary),

@@ -113,6 +113,10 @@ final GoRouter router = GoRouter(
       if (currentPath == '/first' || currentPath == '/tutorial') {
         return '/';
       }
+      // ゲストモードでは設定画面にアクセスできない
+      if (currentPath == '/settings') {
+        return '/';
+      }
       return null; // ゲストでもメインアプリにアクセス可能
     }
 

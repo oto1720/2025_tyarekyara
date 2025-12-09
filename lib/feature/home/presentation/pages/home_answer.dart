@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/opinion.dart';
 import '../../models/topic.dart';
 import '../../providers/opinion_provider.dart';
@@ -13,7 +14,7 @@ import '../../../report/presentation/widgets/report_dialog.dart';
 import '../../../block/providers/block_providers.dart';
 
 /// 意見一覧画面
-class OpinionListScreen extends ConsumerWidget {
+class OpinionListScreen extends ConsumerStatefulWidget {
   final String topicId;
 
   const OpinionListScreen({
@@ -22,7 +23,27 @@ class OpinionListScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OpinionListScreen> createState() => _OpinionListScreenState();
+}
+
+class _OpinionListScreenState extends ConsumerState<OpinionListScreen> {
+  bool _isGuestMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkGuestMode();
+  }
+
+  Future<void> _checkGuestMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isGuestMode = prefs.getBool('is_guest_mode') ?? false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedDate = ref.watch(selectedDateProvider);
     final topicAsync = ref.watch(topicByDateProvider(selectedDate));
 
@@ -65,10 +86,11 @@ class OpinionListScreen extends ConsumerWidget {
             orElse: () => const SizedBox.shrink(),
           ),
           // 設定ボタン
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.black87),
-            onPressed: () => context.push('/settings'),
-          ),
+          if (!_isGuestMode)
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.black87),
+              onPressed: () => context.push('/settings'),
+            ),
         ],
       ),
       body: topicAsync.when(
