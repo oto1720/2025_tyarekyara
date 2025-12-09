@@ -266,7 +266,7 @@ class NotificationService {
 
     await _notifications.zonedSchedule(
       0, // 通知ID
-      'チャレキャラ', // 通知タイトル
+      'Critica', // 通知タイトル
       settings.message, // 通知本文
       scheduledDate,
       NotificationDetails(
@@ -300,7 +300,7 @@ class NotificationService {
   Future<void> showTestNotification(String message) async {
     await _notifications.show(
       999, // テスト通知用ID
-      'チャレキャラ',
+      'Critica',
       message,
       const NotificationDetails(
         android: AndroidNotificationDetails(

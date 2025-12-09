@@ -190,10 +190,16 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
 
   /// ユーザーが既に投稿しているか確認
   Future<void> checkUserOpinion() async {
-    // ゲストモードの場合はスキップ（ゲストは複数回投稿可能）
+    // ゲストモードの場合、SharedPreferencesで投稿済みかチェック
     final prefs = await SharedPreferences.getInstance();
     final isGuest = prefs.getBool('is_guest_mode') ?? false;
-    if (isGuest) return;
+    if (isGuest) {
+      final hasPostedKey = 'guest_posted_topic_$topicId';
+      final hasGuestPosted = prefs.getBool(hasPostedKey) ?? false;
+
+      state = state.copyWith(hasPosted: hasGuestPosted);
+      return;
+    }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -270,6 +276,11 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
       );
 
       await repository.postOpinion(opinion);
+
+      // ゲストモードの場合、投稿済みフラグをSharedPreferencesに保存
+      if (isGuest) {
+        await prefs.setBool('guest_posted_topic_$topicId', true);
+      }
 
       state = state.copyWith(
         isPosting: false,
