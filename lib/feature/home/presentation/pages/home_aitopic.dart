@@ -1,14 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/topic.dart';
 import '../../providers/topic_generation_provider.dart';
 import '../../repositories/ai_repository.dart';
 
-class AITopicHomeScreen extends ConsumerWidget {
+class AITopicHomeScreen extends ConsumerStatefulWidget {
   const AITopicHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AITopicHomeScreen> createState() => _AITopicHomeScreenState();
+}
+
+class _AITopicHomeScreenState extends ConsumerState<AITopicHomeScreen> {
+  bool _isGuestMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkGuestMode();
+  }
+
+  Future<void> _checkGuestMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isGuestMode = prefs.getBool('is_guest_mode') ?? false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(topicGenerationProvider);
     final notifier = ref.read(topicGenerationProvider.notifier);
     final aiProvider = ref.watch(aiProviderProvider);
