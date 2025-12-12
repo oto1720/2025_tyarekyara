@@ -30,7 +30,7 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
   Widget build(BuildContext context) {
     debugPrint('📄 DebateEntryPage build called for event: ${widget.eventId}');
     final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
     final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(widget.eventId));
 
     return unlockedAsync.when(
@@ -55,10 +55,8 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
                 return _buildNotFound(context);
               }
 
-              final userId = authState.maybeWhen(
-                authenticated: (user) => user.id,
-                orElse: () => null,
-              );
+              final user = authStateAsync.value;
+              final userId = user?.uid;
 
               if (userId == null) {
                 return _buildNotAuthenticated(context);
@@ -84,10 +82,8 @@ class _DebateEntryPageState extends ConsumerState<DebateEntryPage> {
               return _buildNotFound(context);
             }
 
-            final userId = authState.maybeWhen(
-              authenticated: (user) => user.id,
-              orElse: () => null,
-            );
+            final user = authStateAsync.value;
+            final userId = user?.uid;
 
             if (userId == null) {
               return _buildNotAuthenticated(context);

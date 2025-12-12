@@ -14,11 +14,9 @@ class DebateStatsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authControllerProvider);
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final authStateAsync = ref.watch(authStateChangesProvider);
+    final user = authStateAsync.value;
+    final userId = user?.uid;
 
     if (userId == null) {
       return _buildNotAuthenticated();

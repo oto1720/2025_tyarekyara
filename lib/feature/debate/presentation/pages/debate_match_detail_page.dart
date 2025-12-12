@@ -29,6 +29,7 @@ class DebateMatchDetailPage extends ConsumerStatefulWidget {
 
 class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
   Timer? _countdownTimer;
+  bool _hasNavigatedToRoom = false; // 遷移済みフラグ
 
   @override
   void initState() {
@@ -50,7 +51,31 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
   @override
   Widget build(BuildContext context) {
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
+
+    // マッチ情報を取得してroomIdがあるかチェック
+    final match = matchAsync.value;
+    final roomId = match?.roomId;
+
+    // ルームIDが存在する場合、ルームのステータス変化を監視
+    if (roomId != null) {
+      ref.listen(roomDetailProvider(roomId), (previous, next) {
+        next.whenData((room) {
+          if (room != null &&
+              room.status == RoomStatus.inProgress &&
+              !_hasNavigatedToRoom) {
+            _hasNavigatedToRoom = true;
+            debugPrint('🚀 [MatchDetail] ルームがアクティブになりました。遷移します。');
+            debugPrint('   Room status: ${room.status}');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.pushReplacement('/debate/room/${match!.id}');
+              }
+            });
+          }
+        });
+      });
+    }
 
     return Scaffold(
       body: SafeArea(
@@ -60,10 +85,8 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
               return _buildNotFound(context);
             }
 
-            final userId = authState.maybeWhen(
-              authenticated: (user) => user.id,
-              orElse: () => null,
-            );
+            final user = authStateAsync.value;
+            final userId = user?.uid;
 
             return _buildMatchDetail(context, match, userId);
           },
@@ -80,24 +103,6 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
     DebateMatch match,
     String? userId,
   ) {
-    // ルーム状態を監視してアクティブになったら自動遷移
-    if (match.roomId != null) {
-      final roomAsync = ref.watch(roomDetailProvider(match.roomId!));
-
-      roomAsync.whenData((room) {
-        if (room != null && room.status == RoomStatus.inProgress) {
-          // ルームがアクティブ → ディベート画面へ自動遷移
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (context.mounted) {
-              Navigator.of(context).pushReplacementNamed(
-                '/debate/room/${match.id}',
-              );
-            }
-          });
-        }
-      });
-    }
-
     // イベント情報を取得（開始時刻を確認するため）
     final eventAsync = ref.watch(eventDetailProvider(match.eventId));
 
@@ -715,13 +720,9 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
     final isReady = match.readyUsers.contains(userId);
     final allReady = allParticipants.every((id) => match.readyUsers.contains(id));
 
-    // 全員準備完了の場合、自動的にディベート開始
+    // 全員準備完了の場合、待機中メッセージを表示
+    // 実際の画面遷移はref.listenで行う（build内で副作用を起こさない）
     if (allReady && match.roomId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.push('/debate/room/${match.id}');
-        }
-      });
       return Center(
         child: Column(
           children: [

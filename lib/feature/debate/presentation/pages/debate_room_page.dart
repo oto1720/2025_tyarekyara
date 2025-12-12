@@ -14,7 +14,12 @@ import '../../../auth/providers/auth_provider.dart';
 import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/keyboard_dismisser.dart';
+
+// 1秒ごとに更新を通知するためのシンプルなStreamProvider
+// これを監視することで、UIを毎秒再描画させることができる
+final _tickerProvider = StreamProvider.autoDispose<int>((ref) {
+  return Stream.periodic(const Duration(seconds: 1), (i) => i);
+});
 
 /// ディベートルーム画面
 class DebateRoomPage extends ConsumerStatefulWidget {
@@ -32,11 +37,22 @@ class DebateRoomPage extends ConsumerStatefulWidget {
 class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentTabIndex = 0; // 独立した状態変数
+  bool _hasNavigatedToJudgment = false; // 判定画面への遷移済みフラグ
+  bool _hasNavigatedToResult = false; // 結果画面への遷移済みフラグ
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: _currentTabIndex);
+    _tabController.addListener(() {
+      if (mounted && _tabController.index != _currentTabIndex) {
+        setState(() {
+          _currentTabIndex = _tabController.index;
+          debugPrint('🔄 [TabController] Index changed to: $_currentTabIndex');
+        });
+      }
+    });
   }
 
   @override
@@ -63,12 +79,10 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     }
 
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
 
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final user = authStateAsync.value;
+    final userId = user?.uid;
 
     if (userId == null) {
       return _buildNotAuthenticated(context);
@@ -105,8 +119,9 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     DebateMatch match,
     String userId,
   ) {
-    // 判定フェーズに入ったら判定待機画面へ遷移
-    if (room.currentPhase == DebatePhase.judgment) {
+    // 判定フェーズに入ったら判定待機画面へ遷移（一度だけ）
+    if (room.currentPhase == DebatePhase.judgment && !_hasNavigatedToJudgment) {
+      _hasNavigatedToJudgment = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           debugPrint('🎯 判定フェーズ開始！判定待機画面へ遷移');
@@ -125,10 +140,11 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       );
     }
 
-    // 結果フェーズに入ったら結果画面へ遷移
-    if (room.currentPhase == DebatePhase.result ||
+    // 結果フェーズに入ったら結果画面へ遷移（一度だけ）
+    if ((room.currentPhase == DebatePhase.result ||
         room.currentPhase == DebatePhase.completed ||
-        room.status == RoomStatus.completed) {
+        room.status == RoomStatus.completed) && !_hasNavigatedToResult) {
+      _hasNavigatedToResult = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           debugPrint('🎯 結果フェーズ開始！結果画面へ遷移');
@@ -148,19 +164,29 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     }
 
     final myStance = room.participantStances[userId];
+    debugPrint('🎭 [DebateRoom] userId: $userId, myStance: $myStance');
+    debugPrint('🎭 [DebateRoom] participantStances: ${room.participantStances}');
 
     // イベント情報を取得
     final eventAsync = ref.watch(eventDetailProvider(match.eventId));
 
-    return KeyboardDismisser(
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
         automaticallyImplyLeading: false, // 戻るボタンを非表示
+        actions: [
+          // トピック表示ボタン
+          if (eventAsync.value != null)
+            IconButton(
+              icon: const Icon(Icons.topic),
+              tooltip: 'トピックを表示',
+              onPressed: () => _showTopicDialog(context, eventAsync.value!),
+            ),
+        ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(70),
+          preferredSize: const Size.fromHeight(50),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.surface,
               border: Border(
@@ -171,10 +197,10 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
                     child: Row(
@@ -182,16 +208,16 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                         Icon(
                           Icons.play_circle_outline,
                           color: AppColors.primary,
-                          size: 20,
+                          size: 16,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             room.currentPhase.displayName,
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -215,19 +241,21 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
           const Divider(height: 1),
           _buildTabBar(),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPublicChat(room, userId),
-                if (myStance != null)
-                  _buildTeamChat(room, userId, myStance)
-                else
-                  const Center(child: Text('チャットに参加できません')),
-              ],
+            child: _DebateChatArea(
+              key: ValueKey('chat_area_${room.id}'),
+              roomId: room.id,
+              userId: userId,
+              myStance: myStance,
+              currentTabIndex: _currentTabIndex,
+              onTabChanged: (index) {
+                setState(() {
+                  _currentTabIndex = index;
+                  _tabController.index = index;
+                });
+              },
             ),
           ),
         ],
-      ),
       ),
     );
   }
@@ -240,55 +268,11 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     DebateEvent? event,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: AppColors.surface,
       child: Column(
         children: [
-          // トピック表示
-          if (event != null) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.topic,
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '今日のトピック',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    event.topic,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
+          // トピックはAppBarのボタンから表示
           Row(
             children: [
               Expanded(
@@ -300,15 +284,16 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.compare_arrows, size: 32),
-                    const SizedBox(height: 4),
+                    const Icon(Icons.compare_arrows, size: 20),
+                    const SizedBox(height: 2),
                     Text(
                       'VS',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
                       ),
@@ -326,7 +311,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           PhaseProgressBar(currentPhase: room.currentPhase),
         ],
       ),
@@ -343,46 +328,47 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     final isMyTeam = team.memberIds.contains(userId);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: isMyTeam ? color.withValues(alpha: 0.2) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isMyTeam ? color : Colors.grey[300]!,
           width: isMyTeam ? 2 : 1,
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (isMyTeam)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'あなたのチーム',
+                'あなた',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          if (isMyTeam) const SizedBox(height: 8),
+          if (isMyTeam) const SizedBox(height: 4),
           Icon(
             team.stance == DebateStance.pro
                 ? Icons.thumb_up
                 : Icons.thumb_down,
             color: color,
-            size: 24,
+            size: 18,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -409,6 +395,17 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textTertiary,
         indicatorColor: AppColors.primary,
+        onTap: (index) {
+          debugPrint('🔵 [TabBar] タブがタップされました: $index');
+          debugPrint('   現在のindex: $_currentTabIndex');
+          if (_currentTabIndex != index) {
+            setState(() {
+              _currentTabIndex = index;
+              _tabController.index = index;
+            });
+            debugPrint('   更新後のindex: $_currentTabIndex');
+          }
+        },
         tabs: const [
           Tab(
             icon: Icon(Icons.public),
@@ -428,17 +425,22 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return DebateChatWidget(
       roomId: room.id,
       userId: userId,
-      currentPhase: room.currentPhase,
       messageType: MessageType.public,
     );
   }
 
   /// チームチャット
-  Widget _buildTeamChat(DebateRoom room, String userId, DebateStance stance) {
+  Widget _buildTeamChat(DebateRoom room, String userId, DebateStance? stance) {
+    debugPrint('🏗️ [_buildTeamChat] Called with stance: $stance');
+    // stanceがnullの場合はチームチャットを表示しない
+    if (stance == null) {
+      debugPrint('   ⚠️ stance is null, showing error message');
+      return const Center(child: Text('チームに参加していません'));
+    }
+    debugPrint('   ✅ Creating DebateChatWidget with MessageType.team');
     return DebateChatWidget(
       roomId: room.id,
       userId: userId,
-      currentPhase: room.currentPhase,
       messageType: MessageType.team,
       stance: stance, // チームのスタンスを渡してフィルタリング
     );
@@ -502,6 +504,61 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// トピック表示ダイアログ
+  void _showTopicDialog(BuildContext context, DebateEvent event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.topic, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text('トピック'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.topic,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (event.description.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                '詳細',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                event.description,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('閉じる'),
+          ),
+        ],
       ),
     );
   }
@@ -597,8 +654,8 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   }
 }
 
-/// フェーズタイマーWidget（ルームの変更を監視）
-class _PhaseTimerWidget extends StatefulWidget {
+/// フェーズタイマーWidget（setStateを使わず、ConsumerWidgetで効率的に更新）
+class _PhaseTimerWidget extends ConsumerWidget {
   final DebateRoom room;
   final DebateMatch match;
 
@@ -608,106 +665,37 @@ class _PhaseTimerWidget extends StatefulWidget {
   });
 
   @override
-  State<_PhaseTimerWidget> createState() => _PhaseTimerWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 毎秒の更新をトリガーするために _tickerProvider を watch する
+    // tickerProviderはautoDisposeなので、このWidgetが表示されている間だけ動作する
+    ref.watch(_tickerProvider);
 
-class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
-  late int _remainingSeconds;
-  Timer? _timer;
+    // --- 残り秒数を計算するロジック ---
+    final int remainingSeconds;
+    final maxDuration = match.duration == DebateDuration.short
+        ? room.currentPhase.shortDuration
+        : room.currentPhase.mediumDuration;
 
-  @override
-  void initState() {
-    super.initState();
-    _updateRemainingTime();
-    _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(_PhaseTimerWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // フェーズが変わったらタイマーをリセット
-    if (oldWidget.room.currentPhase != widget.room.currentPhase ||
-        oldWidget.room.phaseStartedAt != widget.room.phaseStartedAt ||
-        oldWidget.room.phaseTimeRemaining != widget.room.phaseTimeRemaining) {
-      debugPrint('🔄 タイマーリセット: phase=${widget.room.currentPhase.name}, phaseStartedAt=${widget.room.phaseStartedAt?.toString() ?? "null"}');
-      _updateRemainingTime();
-      // タイマーを再起動
-      _startTimer();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _updateRemainingTime() {
-    // フェーズの最大時間を取得
-    final maxDuration = widget.match.duration == DebateDuration.short
-        ? widget.room.currentPhase.shortDuration
-        : widget.room.currentPhase.mediumDuration;
-    
-    if (widget.room.phaseStartedAt != null) {
-      // phaseStartedAtから経過時間を計算
+    if (room.phaseStartedAt != null) {
       final now = DateTime.now();
-      final phaseStart = widget.room.phaseStartedAt!;
+      final phaseStart = room.phaseStartedAt!;
       final elapsed = now.difference(phaseStart).inSeconds;
-      
-      // 残り時間を計算
       final remaining = maxDuration - elapsed;
-      _remainingSeconds = remaining > 0 ? remaining : 0;
-      
-      debugPrint('⏱️ タイマー更新: phaseStartedAt=${phaseStart.toString()}, elapsed=$elapsed秒, maxDuration=$maxDuration秒, remaining=$_remainingSeconds秒');
+      remainingSeconds = remaining > 0 ? remaining : 0;
     } else {
-      // phaseStartedAtがない場合は、phaseTimeRemainingを使用（0の場合は最大時間を使用）
-      if (widget.room.phaseTimeRemaining > 0) {
-        _remainingSeconds = widget.room.phaseTimeRemaining;
+      if (room.phaseTimeRemaining > 0) {
+        remainingSeconds = room.phaseTimeRemaining;
       } else {
-        // phaseTimeRemainingが0の場合は、フェーズの最大時間を使用
-        _remainingSeconds = maxDuration;
+        remainingSeconds = maxDuration;
       }
-      
-      debugPrint('⏱️ タイマー更新: phaseStartedAt=null, phaseTimeRemaining=${widget.room.phaseTimeRemaining}, maxDuration=$maxDuration, using=$_remainingSeconds秒');
     }
-  }
+    // --- 計算ロジックここまで ---
 
-  void _startTimer() {
-    _timer?.cancel();
-    
-    if (_remainingSeconds <= 0) {
-      debugPrint('⚠️ タイマー開始スキップ: 残り時間が0以下です ($_remainingSeconds秒)');
-      return;
-    }
-    
-    debugPrint('▶️ タイマー開始: $_remainingSeconds秒');
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      
-      setState(() {
-        if (_remainingSeconds > 0) {
-          _remainingSeconds--;
-          if (_remainingSeconds % 10 == 0 || _remainingSeconds <= 5) {
-            debugPrint('⏱️ タイマー: $_remainingSeconds秒');
-          }
-        } else {
-          timer.cancel();
-          debugPrint('⏰ タイマー終了');
-          // タイマー終了時はFirestoreの更新を待つ（Cloud Functionsが処理）
-        }
-      });
-    });
-  }
+    final minutes = remainingSeconds ~/ 60;
+    final seconds = remainingSeconds % 60;
+    final isWarning = remainingSeconds <= 10;
 
-  @override
-  Widget build(BuildContext context) {
-    final minutes = _remainingSeconds ~/ 60;
-    final seconds = _remainingSeconds % 60;
-    final isWarning = _remainingSeconds <= 10;
-
+    // --- UI表示部分 ---
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -733,6 +721,7 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     );
   }
 }
+
 
 /// ゲスト用のモックディベートルームWidget
 class _GuestMockDebateRoom extends StatefulWidget {
@@ -838,8 +827,7 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
     final seconds = _remainingSeconds % 60;
     final isWarning = _remainingSeconds <= 10;
 
-    return KeyboardDismisser(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('お試しディベート'),
           automaticallyImplyLeading: false,
@@ -985,7 +973,6 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
           ),
         ],
       ),
-      ),
     );
   }
 
@@ -1053,4 +1040,63 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
     );
   }
 
+}
+
+/// チャットエリア（再構築から隔離されたStatefulWidget）
+class _DebateChatArea extends StatefulWidget {
+  final String roomId;
+  final String userId;
+  final DebateStance? myStance;
+  final int currentTabIndex;
+  final Function(int) onTabChanged;
+
+  const _DebateChatArea({
+    super.key,
+    required this.roomId,
+    required this.userId,
+    required this.myStance,
+    required this.currentTabIndex,
+    required this.onTabChanged,
+  });
+
+  @override
+  State<_DebateChatArea> createState() => _DebateChatAreaState();
+}
+
+class _DebateChatAreaState extends State<_DebateChatArea> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixinのために必要
+
+    debugPrint('📊 [_DebateChatArea] Building - currentTabIndex: ${widget.currentTabIndex}');
+
+    final children = [
+      DebateChatWidget(
+        key: ValueKey('public_chat_${widget.roomId}'),
+        roomId: widget.roomId,
+        userId: widget.userId,
+        messageType: MessageType.public,
+      ),
+      widget.myStance != null
+          ? DebateChatWidget(
+              key: ValueKey('team_chat_${widget.roomId}'),
+              roomId: widget.roomId,
+              userId: widget.userId,
+              messageType: MessageType.team,
+              stance: widget.myStance,
+            )
+          : const Center(
+              key: ValueKey('no_team'),
+              child: Text('チームに参加できません'),
+            ),
+    ];
+
+    return IndexedStack(
+      index: widget.currentTabIndex,
+      children: children,
+    );
+  }
 }

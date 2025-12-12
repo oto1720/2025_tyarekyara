@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../models/debate_match.dart';
+import '../../models/debate_room.dart';
 import '../../providers/debate_match_provider.dart';
 import '../../providers/debate_room_provider.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -52,62 +53,35 @@ class _DebateJudgmentWaitingPageState
       }
     });
 
-    // 判定結果の監視
-    _watchJudgmentResult();
-  }
-
-  @override
-  void dispose() {
-    _progressController.dispose();
-    _pulseController.dispose();
-    _checkTimer?.cancel();
-    super.dispose();
-  }
-
-  /// 判定結果を監視
-  void _watchJudgmentResult() {
-    // 定期的に判定結果をチェック
-    Timer.periodic(const Duration(seconds: 2), (timer) async {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      // キャッシュを無効化して最新データを取得
-      ref.invalidate(judgmentResultProvider(widget.matchId));
-
-      try {
-        final judgment = await ref.read(judgmentResultProvider(widget.matchId).future);
-        if (judgment != null && mounted) {
-          timer.cancel();
-          // 判定結果画面へ遷移
-          context.pushReplacement('/debate/result/${widget.matchId}');
-        }
-      } catch (e) {
-        // エラーの場合は次のポーリングで再試行
-        debugPrint('判定結果取得エラー: $e');
-      }
-    });
+    // 判定結果の監視は ref.listen で行うため、このメソッドは不要
+    // _watchJudgmentResult();
   }
 
   @override
   Widget build(BuildContext context) {
-    final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
-    final roomAsync = ref.watch(debateRoomByMatchProvider(widget.matchId));
-
-    // ルームのフェーズを監視して結果フェーズになったら遷移
-    roomAsync.whenData((room) {
-      if (room != null &&
-          (room.currentPhase.name == 'result' ||
-           room.currentPhase.name == 'completed')) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            debugPrint('🎯 結果フェーズに変更！結果画面へ遷移');
-            context.pushReplacement('/debate/result/${widget.matchId}');
+    // ref.listen を使って、状態の変化を一度だけ捕捉して画面遷移する
+    ref.listen<AsyncValue<DebateRoom?>>(
+      debateRoomByMatchProvider(widget.matchId),
+      (previous, next) {
+        // データがあり、かつロード中でないことを確認
+        if (next.hasValue && !next.isLoading) {
+          final room = next.value;
+          if (room != null &&
+              (room.currentPhase == DebatePhase.result ||
+                  room.currentPhase == DebatePhase.completed)) {
+            
+            // 遷移がまだ行われていないことを確認（念のため）
+            final currentPath = GoRouterState.of(context).uri.path;
+            if (currentPath != '/debate/result/${widget.matchId}') {
+              debugPrint('🎯 結果フェーズに変化したため、結果画面へ遷移します');
+              context.pushReplacement('/debate/result/${widget.matchId}');
+            }
           }
-        });
-      }
-    });
+        }
+      },
+    );
+
+    final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -32,11 +32,9 @@ class _DebateRankingPageState extends ConsumerState<DebateRankingPage>
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final authStateAsync = ref.watch(authStateChangesProvider);
+    final user = authStateAsync.value;
+    final userId = user?.uid;
 
     return Scaffold(
       appBar: AppBar(
