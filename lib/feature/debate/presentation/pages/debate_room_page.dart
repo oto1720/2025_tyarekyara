@@ -174,10 +174,19 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       appBar: AppBar(
         title: const Text('ディベートルーム'),
         automaticallyImplyLeading: false, // 戻るボタンを非表示
+        actions: [
+          // トピック表示ボタン
+          if (eventAsync.value != null)
+            IconButton(
+              icon: const Icon(Icons.topic),
+              tooltip: 'トピックを表示',
+              onPressed: () => _showTopicDialog(context, eventAsync.value!),
+            ),
+        ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(70),
+          preferredSize: const Size.fromHeight(50),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: AppColors.surface,
               border: Border(
@@ -188,10 +197,10 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                     ),
                     child: Row(
@@ -199,16 +208,16 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                         Icon(
                           Icons.play_circle_outline,
                           color: AppColors.primary,
-                          size: 20,
+                          size: 16,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             room.currentPhase.displayName,
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontSize: 12,
                             ),
                           ),
                         ),
@@ -259,55 +268,11 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     DebateEvent? event,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       color: AppColors.surface,
       child: Column(
         children: [
-          // トピック表示
-          if (event != null) ...[
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.topic,
-                        color: AppColors.primary,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '今日のトピック',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    event.topic,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
+          // トピックはAppBarのボタンから表示
           Row(
             children: [
               Expanded(
@@ -319,15 +284,16 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.compare_arrows, size: 32),
-                    const SizedBox(height: 4),
+                    const Icon(Icons.compare_arrows, size: 20),
+                    const SizedBox(height: 2),
                     Text(
                       'VS',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[700],
                       ),
@@ -345,7 +311,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           PhaseProgressBar(currentPhase: room.currentPhase),
         ],
       ),
@@ -362,46 +328,47 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     final isMyTeam = team.memberIds.contains(userId);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: isMyTeam ? color.withValues(alpha: 0.2) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isMyTeam ? color : Colors.grey[300]!,
           width: isMyTeam ? 2 : 1,
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (isMyTeam)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
-                'あなたのチーム',
+                'あなた',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          if (isMyTeam) const SizedBox(height: 8),
+          if (isMyTeam) const SizedBox(height: 4),
           Icon(
             team.stance == DebateStance.pro
                 ? Icons.thumb_up
                 : Icons.thumb_down,
             color: color,
-            size: 24,
+            size: 18,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -537,6 +504,61 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// トピック表示ダイアログ
+  void _showTopicDialog(BuildContext context, DebateEvent event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.topic, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text('トピック'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.topic,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            if (event.description.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                '詳細',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                event.description,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('閉じる'),
+          ),
+        ],
       ),
     );
   }
