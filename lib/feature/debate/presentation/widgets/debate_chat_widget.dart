@@ -261,6 +261,9 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
                   ),
                   counterText: '',
                 ),
+                onTap: () {
+                  debugPrint('⌨️ [TextField] タップされました');
+                },
                 onSubmitted: (_) => _sendMessage(),
               ),
             ),

@@ -38,7 +38,7 @@ class DebateEventDetailPage extends ConsumerWidget {
     }
 
     final eventAsync = ref.watch(eventDetailProvider(eventId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
     final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(eventId));
 
     return Scaffold(
@@ -48,20 +48,32 @@ class DebateEventDetailPage extends ConsumerWidget {
             return _buildNotFound(context);
           }
 
-          final userId = authState.maybeWhen(
-            authenticated: (user) => user.id,
-            orElse: () => null,
-          );
+          final user = authStateAsync.value;
+          final userId = user?.uid;
+          debugPrint('🔐 [EventDetail] Firebase Auth User: ${user?.uid ?? "null"}');
+          debugPrint('🔐 [EventDetail] final userId: $userId');
 
           return unlockedAsync.when(
             data: (unlocked) {
+              debugPrint('🔓 [EventDetail] unlocked: $unlocked');
+              debugPrint('🔓 [EventDetail] eventId: ${event.id}');
+              debugPrint('🔓 [EventDetail] userId: $userId');
+
               if (!unlocked) {
+                debugPrint('🔒 [EventDetail] ロックビューを表示');
                 return _buildLockedView(context);
               }
+              debugPrint('✅ [EventDetail] イベント詳細を表示');
               return _buildEventDetail(context, ref, event, userId);
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => _buildEventDetail(context, ref, event, userId),
+            loading: () {
+              debugPrint('⏳ [EventDetail] unlockedAsync loading...');
+              return const Center(child: CircularProgressIndicator());
+            },
+            error: (error, stack) {
+              debugPrint('❌ [EventDetail] unlockedAsync error: $error');
+              return _buildEventDetail(context, ref, event, userId);
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -452,6 +464,11 @@ class DebateEventDetailPage extends ConsumerWidget {
 
     return entryAsync.when(
       data: (entry) {
+        debugPrint('📋 [EntrySection] eventId: ${event.id}, userId: $userId');
+        debugPrint('📋 [EntrySection] entry: ${entry != null ? "存在する (status: ${entry.status})" : "null"}');
+        debugPrint('📋 [EntrySection] event.status: ${event.status}');
+        debugPrint('📋 [EntrySection] _canEntry: ${_canEntry(event)}');
+
         if (entry != null) {
           // マッチング成立チェック - マッチ詳細画面へ自動遷移
           if (entry.status == MatchStatus.matched && entry.matchId != null) {

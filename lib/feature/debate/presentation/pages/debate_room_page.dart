@@ -14,7 +14,6 @@ import '../../../auth/providers/auth_provider.dart';
 import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/keyboard_dismisser.dart';
 
 /// ディベートルーム画面
 class DebateRoomPage extends ConsumerStatefulWidget {
@@ -63,12 +62,10 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     }
 
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
 
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final user = authStateAsync.value;
+    final userId = user?.uid;
 
     if (userId == null) {
       return _buildNotAuthenticated(context);
@@ -152,8 +149,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     // イベント情報を取得
     final eventAsync = ref.watch(eventDetailProvider(match.eventId));
 
-    return KeyboardDismisser(
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text('ディベートルーム'),
         automaticallyImplyLeading: false, // 戻るボタンを非表示
@@ -227,7 +223,6 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
             ),
           ),
         ],
-      ),
       ),
     );
   }
@@ -409,6 +404,9 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textTertiary,
         indicatorColor: AppColors.primary,
+        onTap: (index) {
+          debugPrint('🔵 [TabBar] タブがタップされました: $index');
+        },
         tabs: const [
           Tab(
             icon: Icon(Icons.public),
@@ -838,8 +836,7 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
     final seconds = _remainingSeconds % 60;
     final isWarning = _remainingSeconds <= 10;
 
-    return KeyboardDismisser(
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           title: const Text('お試しディベート'),
           automaticallyImplyLeading: false,
@@ -984,7 +981,6 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
             ),
           ),
         ],
-      ),
       ),
     );
   }

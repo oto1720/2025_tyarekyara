@@ -58,11 +58,9 @@ class _DebateWaitingRoomPageState extends ConsumerState<DebateWaitingRoomPage>
   @override
   Widget build(BuildContext context) {
     debugPrint('🔄 DebateWaitingRoomPage build called');
-    final authState = ref.watch(authControllerProvider);
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final authStateAsync = ref.watch(authStateChangesProvider);
+    final user = authStateAsync.value;
+    final userId = user?.uid;
     debugPrint('👤 UserId: $userId');
 
     if (userId == null) {

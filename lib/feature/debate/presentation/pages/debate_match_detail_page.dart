@@ -50,7 +50,7 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
   @override
   Widget build(BuildContext context) {
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -60,10 +60,8 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
               return _buildNotFound(context);
             }
 
-            final userId = authState.maybeWhen(
-              authenticated: (user) => user.id,
-              orElse: () => null,
-            );
+            final user = authStateAsync.value;
+            final userId = user?.uid;
 
             return _buildMatchDetail(context, match, userId);
           },
