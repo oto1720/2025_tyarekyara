@@ -11,7 +11,6 @@ import '../../../auth/providers/auth_provider.dart';
 class DebateChatWidget extends ConsumerStatefulWidget {
   final String roomId;
   final String userId;
-  final DebatePhase currentPhase;
   final MessageType messageType;
   final DebateStance? stance; // チームメッセージ用のスタンス
 
@@ -19,7 +18,6 @@ class DebateChatWidget extends ConsumerStatefulWidget {
     super.key,
     required this.roomId,
     required this.userId,
-    required this.currentPhase,
     this.messageType = MessageType.public,
     this.stance,
   });
@@ -28,20 +26,26 @@ class DebateChatWidget extends ConsumerStatefulWidget {
   ConsumerState<DebateChatWidget> createState() => _DebateChatWidgetState();
 }
 
-class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
+class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with AutomaticKeepAliveClientMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   bool _isSending = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin のために必要
     // チームメッセージの場合はstanceでフィルタリング
     final messagesAsync = widget.messageType == MessageType.team && widget.stance != null
         ? ref.watch(teamMessagesWithStanceProvider((widget.roomId, widget.stance!)))
@@ -231,64 +235,91 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
 
   /// 入力エリア
   Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[300]!),
+    return GestureDetector(
+      onTap: () {
+        // 入力エリア全体がタップされたときにフォーカスを要求
+        if (!_focusNode.hasFocus) {
+          debugPrint('🎯 [InputArea] タップされました。フォーカスを要求します');
+          _focusNode.requestFocus();
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Colors.grey[300]!),
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                maxLines: null,
-                maxLength: 200,
-                decoration: InputDecoration(
-                  hintText: 'メッセージを入力...',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 120,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    maxLines: null,
+                    minLines: 1,
+                    maxLength: 200,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    scrollPhysics: const BouncingScrollPhysics(),
+                    decoration: InputDecoration(
+                      hintText: 'メッセージを入力...',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      counterText: '',
+                    ),
+                    onTap: () {
+                      debugPrint('⌨️ [TextField] タップされました');
+                      // フォーカスを明示的に要求
+                      if (!_focusNode.hasFocus) {
+                        _focusNode.requestFocus();
+                      }
+                    },
+                    onSubmitted: (_) {
+                      // TextInputAction.newlineのため、Enterキーで改行される
+                      // 送信は送信ボタンのみで行う
+                    },
                   ),
-                  counterText: '',
                 ),
-                onTap: () {
-                  debugPrint('⌨️ [TextField] タップされました');
-                },
-                onSubmitted: (_) => _sendMessage(),
               ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.send, color: Colors.white),
+                  onPressed: _isSending ? null : _sendMessage,
+                ),
               ),
-              child: IconButton(
-                icon: _isSending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.send, color: Colors.white),
-                onPressed: _isSending ? null : _sendMessage,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -298,6 +329,20 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
   Future<void> _sendMessage() async {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isSending) return;
+
+    // 送信時にProviderから最新のルーム情報を取得
+    final room = ref.read(debateRoomByMatchProvider(widget.roomId)).value;
+    if (room == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ルーム情報の取得に失敗し、送信できませんでした。'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() {
       _isSending = true;
@@ -317,7 +362,7 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
         userId: widget.userId,
         content: content,
         type: widget.messageType,
-        phase: widget.currentPhase,
+        phase: room.currentPhase, // 最新のフェーズ情報を使用
         createdAt: DateTime.now(),
         userNickname: userNickname,
         senderStance: widget.stance,

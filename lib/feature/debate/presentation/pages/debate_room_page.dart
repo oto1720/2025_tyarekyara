@@ -15,6 +15,12 @@ import '../widgets/phase_indicator_widget.dart';
 import '../widgets/debate_chat_widget.dart';
 import '../../../../core/constants/app_colors.dart';
 
+// 1秒ごとに更新を通知するためのシンプルなStreamProvider
+// これを監視することで、UIを毎秒再描画させることができる
+final _tickerProvider = StreamProvider.autoDispose<int>((ref) {
+  return Stream.periodic(const Duration(seconds: 1), (i) => i);
+});
+
 /// ディベートルーム画面
 class DebateRoomPage extends ConsumerStatefulWidget {
   final String matchId;
@@ -213,6 +219,7 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
           Expanded(
             child: TabBarView(
               controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildPublicChat(room, userId),
                 if (myStance != null)
@@ -426,17 +433,19 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     return DebateChatWidget(
       roomId: room.id,
       userId: userId,
-      currentPhase: room.currentPhase,
       messageType: MessageType.public,
     );
   }
 
   /// チームチャット
-  Widget _buildTeamChat(DebateRoom room, String userId, DebateStance stance) {
+  Widget _buildTeamChat(DebateRoom room, String userId, DebateStance? stance) {
+    // stanceがnullの場合はチームチャットを表示しない
+    if (stance == null) {
+      return const Center(child: Text('チームに参加していません'));
+    }
     return DebateChatWidget(
       roomId: room.id,
       userId: userId,
-      currentPhase: room.currentPhase,
       messageType: MessageType.team,
       stance: stance, // チームのスタンスを渡してフィルタリング
     );
@@ -595,8 +604,8 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
   }
 }
 
-/// フェーズタイマーWidget（ルームの変更を監視）
-class _PhaseTimerWidget extends StatefulWidget {
+/// フェーズタイマーWidget（setStateを使わず、ConsumerWidgetで効率的に更新）
+class _PhaseTimerWidget extends ConsumerWidget {
   final DebateRoom room;
   final DebateMatch match;
 
@@ -606,106 +615,37 @@ class _PhaseTimerWidget extends StatefulWidget {
   });
 
   @override
-  State<_PhaseTimerWidget> createState() => _PhaseTimerWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 毎秒の更新をトリガーするために _tickerProvider を watch する
+    // tickerProviderはautoDisposeなので、このWidgetが表示されている間だけ動作する
+    ref.watch(_tickerProvider);
 
-class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
-  late int _remainingSeconds;
-  Timer? _timer;
+    // --- 残り秒数を計算するロジック ---
+    final int remainingSeconds;
+    final maxDuration = match.duration == DebateDuration.short
+        ? room.currentPhase.shortDuration
+        : room.currentPhase.mediumDuration;
 
-  @override
-  void initState() {
-    super.initState();
-    _updateRemainingTime();
-    _startTimer();
-  }
-
-  @override
-  void didUpdateWidget(_PhaseTimerWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // フェーズが変わったらタイマーをリセット
-    if (oldWidget.room.currentPhase != widget.room.currentPhase ||
-        oldWidget.room.phaseStartedAt != widget.room.phaseStartedAt ||
-        oldWidget.room.phaseTimeRemaining != widget.room.phaseTimeRemaining) {
-      debugPrint('🔄 タイマーリセット: phase=${widget.room.currentPhase.name}, phaseStartedAt=${widget.room.phaseStartedAt?.toString() ?? "null"}');
-      _updateRemainingTime();
-      // タイマーを再起動
-      _startTimer();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _updateRemainingTime() {
-    // フェーズの最大時間を取得
-    final maxDuration = widget.match.duration == DebateDuration.short
-        ? widget.room.currentPhase.shortDuration
-        : widget.room.currentPhase.mediumDuration;
-    
-    if (widget.room.phaseStartedAt != null) {
-      // phaseStartedAtから経過時間を計算
+    if (room.phaseStartedAt != null) {
       final now = DateTime.now();
-      final phaseStart = widget.room.phaseStartedAt!;
+      final phaseStart = room.phaseStartedAt!;
       final elapsed = now.difference(phaseStart).inSeconds;
-      
-      // 残り時間を計算
       final remaining = maxDuration - elapsed;
-      _remainingSeconds = remaining > 0 ? remaining : 0;
-      
-      debugPrint('⏱️ タイマー更新: phaseStartedAt=${phaseStart.toString()}, elapsed=$elapsed秒, maxDuration=$maxDuration秒, remaining=$_remainingSeconds秒');
+      remainingSeconds = remaining > 0 ? remaining : 0;
     } else {
-      // phaseStartedAtがない場合は、phaseTimeRemainingを使用（0の場合は最大時間を使用）
-      if (widget.room.phaseTimeRemaining > 0) {
-        _remainingSeconds = widget.room.phaseTimeRemaining;
+      if (room.phaseTimeRemaining > 0) {
+        remainingSeconds = room.phaseTimeRemaining;
       } else {
-        // phaseTimeRemainingが0の場合は、フェーズの最大時間を使用
-        _remainingSeconds = maxDuration;
+        remainingSeconds = maxDuration;
       }
-      
-      debugPrint('⏱️ タイマー更新: phaseStartedAt=null, phaseTimeRemaining=${widget.room.phaseTimeRemaining}, maxDuration=$maxDuration, using=$_remainingSeconds秒');
     }
-  }
+    // --- 計算ロジックここまで ---
 
-  void _startTimer() {
-    _timer?.cancel();
-    
-    if (_remainingSeconds <= 0) {
-      debugPrint('⚠️ タイマー開始スキップ: 残り時間が0以下です ($_remainingSeconds秒)');
-      return;
-    }
-    
-    debugPrint('▶️ タイマー開始: $_remainingSeconds秒');
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      
-      setState(() {
-        if (_remainingSeconds > 0) {
-          _remainingSeconds--;
-          if (_remainingSeconds % 10 == 0 || _remainingSeconds <= 5) {
-            debugPrint('⏱️ タイマー: $_remainingSeconds秒');
-          }
-        } else {
-          timer.cancel();
-          debugPrint('⏰ タイマー終了');
-          // タイマー終了時はFirestoreの更新を待つ（Cloud Functionsが処理）
-        }
-      });
-    });
-  }
+    final minutes = remainingSeconds ~/ 60;
+    final seconds = remainingSeconds % 60;
+    final isWarning = remainingSeconds <= 10;
 
-  @override
-  Widget build(BuildContext context) {
-    final minutes = _remainingSeconds ~/ 60;
-    final seconds = _remainingSeconds % 60;
-    final isWarning = _remainingSeconds <= 10;
-
+    // --- UI表示部分 ---
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -731,6 +671,7 @@ class _PhaseTimerWidgetState extends State<_PhaseTimerWidget> {
     );
   }
 }
+
 
 /// ゲスト用のモックディベートルームWidget
 class _GuestMockDebateRoom extends StatefulWidget {

@@ -87,7 +87,7 @@ class _DebateMatchDetailPageState extends ConsumerState<DebateMatchDetailPage> {
           // ルームがアクティブ → ディベート画面へ自動遷移
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
-              Navigator.of(context).pushReplacementNamed(
+              context.pushReplacement(
                 '/debate/room/${match.id}',
               );
             }
