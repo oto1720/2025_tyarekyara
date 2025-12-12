@@ -37,11 +37,22 @@ class DebateRoomPage extends ConsumerStatefulWidget {
 class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentTabIndex = 0; // 独立した状態変数
+  bool _hasNavigatedToJudgment = false; // 判定画面への遷移済みフラグ
+  bool _hasNavigatedToResult = false; // 結果画面への遷移済みフラグ
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: _currentTabIndex);
+    _tabController.addListener(() {
+      if (mounted && _tabController.index != _currentTabIndex) {
+        setState(() {
+          _currentTabIndex = _tabController.index;
+          debugPrint('🔄 [TabController] Index changed to: $_currentTabIndex');
+        });
+      }
+    });
   }
 
   @override
@@ -108,8 +119,9 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     DebateMatch match,
     String userId,
   ) {
-    // 判定フェーズに入ったら判定待機画面へ遷移
-    if (room.currentPhase == DebatePhase.judgment) {
+    // 判定フェーズに入ったら判定待機画面へ遷移（一度だけ）
+    if (room.currentPhase == DebatePhase.judgment && !_hasNavigatedToJudgment) {
+      _hasNavigatedToJudgment = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           debugPrint('🎯 判定フェーズ開始！判定待機画面へ遷移');
@@ -128,10 +140,11 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
       );
     }
 
-    // 結果フェーズに入ったら結果画面へ遷移
-    if (room.currentPhase == DebatePhase.result ||
+    // 結果フェーズに入ったら結果画面へ遷移（一度だけ）
+    if ((room.currentPhase == DebatePhase.result ||
         room.currentPhase == DebatePhase.completed ||
-        room.status == RoomStatus.completed) {
+        room.status == RoomStatus.completed) && !_hasNavigatedToResult) {
+      _hasNavigatedToResult = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           debugPrint('🎯 結果フェーズ開始！結果画面へ遷移');
@@ -151,6 +164,8 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
     }
 
     final myStance = room.participantStances[userId];
+    debugPrint('🎭 [DebateRoom] userId: $userId, myStance: $myStance');
+    debugPrint('🎭 [DebateRoom] participantStances: ${room.participantStances}');
 
     // イベント情報を取得
     final eventAsync = ref.watch(eventDetailProvider(match.eventId));
@@ -217,16 +232,18 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
           const Divider(height: 1),
           _buildTabBar(),
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildPublicChat(room, userId),
-                if (myStance != null)
-                  _buildTeamChat(room, userId, myStance)
-                else
-                  const Center(child: Text('チャットに参加できません')),
-              ],
+            child: _DebateChatArea(
+              key: ValueKey('chat_area_${room.id}'),
+              roomId: room.id,
+              userId: userId,
+              myStance: myStance,
+              currentTabIndex: _currentTabIndex,
+              onTabChanged: (index) {
+                setState(() {
+                  _currentTabIndex = index;
+                  _tabController.index = index;
+                });
+              },
             ),
           ),
         ],
@@ -413,6 +430,14 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
         indicatorColor: AppColors.primary,
         onTap: (index) {
           debugPrint('🔵 [TabBar] タブがタップされました: $index');
+          debugPrint('   現在のindex: $_currentTabIndex');
+          if (_currentTabIndex != index) {
+            setState(() {
+              _currentTabIndex = index;
+              _tabController.index = index;
+            });
+            debugPrint('   更新後のindex: $_currentTabIndex');
+          }
         },
         tabs: const [
           Tab(
@@ -439,10 +464,13 @@ class _DebateRoomPageState extends ConsumerState<DebateRoomPage>
 
   /// チームチャット
   Widget _buildTeamChat(DebateRoom room, String userId, DebateStance? stance) {
+    debugPrint('🏗️ [_buildTeamChat] Called with stance: $stance');
     // stanceがnullの場合はチームチャットを表示しない
     if (stance == null) {
+      debugPrint('   ⚠️ stance is null, showing error message');
       return const Center(child: Text('チームに参加していません'));
     }
+    debugPrint('   ✅ Creating DebateChatWidget with MessageType.team');
     return DebateChatWidget(
       roomId: room.id,
       userId: userId,
@@ -990,4 +1018,63 @@ class _GuestMockDebateRoomState extends State<_GuestMockDebateRoom> {
     );
   }
 
+}
+
+/// チャットエリア（再構築から隔離されたStatefulWidget）
+class _DebateChatArea extends StatefulWidget {
+  final String roomId;
+  final String userId;
+  final DebateStance? myStance;
+  final int currentTabIndex;
+  final Function(int) onTabChanged;
+
+  const _DebateChatArea({
+    super.key,
+    required this.roomId,
+    required this.userId,
+    required this.myStance,
+    required this.currentTabIndex,
+    required this.onTabChanged,
+  });
+
+  @override
+  State<_DebateChatArea> createState() => _DebateChatAreaState();
+}
+
+class _DebateChatAreaState extends State<_DebateChatArea> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixinのために必要
+
+    debugPrint('📊 [_DebateChatArea] Building - currentTabIndex: ${widget.currentTabIndex}');
+
+    final children = [
+      DebateChatWidget(
+        key: ValueKey('public_chat_${widget.roomId}'),
+        roomId: widget.roomId,
+        userId: widget.userId,
+        messageType: MessageType.public,
+      ),
+      widget.myStance != null
+          ? DebateChatWidget(
+              key: ValueKey('team_chat_${widget.roomId}'),
+              roomId: widget.roomId,
+              userId: widget.userId,
+              messageType: MessageType.team,
+              stance: widget.myStance,
+            )
+          : const Center(
+              key: ValueKey('no_team'),
+              child: Text('チームに参加できません'),
+            ),
+    ];
+
+    return IndexedStack(
+      index: widget.currentTabIndex,
+      children: children,
+    );
+  }
 }

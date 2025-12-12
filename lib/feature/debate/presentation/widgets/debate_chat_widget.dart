@@ -14,26 +14,25 @@ class DebateChatWidget extends ConsumerStatefulWidget {
   final MessageType messageType;
   final DebateStance? stance; // チームメッセージ用のスタンス
 
-  const DebateChatWidget({
+  DebateChatWidget({
     super.key,
     required this.roomId,
     required this.userId,
     this.messageType = MessageType.public,
     this.stance,
-  });
+  }) {
+    debugPrint('🎨 [DebateChatWidget] Constructor called with roomId: $roomId, messageType: $messageType');
+  }
 
   @override
   ConsumerState<DebateChatWidget> createState() => _DebateChatWidgetState();
 }
 
-class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with AutomaticKeepAliveClientMixin {
+class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   bool _isSending = false;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void dispose() {
@@ -45,7 +44,11 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // AutomaticKeepAliveClientMixin のために必要
+    debugPrint('🏗️ [DebateChatWidget] Building - messageType: ${widget.messageType}, stance: ${widget.stance}');
+
+    // ルーム情報を監視（メッセージ送信時に使用）
+    final roomAsync = ref.watch(roomDetailProvider(widget.roomId));
+
     // チームメッセージの場合はstanceでフィルタリング
     final messagesAsync = widget.messageType == MessageType.team && widget.stance != null
         ? ref.watch(teamMessagesWithStanceProvider((widget.roomId, widget.stance!)))
@@ -62,7 +65,7 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
             ),
           ),
         ),
-        _buildInputArea(),
+        _buildInputArea(roomAsync),
       ],
     );
   }
@@ -234,17 +237,11 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
   }
 
   /// 入力エリア
-  Widget _buildInputArea() {
-    return GestureDetector(
-      onTap: () {
-        // 入力エリア全体がタップされたときにフォーカスを要求
-        if (!_focusNode.hasFocus) {
-          debugPrint('🎯 [InputArea] タップされました。フォーカスを要求します');
-          _focusNode.requestFocus();
-        }
-      },
-      behavior: HitTestBehavior.opaque,
-      child: Container(
+  Widget _buildInputArea(AsyncValue<DebateRoom?> roomAsync) {
+    // ルームが読み込まれているかチェック
+    final canSend = roomAsync.hasValue && roomAsync.value != null;
+
+    return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -269,6 +266,8 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
                     keyboardType: TextInputType.multiline,
                     textInputAction: TextInputAction.newline,
                     scrollPhysics: const BouncingScrollPhysics(),
+                    enableInteractiveSelection: true,
+                    autofocus: false,
                     decoration: InputDecoration(
                       hintText: 'メッセージを入力...',
                       filled: true,
@@ -285,10 +284,14 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
                     ),
                     onTap: () {
                       debugPrint('⌨️ [TextField] タップされました');
-                      // フォーカスを明示的に要求
-                      if (!_focusNode.hasFocus) {
-                        _focusNode.requestFocus();
-                      }
+                      debugPrint('   フォーカス状態: ${_focusNode.hasFocus}');
+                      // フォーカスを明示的に要求（次のフレームで実行）
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && !_focusNode.hasFocus) {
+                          debugPrint('   フォーカスを要求します');
+                          _focusNode.requestFocus();
+                        }
+                      });
                     },
                     onSubmitted: (_) {
                       // TextInputAction.newlineのため、Enterキーで改行される
@@ -300,7 +303,7 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
               const SizedBox(width: 8),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: canSend ? Colors.blue : Colors.grey,
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
@@ -315,34 +318,24 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> with Automa
                           ),
                         )
                       : const Icon(Icons.send, color: Colors.white),
-                  onPressed: _isSending ? null : _sendMessage,
+                  onPressed: (_isSending || !canSend) ? null : () => _sendMessage(roomAsync.value!),
                 ),
               ),
             ],
           ),
         ),
-      ),
     );
   }
 
   /// メッセージ送信
-  Future<void> _sendMessage() async {
+  Future<void> _sendMessage(DebateRoom room) async {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isSending) return;
 
-    // 送信時にProviderから最新のルーム情報を取得
-    final room = ref.read(debateRoomByMatchProvider(widget.roomId)).value;
-    if (room == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('ルーム情報の取得に失敗し、送信できませんでした。'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      return;
-    }
+    debugPrint('📤 [SendMessage] Attempting to send message...');
+    debugPrint('   roomId: ${widget.roomId}');
+    debugPrint('   room.id: ${room.id}');
+    debugPrint('   currentPhase: ${room.currentPhase}');
 
     setState(() {
       _isSending = true;
