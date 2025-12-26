@@ -111,25 +111,25 @@ lib/feature/auth/
 ├── presentaion/                               # プレゼンテーション層（UI）
 │   ├── pages/
 │   │   ├── login.dart                         # ログイン画面
-│   │   │   └─ LoginPage (ConsumerStatefulWidget)
+│   │   │   └─ LoginPage (HookConsumerWidget) ✨
 │   │   │       ├─ 依存: authControllerProvider
 │   │   │       └─ 使用Widget: CustomTextField, CustomButton
 │   │   │
 │   │   ├── signup_page.dart                   # 新規登録画面
-│   │   │   └─ SignUpPage
+│   │   │   └─ SignUpPage (HookConsumerWidget) ✨
 │   │   │       ├─ 依存: authControllerProvider
 │   │   │       └─ フォームバリデーション
 │   │   │
 │   │   ├── profile_setup_page.dart            # プロフィール設定画面
-│   │   │   └─ ProfileSetupPage
+│   │   │   └─ ProfileSetupPage (HookConsumerWidget) ✨
 │   │   │       ├─ 依存: profileSetupProvider
 │   │   │       └─ 依存: authControllerProvider
 │   │   │
 │   │   ├── forgot_password_page.dart          # パスワードリセット画面
-│   │   │   └─ ForgotPasswordPage
+│   │   │   └─ ForgotPasswordPage (HookConsumerWidget) ✨
 │   │   │
 │   │   └── change_password_page.dart          # パスワード変更画面
-│   │       └─ ChangePasswordPage
+│   │       └─ ChangePasswordPage (HookConsumerWidget) ✨
 │   │
 │   └── widgets/                               # （現在は空）
 │
@@ -1270,7 +1270,9 @@ ElevatedButton(
 | `firebase_auth` | ^4.x.x | Firebase Authentication |
 | `cloud_firestore` | ^4.x.x | Cloud Firestore |
 | `firebase_storage` | ^11.x.x | Firebase Storage |
-| `flutter_riverpod` | ^2.x.x | 状態管理 |
+| `flutter_hooks` | ^0.20.x | React Hooks風の状態管理 |
+| `hooks_riverpod` | ^2.x.x | Flutter Hooks + Riverpod統合 |
+| `flutter_riverpod` | ^2.x.x | 状態管理（旧UI用） |
 | `freezed` | ^2.x.x | 不変データクラス |
 | `freezed_annotation` | ^2.x.x | Freezedアノテーション |
 | `json_annotation` | ^4.x.x | JSONシリアライゼーション |
@@ -1445,5 +1447,110 @@ await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
 
 ---
 
-**最終更新**: 2025年1月
+## 変更履歴
+
+### 2025年12月26日 - Flutter Hooks リファクタリング
+
+全ての認証画面を `ConsumerStatefulWidget` から `HookConsumerWidget` にリファクタリングしました。
+
+#### 変更されたファイル
+
+1. **lib/feature/auth/presentaion/pages/login.dart**
+2. **lib/feature/auth/presentaion/pages/signup_page.dart**
+3. **lib/feature/auth/presentaion/pages/profile_setup_page.dart**
+4. **lib/feature/auth/presentaion/pages/change_password_page.dart**
+5. **lib/feature/auth/presentaion/pages/forgot_password_page.dart**
+
+#### 主な変更内容
+
+**1. Widget クラスの変更**
+```dart
+// Before
+class LoginPage extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  // ...
+}
+
+// After
+class LoginPage extends HookConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ...
+  }
+}
+```
+
+**2. TextEditingController の管理**
+```dart
+// Before
+final _emailController = TextEditingController();
+
+@override
+void dispose() {
+  _emailController.dispose();
+  super.dispose();
+}
+
+// After
+final emailController = useTextEditingController();
+// 自動的にクリーンアップされる
+```
+
+**3. 状態管理の変更**
+```dart
+// Before
+bool _obscurePassword = true;
+
+setState(() {
+  _obscurePassword = !_obscurePassword;
+});
+
+// After
+final obscurePassword = useState(true);
+
+obscurePassword.value = !obscurePassword.value;
+```
+
+**4. GlobalKey の管理**
+```dart
+// Before
+final _formKey = GlobalKey<FormState>();
+
+// After
+final formKey = useMemoized(() => GlobalKey<FormState>());
+```
+
+**5. 命名規則の変更**
+- すべてのアンダースコアプレフィックス（`_`）を削除
+- 例: `_emailController` → `emailController`
+- 例: `_handleLogin()` → `handleLogin()`
+
+#### メリット
+
+✅ **自動リソース管理**: `dispose()` メソッドが不要になり、メモリリークのリスクが低減
+✅ **コードの簡潔化**: StatefulWidget のボイラープレートコードが削減
+✅ **可読性の向上**: ビジネスロジックと UI ロジックの分離が明確に
+✅ **保守性の向上**: 状態管理がより宣言的で追跡しやすい
+✅ **React 開発者にも親しみやすい**: React Hooks と同様の API
+
+#### 依存関係の追加
+
+```yaml
+dependencies:
+  flutter_hooks: 0.21.3
+  hooks_riverpod: 3.0.3
+```
+
+#### 検証結果
+
+- `flutter analyze` による静的解析: ✅ エラーなし
+- すべての認証ページが正常に動作することを確認
+
+---
+
+**最終更新**: 2025年12月26日
 **メンテナー**: 開発チーム

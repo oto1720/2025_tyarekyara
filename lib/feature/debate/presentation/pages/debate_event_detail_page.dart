@@ -12,7 +12,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/providers/debate_event_unlock_provider.dart';
 
 /// イベント詳細画面
-class DebateEventDetailPage extends ConsumerWidget {
+class DebateEventDetailPage extends ConsumerStatefulWidget {
   final String eventId;
 
   const DebateEventDetailPage({
@@ -21,9 +21,17 @@ class DebateEventDetailPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DebateEventDetailPage> createState() =>
+      _DebateEventDetailPageState();
+}
+
+class _DebateEventDetailPageState extends ConsumerState<DebateEventDetailPage> {
+  bool _hasNavigatedToMatch = false; // マッチ詳細画面への遷移済みフラグ
+
+  @override
+  Widget build(BuildContext context) {
     // ゲストモックイベントの場合
-    if (eventId == 'guest_mock_event') {
+    if (widget.eventId == 'guest_mock_event') {
       return FutureBuilder<bool>(
         future: SharedPreferences.getInstance()
             .then((prefs) => prefs.getBool('is_guest_mode') ?? false),
@@ -32,14 +40,14 @@ class DebateEventDetailPage extends ConsumerWidget {
           if (!isGuest) {
             return _buildNotFound(context);
           }
-          return _buildGuestMockEventDetail(context, ref);
+          return _buildGuestMockEventDetail(context);
         },
       );
     }
 
-    final eventAsync = ref.watch(eventDetailProvider(eventId));
-    final authState = ref.watch(authControllerProvider);
-    final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(eventId));
+    final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
+    final authStateAsync = ref.watch(authStateChangesProvider);
+    final unlockedAsync = ref.watch(isDebateEventUnlockedProvider(widget.eventId));
 
     return Scaffold(
       body: eventAsync.when(
@@ -48,20 +56,32 @@ class DebateEventDetailPage extends ConsumerWidget {
             return _buildNotFound(context);
           }
 
-          final userId = authState.maybeWhen(
-            authenticated: (user) => user.id,
-            orElse: () => null,
-          );
+          final user = authStateAsync.value;
+          final userId = user?.uid;
+          debugPrint('🔐 [EventDetail] Firebase Auth User: ${user?.uid ?? "null"}');
+          debugPrint('🔐 [EventDetail] final userId: $userId');
 
           return unlockedAsync.when(
             data: (unlocked) {
+              debugPrint('🔓 [EventDetail] unlocked: $unlocked');
+              debugPrint('🔓 [EventDetail] eventId: ${event.id}');
+              debugPrint('🔓 [EventDetail] userId: $userId');
+
               if (!unlocked) {
+                debugPrint('🔒 [EventDetail] ロックビューを表示');
                 return _buildLockedView(context);
               }
+              debugPrint('✅ [EventDetail] イベント詳細を表示');
               return _buildEventDetail(context, ref, event, userId);
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => _buildEventDetail(context, ref, event, userId),
+            loading: () {
+              debugPrint('⏳ [EventDetail] unlockedAsync loading...');
+              return const Center(child: CircularProgressIndicator());
+            },
+            error: (error, stack) {
+              debugPrint('❌ [EventDetail] unlockedAsync error: $error');
+              return _buildEventDetail(context, ref, event, userId);
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -71,7 +91,7 @@ class DebateEventDetailPage extends ConsumerWidget {
   }
 
   /// ゲスト用のモックイベント詳細を表示
-  Widget _buildGuestMockEventDetail(BuildContext context, WidgetRef ref) {
+  Widget _buildGuestMockEventDetail(BuildContext context) {
     final now = DateTime.now();
     final mockEvent = DebateEvent(
       id: 'guest_mock_event',
@@ -452,15 +472,27 @@ class DebateEventDetailPage extends ConsumerWidget {
 
     return entryAsync.when(
       data: (entry) {
+        debugPrint('📋 [EntrySection] eventId: ${event.id}, userId: $userId');
+        debugPrint('📋 [EntrySection] entry: ${entry != null ? "存在する (status: ${entry.status})" : "null"}');
+        debugPrint('📋 [EntrySection] event.status: ${event.status}');
+        debugPrint('📋 [EntrySection] _canEntry: ${_canEntry(event)}');
+
         if (entry != null) {
           // マッチング成立チェック - マッチ詳細画面へ自動遷移
-          if (entry.status == MatchStatus.matched && entry.matchId != null) {
+          if (entry.status == MatchStatus.matched &&
+              entry.matchId != null &&
+              !_hasNavigatedToMatch) {
+            _hasNavigatedToMatch = true; // フラグを立てて重複遷移を防ぐ
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (context.mounted) {
                 debugPrint('🎯 マッチング成立！マッチ詳細画面へ遷移: ${entry.matchId}');
                 context.pushReplacement('/debate/match/${entry.matchId}');
               }
             });
+          }
+
+          // マッチング成立時は遷移中メッセージを表示
+          if (entry.status == MatchStatus.matched && entry.matchId != null) {
             return Center(
               child: Column(
                 children: [

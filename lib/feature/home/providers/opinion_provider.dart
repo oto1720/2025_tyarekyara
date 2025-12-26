@@ -8,6 +8,7 @@ import '../models/opinion.dart';
 import '../models/topic.dart'; // TopicDifficultyをインポート
 import '../repositories/opinion_repository.dart';
 import '../../block/repositories/block_repository.dart';
+import '../../../core/providers/debate_event_unlock_provider.dart';
 import 'package:flutter/foundation.dart';
 part 'opinion_provider.freezed.dart';
 
@@ -281,6 +282,9 @@ class OpinionPostNotifier extends Notifier<OpinionPostState> {
       if (isGuest) {
         await prefs.setBool('guest_posted_topic_$topicId', true);
       }
+
+      // ディベート解放状態を更新（トピック投稿後にディベートが解放される）
+      ref.invalidate(isTodayDebateUnlockedProvider);
 
       state = state.copyWith(
         isPosting: false,

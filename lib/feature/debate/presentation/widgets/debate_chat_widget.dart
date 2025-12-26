@@ -11,18 +11,18 @@ import '../../../auth/providers/auth_provider.dart';
 class DebateChatWidget extends ConsumerStatefulWidget {
   final String roomId;
   final String userId;
-  final DebatePhase currentPhase;
   final MessageType messageType;
   final DebateStance? stance; // チームメッセージ用のスタンス
 
-  const DebateChatWidget({
+  DebateChatWidget({
     super.key,
     required this.roomId,
     required this.userId,
-    required this.currentPhase,
     this.messageType = MessageType.public,
     this.stance,
-  });
+  }) {
+    debugPrint('🎨 [DebateChatWidget] Constructor called with roomId: $roomId, messageType: $messageType');
+  }
 
   @override
   ConsumerState<DebateChatWidget> createState() => _DebateChatWidgetState();
@@ -31,17 +31,24 @@ class DebateChatWidget extends ConsumerStatefulWidget {
 class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
   bool _isSending = false;
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🏗️ [DebateChatWidget] Building - messageType: ${widget.messageType}, stance: ${widget.stance}');
+
+    // ルーム情報を監視（メッセージ送信時に使用）
+    final roomAsync = ref.watch(roomDetailProvider(widget.roomId));
+
     // チームメッセージの場合はstanceでフィルタリング
     final messagesAsync = widget.messageType == MessageType.team && widget.stance != null
         ? ref.watch(teamMessagesWithStanceProvider((widget.roomId, widget.stance!)))
@@ -58,7 +65,7 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
             ),
           ),
         ),
-        _buildInputArea(),
+        _buildInputArea(roomAsync),
       ],
     );
   }
@@ -230,71 +237,105 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
   }
 
   /// 入力エリア
-  Widget _buildInputArea() {
+  Widget _buildInputArea(AsyncValue<DebateRoom?> roomAsync) {
+    // ルームが読み込まれているかチェック
+    final canSend = roomAsync.hasValue && roomAsync.value != null;
+
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[300]!),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: Colors.grey[300]!),
+          ),
         ),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                maxLines: null,
-                maxLength: 200,
-                decoration: InputDecoration(
-                  hintText: 'メッセージを入力...',
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 120,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _focusNode,
+                    maxLines: null,
+                    minLines: 1,
+                    maxLength: 200,
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    scrollPhysics: const BouncingScrollPhysics(),
+                    enableInteractiveSelection: true,
+                    autofocus: false,
+                    decoration: InputDecoration(
+                      hintText: 'メッセージを入力...',
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      counterText: '',
+                    ),
+                    onTap: () {
+                      debugPrint('⌨️ [TextField] タップされました');
+                      debugPrint('   フォーカス状態: ${_focusNode.hasFocus}');
+                      // フォーカスを明示的に要求（次のフレームで実行）
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && !_focusNode.hasFocus) {
+                          debugPrint('   フォーカスを要求します');
+                          _focusNode.requestFocus();
+                        }
+                      });
+                    },
+                    onSubmitted: (_) {
+                      // TextInputAction.newlineのため、Enterキーで改行される
+                      // 送信は送信ボタンのみで行う
+                    },
                   ),
-                  counterText: '',
                 ),
-                onSubmitted: (_) => _sendMessage(),
               ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
+              const SizedBox(width: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: canSend ? Colors.blue : Colors.grey,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.send, color: Colors.white),
+                  onPressed: (_isSending || !canSend) ? null : () => _sendMessage(roomAsync.value!),
+                ),
               ),
-              child: IconButton(
-                icon: _isSending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.send, color: Colors.white),
-                onPressed: _isSending ? null : _sendMessage,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
     );
   }
 
   /// メッセージ送信
-  Future<void> _sendMessage() async {
+  Future<void> _sendMessage(DebateRoom room) async {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isSending) return;
+
+    debugPrint('📤 [SendMessage] Attempting to send message...');
+    debugPrint('   roomId: ${widget.roomId}');
+    debugPrint('   room.id: ${room.id}');
+    debugPrint('   currentPhase: ${room.currentPhase}');
 
     setState(() {
       _isSending = true;
@@ -314,7 +355,7 @@ class _DebateChatWidgetState extends ConsumerState<DebateChatWidget> {
         userId: widget.userId,
         content: content,
         type: widget.messageType,
-        phase: widget.currentPhase,
+        phase: room.currentPhase, // 最新のフェーズ情報を使用
         createdAt: DateTime.now(),
         userNickname: userNickname,
         senderStance: widget.stance,

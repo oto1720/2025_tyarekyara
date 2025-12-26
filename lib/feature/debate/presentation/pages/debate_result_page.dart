@@ -39,12 +39,10 @@ class DebateResultPage extends ConsumerWidget {
 
     final judgmentAsync = ref.watch(judgmentResultProvider(matchId));
     final matchAsync = ref.watch(matchDetailProvider(matchId));
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authStateChangesProvider);
 
-    final userId = authState.maybeWhen(
-      authenticated: (user) => user.id,
-      orElse: () => null,
-    );
+    final user = authStateAsync.value;
+    final userId = user?.uid;
 
     return Scaffold(
       backgroundColor: AppColors.background,
