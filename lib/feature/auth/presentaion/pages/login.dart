@@ -1,63 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/auth_state.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
+class LoginPage extends HookConsumerWidget {
   const LoginPage({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final emailController = useTextEditingController();
+    final passwordController = useTextEditingController();
+    final obscurePassword = useState(true);
 
-class _LoginPageState extends ConsumerState<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'メールアドレスは必須です';
+    String? validateEmail(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'メールアドレスは必須です';
+      }
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegex.hasMatch(value)) {
+        return '有効なメールアドレスを入力してください';
+      }
+      return null;
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
-      return '有効なメールアドレスを入力してください';
-    }
-    return null;
-  }
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'パスワードは必須です';
+    String? validatePassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'パスワードは必須です';
+      }
+      if (value.length < 6) {
+        return 'パスワードは6文字以上で入力してください';
+      }
+      return null;
     }
-    if (value.length < 6) {
-      return 'パスワードは6文字以上で入力してください';
-    }
-    return null;
-  }
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
+    Future<void> handleLogin() async {
+      if (!formKey.currentState!.validate()) return;
 
-    await ref.read(authControllerProvider.notifier).signInWithEmail(
-	  email: _emailController.text.trim(),
-	  password: _passwordController.text,
+      await ref.read(authControllerProvider.notifier).signInWithEmail(
+	  email: emailController.text.trim(),
+	  password: passwordController.text,
 	);
-  }
+    }
 
-  @override
-  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
@@ -69,7 +58,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 	  ScaffoldMessenger.of(context).showSnackBar(
 	    const SnackBar(content: Text('ログイン成功')),
 	  );
-	  // ���;bkw�
+	  // ホームに遷移
 	  context.go('/');
 	},
 	unauthenticated: () {},
@@ -95,12 +84,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 	child: SingleChildScrollView(
 	  padding: const EdgeInsets.all(24),
 	  child: Form(
-	    key: _formKey,
+	    key: formKey,
 	    child: Column(
 	      crossAxisAlignment: CrossAxisAlignment.stretch,
 	      children: [
 		const SizedBox(height: 40),
-		// ��~_o������
+		// ログインアイコン
 		Icon(
 		  Icons.lock_outline,
 		  size: 80,
@@ -125,33 +114,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		),
 		const SizedBox(height: 40),
 		CustomTextField(
-		  controller: _emailController,
+		  controller: emailController,
 		  label: 'メールアドレス',
 		  hintText: 'example@email.com',
 		  keyboardType: TextInputType.emailAddress,
 		  prefixIcon: const Icon(Icons.email_outlined),
-		  validator: _validateEmail,
+		  validator: validateEmail,
 		),
 		const SizedBox(height: 24),
 		CustomTextField(
-		  controller: _passwordController,
+		  controller: passwordController,
 		  label: 'パスワード',
 		  hintText: '6文字以上',
-		  obscureText: _obscurePassword,
+		  obscureText: obscurePassword.value,
 		  prefixIcon: const Icon(Icons.lock_outline),
 		  suffixIcon: IconButton(
 		    icon: Icon(
-		      _obscurePassword
+		      obscurePassword.value
 			  ? Icons.visibility_off_outlined
 			  : Icons.visibility_outlined,
 		    ),
 		    onPressed: () {
-		      setState(() {
-			_obscurePassword = !_obscurePassword;
-		      });
+		      obscurePassword.value = !obscurePassword.value;
 		    },
 		  ),
-		  validator: _validatePassword,
+		  validator: validatePassword,
 		),
 		const SizedBox(height: 16),
 
@@ -174,7 +161,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 		const SizedBox(height: 24),
 		CustomButton(
 		  text: 'ログイン',
-		  onPressed: _handleLogin,
+		  onPressed: handleLogin,
 		  isLoading: authState.maybeWhen(
 		    loading: () => true,
 		    orElse: () => false,

@@ -1,92 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/auth_state.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
-class SignUpPage extends ConsumerStatefulWidget {
+class SignUpPage extends HookConsumerWidget {
   const SignUpPage({super.key});
 
   @override
-  ConsumerState<SignUpPage> createState() => _SignUpPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final nicknameController = useTextEditingController();
+    final emailController = useTextEditingController();
+    final passwordController = useTextEditingController();
+    final confirmPasswordController = useTextEditingController();
+    final obscurePassword = useState(true);
+    final obscureConfirmPassword = useState(true);
 
-class _SignUpPageState extends ConsumerState<SignUpPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nicknameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
+    String? validateNickname(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'ニックネームは必須です';
+      }
+      if (value.length < 2) {
+        return 'ニックネームは2文字以上で入力してください';
+      }
+      if (value.length > 20) {
+        return 'ニックネームは20文字以内で入力してください';
+      }
+      return null;
+    }
 
-  @override
-  void dispose() {
-    _nicknameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
+    String? validateEmail(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'メールアドレスは必須です';
+      }
+      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+      if (!emailRegex.hasMatch(value)) {
+        return '有効なメールアドレスを入力してください';
+      }
+      return null;
+    }
 
-  String? _validateNickname(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'ニックネームは必須です';
+    String? validatePassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'パスワードは必須です';
+      }
+      if (value.length < 6) {
+        return 'パスワードは6文字以上で入力してください';
+      }
+      return null;
     }
-    if (value.length < 2) {
-      return 'ニックネームは2文字以上で入力してください';
-    }
-    if (value.length > 20) {
-      return 'ニックネームは20文字以内で入力してください';
-    }
-    return null;
-  }
 
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'メールアドレスは必須です';
+    String? validateConfirmPassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'パスワードを確認してください';
+      }
+      if (value != passwordController.text) {
+        return 'パスワードが一致しません';
+      }
+      return null;
     }
-    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value)) {
-      return '有効なメールアドレスを入力してください';
-    }
-    return null;
-  }
 
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'パスワードは必須です';
-    }
-    if (value.length < 6) {
-      return 'パスワードは6文字以上で入力してください';
-    }
-    return null;
-  }
+    Future<void> handleSignUp() async {
+      if (!formKey.currentState!.validate()) return;
 
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'パスワードを確認してください';
+      await ref.read(authControllerProvider.notifier).signUpWithEmail(
+            email: emailController.text.trim(),
+            password: passwordController.text,
+            nickname: nicknameController.text.trim(),
+          );
     }
-    if (value != _passwordController.text) {
-      return 'パスワードが一致しません';
-    }
-    return null;
-  }
 
-  Future<void> _handleSignUp() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    await ref.read(authControllerProvider.notifier).signUpWithEmail(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          nickname: _nicknameController.text.trim(),
-        );
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
 
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
@@ -124,7 +111,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -147,67 +134,63 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
                 const SizedBox(height: 40),
                 CustomTextField(
-                  controller: _nicknameController,
+                  controller: nicknameController,
                   label: 'ニックネーム',
                   hintText: 'ニックネームを入力',
                   prefixIcon: const Icon(Icons.person_outline),
-                  validator: _validateNickname,
+                  validator: validateNickname,
                 ),
                 const SizedBox(height: 24),
                 CustomTextField(
-                  controller: _emailController,
+                  controller: emailController,
                   label: 'メールアドレス',
                   hintText: 'example@email.com',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
-                  validator: _validateEmail,
+                  validator: validateEmail,
                 ),
                 const SizedBox(height: 24),
                 CustomTextField(
-                  controller: _passwordController,
+                  controller: passwordController,
                   label: 'パスワード',
                   hintText: '6文字以上',
-                  obscureText: _obscurePassword,
+                  obscureText: obscurePassword.value,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword
+                      obscurePassword.value
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
+                      obscurePassword.value = !obscurePassword.value;
                     },
                   ),
-                  validator: _validatePassword,
+                  validator: validatePassword,
                 ),
                 const SizedBox(height: 24),
                 CustomTextField(
-                  controller: _confirmPasswordController,
+                  controller: confirmPasswordController,
                   label: 'パスワード確認',
                   hintText: 'パスワードを再入力',
-                  obscureText: _obscureConfirmPassword,
+                  obscureText: obscureConfirmPassword.value,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword
+                      obscureConfirmPassword.value
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
+                      obscureConfirmPassword.value = !obscureConfirmPassword.value;
                     },
                   ),
-                  validator: _validateConfirmPassword,
+                  validator: validateConfirmPassword,
                 ),
                 const SizedBox(height: 40),
                 CustomButton(
                   text: '登録',
-                  onPressed: _handleSignUp,
+                  onPressed: handleSignUp,
                   isLoading: authState.maybeWhen(
                     loading: () => true,
                     orElse: () => false,
