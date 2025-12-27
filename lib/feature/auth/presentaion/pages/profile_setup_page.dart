@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/auth_state.dart';
@@ -7,138 +8,128 @@ import '../../providers/profile_setup_provider.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
-class ProfileSetupPage extends ConsumerStatefulWidget {
+
+ // 年齢オプション
+    const List<String> ageRanges = [
+          '10歳未満',
+          '10代',
+          '20代',
+          '30代',
+          '40代',
+          '50代',
+          '60代',
+          '70代',
+          '80代',
+          '90代',
+    ];
+
+    // 地域オプション
+    const List<String> regions = [
+          '東京都',
+          '大阪府',
+          '福岡県',
+          '熊本県',
+          '鹿児島県',
+          '沖縄県',
+          '北海道',
+          '青森県',
+          '岩手県',
+          '宮城県',
+          '秋田県',
+          '山形県',
+          '福島県',
+          '茨城県',
+          '栃木県',
+          '群馬県',
+          '埼玉県',
+          '千葉県',
+          '神奈川県',
+          '新潟県',
+          '富山県',
+          '石川県',
+          '福井県',
+          '山梨県',
+          '長野県',
+          '岐阜県',
+          '静岡県',
+          '愛知県',
+          '三重県',
+          '滋賀県',
+          '京都府',
+          '兵庫県',
+          '奈良県',
+          '和歌山県',
+          '鳥取県',
+          '島根県',
+          '岡山県',
+          '広島県',
+          '山口県',
+          '徳島県',
+          '香川県',
+          '愛媛県',
+          '高知県',
+          '佐賀県',
+          '長崎県',
+          '大分県',
+          '宮崎県',
+    ];
+
+class ProfileSetupPage extends HookConsumerWidget {
   const ProfileSetupPage({super.key});
 
-  @override
-  ConsumerState<ProfileSetupPage> createState() => _ProfileSetupPageState();
-}
-
-class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nicknameController = TextEditingController();
-
-  // 年齢オプション
-  final List<String> _ageRanges = [
-    '10歳未満',
-    '10代',
-    '20代',
-    '30代',
-    '40代',
-    '50代',
-    '60代',
-    '70代',
-    '80代',
-    '90代',
-  ];
-
-  // 地域オプション
-  final List<String> _regions = [
-    '東京都',
-    '大阪府',
-    '福岡県',
-    '熊本県',
-    '鹿児島県',
-    '沖縄県',
-    '北海道',
-    '青森県',
-    '岩手県',
-    '宮城県',
-    '秋田県',
-    '山形県',
-    '福島県',
-    '茨城県',
-    '栃木県',
-    '群馬県',
-    '埼玉県',
-    '千葉県',
-    '神奈川県',
-    '新潟県',
-    '富山県',
-    '石川県',
-    '福井県',
-    '山梨県',
-    '長野県',
-    '岐阜県',
-    '静岡県',
-    '愛知県',
-    '三重県',
-    '滋賀県',
-    '京都府',
-    '兵庫県',
-    '奈良県',
-    '和歌山県',
-    '鳥取県',
-    '島根県',
-    '岡山県',
-    '広島県',
-    '山口県',
-    '徳島県',
-    '香川県',
-    '愛媛県',
-    '高知県',
-    '佐賀県',
-    '長崎県',
-    '大分県',
-    '宮崎県',
-  ];
 
   @override
-  void initState() {
-    super.initState();
-    // 初期化は build メソッド内で行う
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final nicknameController = useTextEditingController();
 
-  @override
-  void dispose() {
-    _nicknameController.dispose();
-    super.dispose();
-  }
-
-  String? _validateNickname(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'ニックネームは必須です';
+    String? validateNickname(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'ニックネームは必須です';
+      }
+      if (value.length < 2) {
+        return 'ニックネームは2文字以上で入力してください';
+      }
+      if (value.length > 20) {
+        return 'ニックネームは20文字以内で入力してください';
+      }
+      return null;
     }
-    if (value.length < 2) {
-      return 'ニックネームは2文字以上で入力してください';
+
+    Future<void> handleSaveProfile() async {
+      if (!formKey.currentState!.validate()) return;
+
+      final success = await ref
+          .read(profileSetupProvider.notifier)
+          .saveProfile(nickname: nicknameController.text.trim());
+
+      if (!success) {
+        // エラーは profileSetupProvider の errorMessage で管理される
+        return;
+      }
     }
-    if (value.length > 20) {
-      return 'ニックネームは20文字以内で入力してください';
-    }
-    return null;
-  }
 
-  Future<void> _handleSaveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final success = await ref
-        .read(profileSetupProvider.notifier)
-        .saveProfile(nickname: _nicknameController.text.trim());
-
-    if (!success) {
-      // エラーは profileSetupProvider の errorMessage で管理される
-      return;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final currentUserAsync = ref.watch(currentUserProvider);
     final profileSetupState = ref.watch(profileSetupProvider);
 
-    // 現在のユーザー情報でフィールドを初期化
-    currentUserAsync.whenData((user) {
-      if (user != null && _nicknameController.text.isEmpty) {
-        _nicknameController.text = user.nickname;
-        // Providerの状態を初期化
+    // 初期化フラグを管理（useStateの代わり）
+    final isInitialized = useRef<bool>(false);
+
+    // ユーザーデータの初期化を一度だけ実行（useEffectの代わり）
+    useEffect(() {
+      final user = currentUserAsync.value;
+      if (user != null && !isInitialized.value) {
+        nicknameController.text = user.nickname;
         ref.read(profileSetupProvider.notifier).initializeFromUser(
               nickname: user.nickname,
               ageRange: user.ageRange.isNotEmpty ? user.ageRange : null,
               region: user.region.isNotEmpty ? user.region : null,
             );
+        isInitialized.value = true;
       }
-    });
+      return null;
+    }, [currentUserAsync]);
 
     // 認証状態の監視
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
@@ -191,7 +182,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -293,11 +284,11 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
 
                 // ニックネーム
                 CustomTextField(
-                  controller: _nicknameController,
+                  controller: nicknameController,
                   label: 'ニックネーム',
                   hintText: 'ニックネームを入力',
                   prefixIcon: const Icon(Icons.person_outline),
-                  validator: _validateNickname,
+                  validator: validateNickname,
                 ),
                 const SizedBox(height: 24),
 
@@ -321,7 +312,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                       isExpanded: true,
                       value: profileSetupState.selectedAgeRange,
                       hint: const Text('年齢を選択'),
-                      items: _ageRanges.map((String value) {
+                      items: ageRanges.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -359,7 +350,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                       isExpanded: true,
                       value: profileSetupState.selectedRegion,
                       hint: const Text('地域を選択'),
-                      items: _regions.map((String value) {
+                      items: regions.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -380,7 +371,7 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
                 // 保存
                 CustomButton(
                   text: '保存',
-                  onPressed: _handleSaveProfile,
+                  onPressed: handleSaveProfile,
                   isLoading: profileSetupState.isUploading ||
                       authState.maybeWhen(
                         loading: () => true,

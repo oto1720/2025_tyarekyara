@@ -1,111 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
-class ChangePasswordPage extends ConsumerStatefulWidget {
+class ChangePasswordPage extends HookConsumerWidget {
   const ChangePasswordPage({super.key});
 
   @override
-  ConsumerState<ChangePasswordPage> createState() => _ChangePasswordPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final currentPasswordController = useTextEditingController();
+    final newPasswordController = useTextEditingController();
+    final confirmPasswordController = useTextEditingController();
 
-class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _currentPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+    final obscureCurrentPassword = useState(true);
+    final obscureNewPassword = useState(true);
+    final obscureConfirmPassword = useState(true);
+    final isLoading = useState(false);
 
-  bool _obscureCurrentPassword = true;
-  bool _obscureNewPassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  String? _validateCurrentPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return '現在のパスワードは必須です';
+    String? validateCurrentPassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return '現在のパスワードは必須です';
+      }
+      return null;
     }
-    return null;
-  }
 
-  String? _validateNewPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return '新しいパスワードは必須です';
+    String? validateNewPassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return '新しいパスワードは必須です';
+      }
+      if (value.length < 6) {
+        return 'パスワードは6文字以上で入力してください';
+      }
+      if (value == currentPasswordController.text) {
+        return '現在のパスワードと異なるパスワードを入力してください';
+      }
+      return null;
     }
-    if (value.length < 6) {
-      return 'パスワードは6文字以上で入力してください';
+
+    String? validateConfirmPassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'パスワード確認は必須です';
+      }
+      if (value != newPasswordController.text) {
+        return 'パスワードが一致しません';
+      }
+      return null;
     }
-    if (value == _currentPasswordController.text) {
-      return '現在のパスワードと異なるパスワードを入力してください';
-    }
-    return null;
-  }
 
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'パスワード確認は必須です';
-    }
-    if (value != _newPasswordController.text) {
-      return 'パスワードが一致しません';
-    }
-    return null;
-  }
+    Future<void> handleChangePassword() async {
+      if (!formKey.currentState!.validate()) return;
 
-  Future<void> _handleChangePassword() async {
-    if (!_formKey.currentState!.validate()) return;
+      isLoading.value = true;
 
-    setState(() {
-      _isLoading = true;
-    });
+      try {
+        final authRepository = ref.read(authServiceProvider);
+        await authRepository.updatePassword(
+          currentPassword: currentPasswordController.text,
+          newPassword: newPasswordController.text,
+        );
 
-    try {
-      final authRepository = ref.read(authServiceProvider);
-      await authRepository.updatePassword(
-        currentPassword: _currentPasswordController.text,
-        newPassword: _newPasswordController.text,
-      );
+        if (!context.mounted) return;
 
-      if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('パスワードを変更しました'),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('パスワードを変更しました'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        context.pop();
+      } catch (e) {
+        if (!context.mounted) return;
 
-      context.pop();
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (context.mounted) {
+          isLoading.value = false;
+        }
       }
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -118,7 +102,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
-            key: _formKey,
+            key: formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -152,78 +136,72 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
                 // 現在のパスワード
                 CustomTextField(
-                  controller: _currentPasswordController,
+                  controller: currentPasswordController,
                   label: '現在のパスワード',
                   hintText: '現在のパスワードを入力',
-                  obscureText: _obscureCurrentPassword,
+                  obscureText: obscureCurrentPassword.value,
                   prefixIcon: const Icon(Icons.lock_outline),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureCurrentPassword
+                      obscureCurrentPassword.value
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _obscureCurrentPassword = !_obscureCurrentPassword;
-                      });
+                      obscureCurrentPassword.value = !obscureCurrentPassword.value;
                     },
                   ),
-                  validator: _validateCurrentPassword,
+                  validator: validateCurrentPassword,
                 ),
                 const SizedBox(height: 24),
 
                 // 新しいパスワード
                 CustomTextField(
-                  controller: _newPasswordController,
+                  controller: newPasswordController,
                   label: '新しいパスワード',
                   hintText: '6文字以上',
-                  obscureText: _obscureNewPassword,
+                  obscureText: obscureNewPassword.value,
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureNewPassword
+                      obscureNewPassword.value
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _obscureNewPassword = !_obscureNewPassword;
-                      });
+                      obscureNewPassword.value = !obscureNewPassword.value;
                     },
                   ),
-                  validator: _validateNewPassword,
+                  validator: validateNewPassword,
                 ),
                 const SizedBox(height: 24),
 
                 // パスワード確認
                 CustomTextField(
-                  controller: _confirmPasswordController,
+                  controller: confirmPasswordController,
                   label: '新しいパスワード（確認）',
                   hintText: 'もう一度入力',
-                  obscureText: _obscureConfirmPassword,
+                  obscureText: obscureConfirmPassword.value,
                   prefixIcon: const Icon(Icons.lock_clock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword
+                      obscureConfirmPassword.value
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                     ),
                     onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
+                      obscureConfirmPassword.value = !obscureConfirmPassword.value;
                     },
                   ),
-                  validator: _validateConfirmPassword,
+                  validator: validateConfirmPassword,
                 ),
                 const SizedBox(height: 40),
 
                 // 変更ボタン
                 CustomButton(
                   text: 'パスワードを変更',
-                  onPressed: _handleChangePassword,
-                  isLoading: _isLoading,
+                  onPressed: handleChangePassword,
+                  isLoading: isLoading.value,
                 ),
                 const SizedBox(height: 16),
 
