@@ -8,16 +8,9 @@ import '../../providers/profile_setup_provider.dart';
 import '../../../../widgets/custom_text_field.dart';
 import '../../../../widgets/custom_button.dart';
 
-class ProfileSetupPage extends HookConsumerWidget {
-  const ProfileSetupPage({super.key});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final formKey = useMemoized(() => GlobalKey<FormState>());
-    final nicknameController = useTextEditingController();
-
-    // 年齢オプション
-    final List<String> ageRanges = [
+ // 年齢オプション
+    const List<String> ageRanges = [
       '10歳未満',
       '10代',
       '20代',
@@ -31,7 +24,7 @@ class ProfileSetupPage extends HookConsumerWidget {
     ];
 
     // 地域オプション
-    final List<String> regions = [
+    const List<String> regions = [
       '東京都',
       '大阪府',
       '福岡県',
@@ -81,6 +74,15 @@ class ProfileSetupPage extends HookConsumerWidget {
       '宮崎県',
     ];
 
+class ProfileSetupPage extends HookConsumerWidget {
+  const ProfileSetupPage({super.key});
+
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    final nicknameController = useTextEditingController();
+
     String? validateNickname(String? value) {
       if (value == null || value.isEmpty) {
         return 'ニックネームは必須です';
@@ -111,18 +113,23 @@ class ProfileSetupPage extends HookConsumerWidget {
     final currentUserAsync = ref.watch(currentUserProvider);
     final profileSetupState = ref.watch(profileSetupProvider);
 
-    // 現在のユーザー情報でフィールドを初期化
-    currentUserAsync.whenData((user) {
-      if (user != null && nicknameController.text.isEmpty) {
+    // 初期化フラグを管理（useStateの代わり）
+    final isInitialized = useRef<bool>(false);
+
+    // ユーザーデータの初期化を一度だけ実行（useEffectの代わり）
+    useEffect(() {
+      final user = currentUserAsync.value;
+      if (user != null && !isInitialized.value) {
         nicknameController.text = user.nickname;
-        // Providerの状態を初期化
         ref.read(profileSetupProvider.notifier).initializeFromUser(
               nickname: user.nickname,
               ageRange: user.ageRange.isNotEmpty ? user.ageRange : null,
               region: user.region.isNotEmpty ? user.region : null,
             );
+        isInitialized.value = true;
       }
-    });
+      return null;
+    }, [currentUserAsync]);
 
     // 認証状態の監視
     ref.listen<AuthState>(authControllerProvider, (previous, next) {

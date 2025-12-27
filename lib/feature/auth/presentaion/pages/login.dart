@@ -55,6 +55,7 @@ class LoginPage extends HookConsumerWidget {
 	loading: () {},
 	guest: () {},
 	authenticated: (user) {
+    if(!context.mounted) return;
 	  ScaffoldMessenger.of(context).showSnackBar(
 	    const SnackBar(content: Text('ログイン成功')),
 	  );
@@ -63,6 +64,7 @@ class LoginPage extends HookConsumerWidget {
 	},
 	unauthenticated: () {},
 	error: (message) {
+    if(!context.mounted) return;
 	  ScaffoldMessenger.of(context).showSnackBar(
 	    SnackBar(
 	      content: Text(message),
