@@ -82,6 +82,7 @@ class SignUpPage extends HookConsumerWidget {
         loading: () {},
         guest: () {},
         authenticated: (user) {
+          if(!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('アカウント作成成功')),
           );
@@ -90,6 +91,7 @@ class SignUpPage extends HookConsumerWidget {
         },
         unauthenticated: () {},
         error: (message) {
+          if(!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
