@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/challenge_card.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/completed_challenge_card.dart';
@@ -9,7 +10,7 @@ import 'package:tyarekyara/core/constants/app_colors.dart';
 import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
 import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
-class ChallengePage extends ConsumerStatefulWidget {
+class ChallengePage extends HookConsumerWidget {
   const ChallengePage({super.key});
 
 // //仮のチャレンジカードデータ
@@ -44,14 +45,8 @@ class ChallengePage extends ConsumerStatefulWidget {
 //   ];
 
   @override
-  ConsumerState<ChallengePage> createState() => _ChallengePageState();
-}
-
-class _ChallengePageState extends ConsumerState<ChallengePage> {
-  final GlobalKey _helpButtonKey = GlobalKey();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final helpButtonKey = useMemoized(() => GlobalKey());
     final asyncValue = ref.watch(challengeProvider);
     final currentPoints = ref.watch(currentPointsProvider);
     final challenges = ref.watch(filteredChallengesProvider);
@@ -96,14 +91,14 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
     return ShowCaseWidget(
       builder: (context) => TutorialShowcaseWrapper(
         pageKey: 'challenge',
-        showcaseKey: _helpButtonKey,
+        showcaseKey: helpButtonKey,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('チャレンジ'),
             actions: [
               // ヘルプボタン
               Showcase(
-                key: _helpButtonKey,
+                key: helpButtonKey,
                 title: '操作ガイド',
                 description: '詳細はここにあります。確認しましょう',
                 child: IconButton(
@@ -121,14 +116,14 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                 onPressed: () async {
               debugPrint('🔄 [UI] リフレッシュボタンが押されました');
               await ref.read(challengeProvider.notifier).refresh();
-              if (mounted) {
+              if (!context.mounted) return; 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('データを再読み込みしました'),
                     duration: Duration(seconds: 1),
                   ),
                 );
-              }
+              
             },
           ),
         ],
@@ -407,7 +402,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                                       extra: challenge,
                                   );
 
-                                  if (result != null && mounted) {
+                                  if (result != null && context.mounted) {
                                     final int earnedPoints = result['points'];
                                     final String opinionText = result['opinion'];
                                     final String? feedbackText = result['feedbackText'];
@@ -422,7 +417,7 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                                         feedbackScore: feedbackScore,
                                     );
 
-                                    if (mounted) {
+                                    if (!context.mounted)return; 
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                           content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
@@ -430,7 +425,6 @@ class _ChallengePageState extends ConsumerState<ChallengePage> {
                                           duration: const Duration(seconds: 2),
                                         ),
                                       );
-                                    }
                                   }
                             }
                           )
