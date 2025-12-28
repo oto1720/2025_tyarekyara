@@ -7,42 +7,76 @@ import 'package:showcaseview/showcaseview.dart';
 import 'package:tyarekyara/feature/challenge/providers/challenge_provider.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/completed_challenge_card.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
+import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import '../../../guide/presentaion/widgets/tutorial_showcase_wrapper.dart';
 import '../../../guide/presentaion/widgets/tutorial_dialog.dart' show TutorialBottomSheet;
 
 class ChallengePage extends HookConsumerWidget {
   const ChallengePage({super.key});
 
-// //仮のチャレンジカードデータ
-//   static final Challenge challenge1 = Challenge(
-//     id: 'shukyu-3',
-//     title: '週休3日制は導入すべきか？',
-//     difficulty: ChallengeDifficulty.easy,
-//     stance: Stance.pro,
-//     originalOpinionText: '週休3日制は、労働者のワークライフバランスを向上させ、生産性を高める可能性があります。'
-//   );
+  ///　後でファイルル分割する
+  /// チャレンジカードが押されたときの処理
+  /// 
+  /// 責務:
+  /// - チャレンジ詳細画面へのナビゲーション
+  /// - 完了結果の受け取りと処理
+  /// - エラーハンドリングとユーザーフィードバック
+  static Future<void> _handleChallengePressed(
+    BuildContext context,
+    WidgetRef ref,
+    Challenge challenge,
+  ) async {
+    // 1. チャレンジ詳細画面へ遷移
+    final result = await context.push<Map<String, dynamic>>(
+      '/challenge/${challenge.id}',
+      extra: challenge,
+    );
 
-//   static final Challenge challenge2 = Challenge(
-//     id: '2',
-//     difficulty: ChallengeDifficulty.normal,
-//     title: '今日のご飯なに？',
-//     stance: Stance.pro,
-//     originalOpinionText: 'カレーライスが食べたいです。',
-//   );
+    // 2. 結果がない、またはウィジェットが破棄されている場合は終了
+    if (result == null || !context.mounted) {
+      return;
+    }
 
-//   static final Challenge challenge3 = Challenge(
-//     id: '3',
-//     difficulty: ChallengeDifficulty.hard,
-//     title: 'は？',
-//     stance: Stance.pro,
-//     originalOpinionText: 'は？'
-//   );
+    // 3. 結果データの抽出
+    final int earnedPoints = result['points'] as int;
+    final String opinionText = result['opinion'] as String;
+    final String? feedbackText = result['feedbackText'] as String?;
+    final int? feedbackScore = result['feedbackScore'] as int?;
 
-//   static final List<Challenge> allChallenges = [
-//     challenge1,
-//     challenge2,
-//     challenge3,
-//   ];
+    // 4. チャレンジ完了処理
+    try {
+      await ref.read(challengeProvider.notifier).completeChallenge(
+            challenge.id,
+            opinionText,
+            earnedPoints,
+            feedbackText: feedbackText,
+            feedbackScore: feedbackScore,
+          );
+
+      // 5. 成功メッセージの表示（エラーが発生しなかった場合のみ）
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 6. エラーハンドリング
+      if (!context.mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('チャレンジ完了に失敗しました: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -396,37 +430,11 @@ class ChallengePage extends HookConsumerWidget {
                     child: isAvailable
                         ? ChallengeCard(
                             challenge: challenge,
-                            onChallengePressed: () async {
-                              final result = await context.push<Map<String, dynamic>>(
-                                      '/challenge/${challenge.id}',
-                                      extra: challenge,
-                                  );
-
-                                  if (result != null && context.mounted) {
-                                    final int earnedPoints = result['points'];
-                                    final String opinionText = result['opinion'];
-                                    final String? feedbackText = result['feedbackText'];
-                                    final int? feedbackScore = result['feedbackScore'];
-
-                                    // Providerのメソッドを呼び出して状態を更新（フィードバック含む）
-                                    ref.read(challengeProvider.notifier).completeChallenge(
-                                        challenge.id,
-                                        opinionText, // 提出された意見
-                                        earnedPoints, // 獲得ポイント
-                                        feedbackText: feedbackText,
-                                        feedbackScore: feedbackScore,
-                                    );
-
-                                    if (!context.mounted)return; 
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('チャレンジ完了！ +$earnedPoints ポイント獲得しました！'),
-                                          backgroundColor: Colors.green,
-                                          duration: const Duration(seconds: 2),
-                                        ),
-                                      );
-                                  }
-                            }
+                            onChallengePressed: () => _handleChallengePressed(
+                              context,
+                              ref,
+                              challenge,
+                            ),
                           )
                     : CompletedCard( // 完了済みの場合
                         challenge: challenge,
