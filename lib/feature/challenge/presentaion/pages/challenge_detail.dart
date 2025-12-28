@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
@@ -6,32 +8,18 @@ import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import 'package:tyarekyara/core/widgets/keyboard_dismisser.dart';
 
-class ChallengeDetailPage extends StatefulWidget {
+class ChallengeDetailPage extends HookConsumerWidget {
   // どのチャレンジかを受け取るためのID
   final Challenge challenge;
 
   const ChallengeDetailPage({super.key, required this.challenge});
 
   @override
-  State<ChallengeDetailPage> createState() => _ChallengeDetailPageState();
-}
-
-class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
-
-  // ↓↓↓ 4. フォームの状態を管理するキーを追加
-  final _formKey = GlobalKey<FormState>();
-  // ↓↓↓ 5. テキストフィールドの入力を管理するコントローラーを追加
-  final _opinionController = TextEditingController();
-
-  @override
-    void dispose() {
-      // 6. コントローラーを破棄
-      _opinionController.dispose();
-      super.dispose();
-    }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // フォームの状態を管理するキー
+    final formKey = useMemoized(() => GlobalKey<FormState>());
+    // テキストフィールドの入力を管理するコントローラー
+    final opinionController = useTextEditingController();
     return KeyboardDismisser(
       child: Scaffold(
         body: SafeArea(
@@ -77,7 +65,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                             child: DifficultyBadge(
-                              difficulty: widget.challenge.difficulty,
+                              difficulty: challenge.difficulty,
                               showPoints: false,
                             ),
                           ),
@@ -85,7 +73,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       ),
                       const SizedBox(height: 4), // タイトルと説明文の間の小さな隙間
                       Text(
-                        widget.challenge.title,
+                        challenge.title,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -105,7 +93,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              '${widget.challenge.difficulty.points}ポイント',
+                              '${challenge.difficulty.points}ポイント',
                               style: const TextStyle(
                                 fontSize: 18,
                                 color: AppColors.textPrimary,
@@ -135,7 +123,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'あなたの元の意見 (${(widget.challenge.originalStance ?? widget.challenge.stance) == Stance.pro ? "賛成" : "反対"})',
+                          'あなたの元の意見 (${(challenge.originalStance ?? challenge.stance) == Stance.pro ? "賛成" : "反対"})',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -146,7 +134,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          widget.challenge.originalOpinionText,
+                          challenge.originalOpinionText,
                           style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.textPrimary,
@@ -160,7 +148,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
               
               //テキスト入力フォームのカード
               Form(
-                key: _formKey,
+                key: formKey,
                 child: Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -183,7 +171,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
-                                  'チャレンジ:${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場で考えてみよう',
+                                  'チャレンジ:${challenge.stance == Stance.pro ? "賛成" : "反対"}の立場で考えてみよう',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -196,7 +184,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            '${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場から、説得力のある意見を書いてみてください',
+                            '${challenge.stance == Stance.pro ? "賛成" : "反対"}の立場から、説得力のある意見を書いてみてください',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -221,11 +209,11 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                               ),
                               const SizedBox(width: 8),
                               buildStanceTag(
-                                widget.challenge.stance == Stance.pro ? '賛成' : '反対',
-                                widget.challenge.stance == Stance.pro
+                                challenge.stance == Stance.pro ? '賛成' : '反対',
+                                challenge.stance == Stance.pro
                                     ? AppColors.agree.withValues(alpha: 0.2)
                                     : AppColors.disagree.withValues(alpha: 0.2),
-                                widget.challenge.stance == Stance.pro
+                                challenge.stance == Stance.pro
                                     ? AppColors.agree
                                     : AppColors.disagree,
                               ),
@@ -234,7 +222,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                           const SizedBox(height: 8),
                           // 意見を記述するテキストフィールド
                           TextFormField(
-                            controller: _opinionController,
+                            controller: opinionController,
                             maxLines: 8, // 少し高さを増やす
                             maxLength: 300,
                             
@@ -256,7 +244,7 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor: AppColors.surface,
-                              hintText: '${widget.challenge.stance == Stance.pro ? "賛成" : "反対"}の立場での意見を書いてみよう！',
+                              hintText: '${challenge.stance == Stance.pro ? "賛成" : "反対"}の立場での意見を書いてみよう！',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.0),
                                 borderSide: const BorderSide(color: AppColors.border),
@@ -318,12 +306,12 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                     ),
                                   ),
                                   onPressed: () async {
-                                    if (_formKey.currentState!.validate()) {
+                                    if (formKey.currentState!.validate()) {
                                       // ゲストモードをチェック
                                       final prefs = await SharedPreferences.getInstance();
                                       final isGuest = prefs.getBool('is_guest_mode') ?? false;
 
-                                      if (!mounted) return;
+                                      if (!context.mounted) return;
 
                                       if (isGuest) {
                                         // ゲストモードの場合、AI審査が利用できないことを通知
@@ -370,14 +358,14 @@ class _ChallengeDetailPageState extends State<ChallengeDetailPage> {
                                       // 通常モード：フィードバック画面に遷移
                                       final router = GoRouter.of(context);
                                       final result = await router.push(
-                                        '/challenge/${widget.challenge.id}/feedback',
+                                        '/challenge/${challenge.id}/feedback',
                                         extra: {
-                                          'challenge': widget.challenge,
-                                          'challengeAnswer': _opinionController.text,
+                                          'challenge': challenge,
+                                          'challengeAnswer': opinionController.text,
                                         },
                                       );
                                       // フィードバック画面から戻ってきたら結果を返す
-                                      if (result != null && mounted) {
+                                      if (result != null && context.mounted) {
                                         router.pop(result);
                                       }
                                     }

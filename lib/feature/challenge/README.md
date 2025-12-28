@@ -498,9 +498,16 @@ class ChallengeFeedbackService {
 
 ### 5. Presentation Layer (UI)
 
+**使用技術**: `HookConsumerWidget` + `flutter_hooks`
+- すべてのページで状態管理にhooksを使用
+- 自動リソース管理により`dispose()`メソッド不要
+- 宣言的で簡潔なコード記述
+
 #### ChallengePage (`lib/feature/challenge/presentaion/pages/challenge.dart`)
 
 **責務**: チャレンジ一覧画面
+
+**ウィジェットタイプ**: `HookConsumerWidget`
 
 **主要機能**:
 - タブ切り替え（挑戦可能/完了済み）
@@ -514,17 +521,27 @@ class ChallengeFeedbackService {
 - `currentPointsProvider`: 累計ポイント
 - `challengeFilterProvider`: フィルタ状態
 
+**使用Hooks**:
+- `useMemoized`: ShowcaseWidget用のGlobalKeyをメモ化
+
 #### ChallengeDetailPage (`lib/feature/challenge/presentaion/pages/challenge_detail.dart`)
 
 **責務**: チャレンジ詳細・回答画面
 
+**ウィジェットタイプ**: `HookConsumerWidget`
+
 **主要機能**:
 - 元の意見表示
-- 反対意見入力フォーム（TextEditingController使用）
+- 反対意見入力フォーム
 - 文字数バリデーション（100文字以上）
 - ヒント表示
+- ゲストモード対応
 - フィードバック生成オプション
 - 完了処理
+
+**使用Hooks**:
+- `useMemoized`: FormのGlobalKeyをメモ化
+- `useTextEditingController`: 入力フォームのコントローラー管理
 
 **処理フロー**:
 ```
@@ -546,11 +563,27 @@ class ChallengeFeedbackService {
 
 **責務**: フィードバック表示画面
 
+**ウィジェットタイプ**: `HookConsumerWidget`
+
 **主要機能**:
-- スコア表示（CircularProgressIndicator使用）
+- AIフィードバックの自動生成と表示
+- スコア表示（0-100点）
 - フィードバックテキスト表示
 - チャレンジポイント表示
 - 元の意見と回答の表示
+- ローディング・エラー状態の管理
+
+**使用Hooks**:
+- `useState`: ローディング状態、フィードバックテキスト、スコア、エラーメッセージの管理
+- `useEffect`: マウント時のフィードバック自動生成
+
+**状態管理**:
+```dart
+final isLoading = useState(true);
+final feedbackText = useState<String?>(null);
+final feedbackScore = useState<int?>(null);
+final errorMessage = useState<String?>(null);
+```
 
 #### Widgets
 
@@ -1069,7 +1102,25 @@ test('completeChallenge updates state correctly', () async {
 
 ## 更新履歴
 
-### 2025-11-08 (最新)
+### 2025-12-28 (最新)
+- **Flutter Hooks へのリファクタリング**
+  - すべてのプレゼンテーション層のページを `HookConsumerWidget` に変更
+    - `challenge.dart`: `ConsumerStatefulWidget` → `HookConsumerWidget`
+    - `challenge_detail.dart`: `StatefulWidget` → `HookConsumerWidget`
+    - `challenge_feedback_page.dart`: `ConsumerStatefulWidget` → `HookConsumerWidget`
+  - `flutter_hooks` と `hooks_riverpod` の導入
+  - 状態管理の改善
+    - `useState` による状態変数の宣言的管理
+    - `useTextEditingController` による自動リソース管理
+    - `useMemoized` による値のメモ化
+    - `useEffect` による副作用処理（initStateの置き換え）
+  - `dispose()` メソッドの削除（自動クリーンアップによりメモリリーク防止）
+  - コードの簡潔化と保守性の向上
+    - Stateクラスの削除により定型文が減少
+    - ヘルパーメソッドの純粋関数化
+    - `.value` による明示的な状態更新
+
+### 2025-11-08
 - **ホーム画面の意見との連携実装**
   - `challenge_model.dart`に`opinionId`、`feedbackText`、`feedbackScore`、`feedbackGeneratedAt`フィールドを追加
   - `challenge_repositories.dart`に`getChallengesFromUserOpinions()`メソッドを追加
