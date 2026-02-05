@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tyarekyara/core/constants/app_colors.dart';
 import 'package:tyarekyara/feature/challenge/models/challenge_model.dart';
 import 'package:tyarekyara/feature/challenge/services/feedback_service.dart';
 import 'package:tyarekyara/feature/challenge/presentaion/widgets/difficultry_budge.dart';
 
-class ChallengeFeedbackPage extends ConsumerStatefulWidget {
+class ChallengeFeedbackPage extends HookConsumerWidget {
   final Challenge challenge;
   final String challengeAnswer;
 
@@ -17,51 +18,39 @@ class ChallengeFeedbackPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ChallengeFeedbackPage> createState() =>
-      _ChallengeFeedbackPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLoading = useState(true);
+    final feedbackText = useState<String?>(null);
+    final feedbackScore = useState<int?>(null);
+    final errorMessage = useState<String?>(null);
 
-class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
-  bool _isLoading = true;
-  String? _feedbackText;
-  int? _feedbackScore;
-  String? _errorMessage;
+    Future<void> generateFeedback() async {
+      try {
+        final feedbackService = ChallengeFeedbackService();
+        final result = await feedbackService.generateFeedback(
+          topicTitle: challenge.title,
+          originalOpinion: challenge.originalOpinionText,
+          originalStance: challenge.stance,
+          challengeAnswer: challengeAnswer,
+        );
 
-  @override
-  void initState() {
-    super.initState();
-    _generateFeedback();
-  }
-
-  Future<void> _generateFeedback() async {
-    try {
-      final feedbackService = ChallengeFeedbackService();
-      final result = await feedbackService.generateFeedback(
-        topicTitle: widget.challenge.title,
-        originalOpinion: widget.challenge.originalOpinionText,
-        originalStance: widget.challenge.stance,
-        challengeAnswer: widget.challengeAnswer,
-      );
-
-      if (mounted) {
-        setState(() {
-          _feedbackText = result.feedbackText;
-          _feedbackScore = result.score;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'フィードバックの生成に失敗しました: $e';
-          _isLoading = false;
-        });
+        if (context.mounted) {
+          feedbackText.value = result.feedbackText;
+          feedbackScore.value = result.score;
+          isLoading.value = false;
+        }
+      } catch (e) {
+        if (context.mounted) {
+          errorMessage.value = 'フィードバックの生成に失敗しました: $e';
+          isLoading.value = false;
+        }
       }
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
+    useEffect(() {
+      generateFeedback();
+      return null;
+    }, []);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -83,11 +72,21 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
                 const SizedBox(height: 16),
 
                 // フィードバック表示
-                _buildFeedbackSection(),
+                _buildFeedbackSection(
+                  isLoading.value,
+                  errorMessage.value,
+                  feedbackText.value,
+                  feedbackScore.value,
+                ),
                 const SizedBox(height: 24),
 
                 // 完了ボタン
-                _buildCompleteButton(),
+                _buildCompleteButton(
+                  context,
+                  isLoading.value,
+                  feedbackText.value,
+                  feedbackScore.value,
+                ),
               ],
             ),
           ),
@@ -142,7 +141,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.challenge.title,
+                    challenge.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -158,7 +157,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
             Row(
               children: [
                 DifficultyBadge(
-                  difficulty: widget.challenge.difficulty,
+                  difficulty: challenge.difficulty,
                   showPoints: false,
                 ),
                 const SizedBox(width: 12),
@@ -169,7 +168,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '+${widget.challenge.difficulty.points}ポイント',
+                  '+${challenge.difficulty.points}ポイント',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -206,7 +205,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'あなたの回答（${widget.challenge.stance == Stance.pro ? "反対" : "賛成"}の立場）',
+                  'あなたの回答（${challenge.stance == Stance.pro ? "反対" : "賛成"}の立場）',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -217,7 +216,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              widget.challengeAnswer,
+              challengeAnswer,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textPrimary,
@@ -230,16 +229,21 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     );
   }
 
-  Widget _buildFeedbackSection() {
-    if (_isLoading) {
+  Widget _buildFeedbackSection(
+    bool isLoading,
+    String? errorMessage,
+    String? feedbackText,
+    int? feedbackScore,
+  ) {
+    if (isLoading) {
       return _buildLoadingState();
     }
 
-    if (_errorMessage != null) {
-      return _buildErrorState();
+    if (errorMessage != null) {
+      return _buildErrorState(errorMessage);
     }
 
-    return _buildFeedbackResult();
+    return _buildFeedbackResult(feedbackText!, feedbackScore!);
   }
 
   Widget _buildLoadingState() {
@@ -271,7 +275,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     );
   }
 
-  Widget _buildErrorState() {
+  Widget _buildErrorState(String error) {
     return Card(
       color: AppColors.surface,
       elevation: 0,
@@ -290,7 +294,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage!,
+              error,
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.red,
@@ -303,7 +307,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     );
   }
 
-  Widget _buildFeedbackResult() {
+  Widget _buildFeedbackResult(String feedback, int score) {
     return Card(
       color: AppColors.surface,
       elevation: 0,
@@ -334,13 +338,13 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
                   ),
                 ),
                 const Spacer(),
-                _buildScoreBadge(),
+                _buildScoreBadge(score),
               ],
             ),
             const SizedBox(height: 16),
             // フィードバック本文
             Text(
-              _feedbackText ?? '',
+              feedback,
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textPrimary,
@@ -353,8 +357,7 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     );
   }
 
-  Widget _buildScoreBadge() {
-    final score = _feedbackScore ?? 0;
+  Widget _buildScoreBadge(int score) {
     Color backgroundColor;
     Color textColor;
 
@@ -389,7 +392,12 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
     );
   }
 
-  Widget _buildCompleteButton() {
+  Widget _buildCompleteButton(
+    BuildContext context,
+    bool isLoading,
+    String? feedbackText,
+    int? feedbackScore,
+  ) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -401,15 +409,15 @@ class _ChallengeFeedbackPageState extends ConsumerState<ChallengeFeedbackPage> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: _isLoading
+        onPressed: isLoading
             ? null
             : () {
                 // 結果を返して画面を閉じる
                 final result = {
-                  'points': widget.challenge.difficulty.points,
-                  'opinion': widget.challengeAnswer,
-                  'feedbackText': _feedbackText,
-                  'feedbackScore': _feedbackScore,
+                  'points': challenge.difficulty.points,
+                  'opinion': challengeAnswer,
+                  'feedbackText': feedbackText,
+                  'feedbackScore': feedbackScore,
                 };
                 context.pop(result);
               },
